@@ -1,6 +1,6 @@
-=================================
-Présentation du projet bottleLDAP
-=================================
+==========
+bottleLDAP
+==========
 
 :Author: Patrick Cao Huu Thien
 :Date: 29 juin 2011
@@ -35,7 +35,19 @@ Ce site est donc programmé entièrement en Python, avec l'aide de la micro web-
 Démarrage du serveur
 ====================
 
-Pour démarrer le serveur, il suffit de taper, dans une console, la commande::
+Pour démarrer le serveur, il faut créer une fichier `ldap_servers.ini` contenant les informations suivantes::
+
+    [<serveur_id>]
+    name = <server name>
+    host = <fqhn>
+    port = <optional>
+    basedn = <ldap base DN>
+    basegroup = <DN of the groupOfUniqueNames>
+    baseuser = <DN of the groupOfUniqueNames>
+    binddn = <DN to bind>
+    bindpwd = <password of %(binddn)s>
+
+Puis dans une console, taper la commande::
 
     $ python server.py
     Bottle server starting up (using WSGIRefServer())...
