@@ -1,0 +1,23 @@
+
+<div class="shadow box">
+<h1>Rechercher un utilisateur</h1>
+<script type="text/javascript">
+<!-- JQuery loader
+$(function(){
+    $("#input_search").keypress(function(e){
+        if (e.which == 13) {
+            if ($(this).length) {
+                // alert("GO !!!");
+                window.location='/users/search/'+$(this).val();
+            } else {
+                alert("hum ?!");
+                $(this).focus();
+            }
+        }
+    });
+}
+);
+//-->
+</script>
+<strong>Recherche</strong>: <input type="text" name="search" value="" id="input_search">
+</div>
