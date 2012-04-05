@@ -1,6 +1,6 @@
-=====================================
-Présentation du projet ???
-=====================================
+=================================
+Présentation du projet bottleLDAP
+=================================
 
 :Author: Patrick Cao Huu Thien
 :Date: 29 juin 2011
@@ -37,8 +37,9 @@ Démarrage du serveur
 
 Pour démarrer le serveur, il suffit de taper, dans une console, la commande::
 
-    user@host $ python server.py
+    $ python server.py
     Bottle server starting up (using WSGIRefServer())...
     Listening on http://localhost:8080/
     Use Ctrl-C to quit.
 
+.. vim:set spelllang=fr:
