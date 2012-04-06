@@ -57,11 +57,11 @@ TODO
 main_users = {
     '*': {
         'name': 'personnes',
-        'basedn': 'ou=personnels,o=ijlrda'
+        'basedn': 'ou=personnels,o=ijlrda',
     },
     'p': {
         'name': 'permanents',
-        'basedn': 'ou=permanents,ou=personnels,o=ijlrda'
+        'basedn': 'ou=permanents,ou=personnels,o=ijlrda',
     },
     'd': {
         'name': 'thésards',

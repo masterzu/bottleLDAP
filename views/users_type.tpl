@@ -1,21 +1,66 @@
 %rebase base title="Utilisateurs", nav=nav, warn=warn, author=author, version=version
 
+%attrs = [ ('givenName', u'prénom'), ('sn', 'nom de famille'), ('cn', "nom d'usage"), ('mail', 'email'), ('description', 'description')  ]
+<script type="text/javascript">
+// script to handle add user form
+$(function() { 
+    
+    $('#form').hide();
+    $('button#add').click(function () {
+        $('#form').slideToggle('slow');
+    });
+    $("input[name='givenName']").change(function(){
+        var val = $(this).val().capitalize();
+        $(this).val(val);
+        $("input[name='cn']").val($("input[name='givenName']").val()+' '+$("input[name='sn']").val());
+    });
+    $("input[name='sn']").change(function(){
+        var val = $(this).val().toUpperCase();
+        $(this).val(val);
+        $("input[name='cn']").val($("input[name='givenName']").val()+' '+$("input[name='sn']").val());
+    });
+
+
+    
+});
+</script>
+
 <div class="box shadow">
-<h1>{{title}}</h1>
+    <h1>{{title}}</h1>
 
-%l = len(users)
-<p> Il y a {{l}} {{title}} dans l'annuaire.  </p>
+    <button id="add" name="ajouter un {{title}}...">ajouter un {{title}}...</button>
+    <div id="form" class="box shadow">
+        <table cellspacing="1">
+        <tbody>
+%for id, id_name in attrs:
+            <tr>
+                <th>{{id_name}}</th>
+                <td style="text-align: right; font-size: smaller;font-family: monospace">({{id}})</td>
+                <td><input type="text" name="{{id}}"/></td>
+            </tr>
+%end
+            <tr>
+                <td></td>
+                <td colspan="2" style="text-align: right"><button name="ajouter">ajouter</button></td>
+            </tr>
+        </tbody>
+        </table>
+
+    </div><!-- form -->
 
 
-<script type = "text/javascript">
-$(document).ready(function() 
-    { 
-        $("#users").tablesorter({
-            // sort on first column
-            sortList: [[0,0]]
-        }); 
-    } 
-);
+    %l = len(users)
+    <p> Il y a {{l}} {{title}} dans l'annuaire.  </p>
+
+
+<script type="text/javascript">
+// script to sort #users table
+$(function() { 
+    $("#users").tablesorter({
+        // sort on first column
+        sortList: [[0,0]]
+    }); 
+});
 </script>
 
 <table class="tablesorter" id="users" cellspacing="1">
