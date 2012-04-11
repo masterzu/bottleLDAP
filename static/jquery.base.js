@@ -11,6 +11,17 @@ String.prototype.capitalize = function(){
 };
 
 
+/**********************************************************
+ show warning
+*/
+
+function show_warning(text) {
+    if (text)
+        $('#warning').show('fast').text(text)
+    else
+        $('#warning').hide('fast');
+};
+
 $(function(){
     // search input
     $("#input_search").keypress(function(e){
@@ -44,33 +55,19 @@ $(function(){
 
 
 /**********************************************************
- DEBUG with #warning and .change()
+ #warning Zone interactions
 */
     //$('#warning').text('DEBUG ZONE').show();
 
-
-
-/**********************************************************
- show warning
-*/
-
-    function show_warning(text) {
-        $('#warning').show().text(text);
-        $('#warning').fadeOut(10000);
-    };
     $('#warning').fadeOut('fast');
+    $('#warning').click(function(){
+        $(this).hide('slow');
+    });
 
 
 /**********************************************************
- JQUERY function to add interactivity to 
- - user.tpl
- - group.tpl
+ enable «onglet» with #onglets and .onglet class
 
- 1/ enable «onglet» with #onglets and .onglet class
-
- 2/ enable {span,button}.click() to table#fields span, table#fields button
-
- 3/ enable input.keypress(<ENTER>) to change it with $.getJSON
 */
 
     // #onglets - display the first .onglet
@@ -85,10 +82,6 @@ $(function(){
         $(this).addClass("actif");
         return false;
     });
-
-    /********************************************
-     Private fonctions
-    */
 
 });
 

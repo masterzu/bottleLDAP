@@ -1,46 +1,197 @@
 %rebase base title="Utilisateurs", nav=nav, warn=warn, author=author, version=version
 
-%attrs = [ ('givenName', u'prénom'), ('sn', 'nom de famille'), ('cn', "nom d'usage"), ('mail', 'email'), ('description', 'description')  ]
+%attrs = [ ('givenName', u'prénom'), ('sn', 'nom de famille'), ('cn', "nom d'usage (prénom + nom)"), ('mail', 'email'), ('description', u'description (thème de recherche )')  ]
 <script type="text/javascript">
+<!--
 // script to handle add user form
 $(function() { 
     
-    $('#form').hide();
     $('button#add').click(function () {
         $('#form').slideToggle('slow');
     });
+    // capitalize the given name && update field cn
     $("input[name='givenName']").change(function(){
         var val = $(this).val().capitalize();
         $(this).val(val);
         $("input[name='cn']").val($("input[name='givenName']").val()+' '+$("input[name='sn']").val());
     });
+    // upper the familly name (sn) && update field cn
     $("input[name='sn']").change(function(){
         var val = $(this).val().toUpperCase();
         $(this).val(val);
         $("input[name='cn']").val($("input[name='givenName']").val()+' '+$("input[name='sn']").val());
     });
+    // email validation
+    // http://www.designchemical.com/blog/index.php/jquery/email-validation-using-jquery/
+    $("input[name='mail']").change(function() {
+        var emailre = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
+        var email = $(this).val();
+        if (!emailre.test(email)) {
+            alert('email non valide');
+            $(this).focus();
+        } else {
+            //alert('email OK');
+            $(this).blur();
+        }
+    });
+    // populate select #select-group
+    $.getJSON('/api/groups',function(data, textStatus){
+        if (textStatus == 'success') { // ajax OK
+            $.each(data['groups'], function(){
+                //alert(data['groups'][g]['cn']);
+                //alert(this.cn);
+                $("#select-group").append('<option value="' + this.dn + '">' + this.description + '</option>');
+            });
+        } else { // ajax error
+            show_warning('AJAX: error: GET '+url);
+        }
+    });
+    // user type change
+    $("#select-usertype").change(function(){
+        var val = $(this).val();
+        if (val == 'p') {
+            $("#tr-group").show();
+            $("#tr-manager").hide();
+        } else if (val == 'd' || val == 't') {
+            $("#tr-group").hide();
+            $("#tr-manager").show();
+            alert('Not Yet Implemented');
+        } else {
+            alert('user WTF ?');
+        }
+    });
+    // bouton ajouter
+    $("button[name='ajouter']").click(function(){
+        var givenName = $("input[name='givenName']").val();
+        var sn = $("input[name='sn']").val();
+        var cn = $("input[name='cn']").val();
+        var mail = $("input[name='mail']").val();
+        var description = $("input[name='description']").val();
+        var usertype = $("#select-usertype").val();
+        var uid = $("#tr-uid input").val();
+
+        if (! givenName) {
+            alert('Mettre un prénom');
+            $("input[name='givenName']").focus();
+            return;
+        } else if (!sn) {
+            alert('Mettre un nom de famille');
+            $("input[name='sn']").focus();
+            return;
+        } else if (!cn) {
+            alert("Mettre un nom d'usage");
+            $("input[name='cn']").focus();
+            return;
+        } else if (!mail) {
+            alert('Mettre un email');
+            $("input[name='mail']").focus();
+            return;
+        } else if (!description) {
+            alert('Mettre une description');
+            $("input[name='description']").focus();
+            return;
+        };
+        //alert(givenName+'|'+sn+'|'+cn+'|'+mail+'|'+description+'|'+usertype);
+        if (usertype == 'p') {
+            var group = $("#select-group").val();
+            //alert('group='+group);
+
+            var url = '/api/useradd';
+            var data = {};
+            data['givenName'] = givenName;
+            data['sn'] = sn;
+            data['cn'] = cn;
+            data['mail'] = mail;
+            data['description'] = description;
+            data['usertype'] = usertype;
+            data['group'] = group;
+            if (uid) data['uid'] = uid;
+            
+            //alert('post on '+url+' with: '+data);
+            $.post(url,data,function(dataout, textStatus){
+                if (textStatus == 'success') { // ajax OK
+                    //alert('OK JSON='+dataout['uid']);
+                    if (dataout['success']) { // operation done
+                        var uid = dataout['uid'];
+                        alert('utilisateur crée avec le login:'+uid);
+                        location.href='/user/'+uid;
+
+                    } else { // operation failed
+                        var message = dataout['message'];
+                        if (message == 'no_free_uid'){
+                            $('#tr-uid').show('fast');
+                            show_warning('champs uid existe déjà. Choisissez une autre valeur.');
+                            $('#tr-uid input').focus();
+                        } else {
+                            show_warning(dataout['message']);
+                        }
+                    }
+                } else { // ajax failed
+                    show_warning('AJAX: error: POST '+url);
+                };
+            } ,'json');
+
+
+        } else if (usertype == 'd' || usertype == 't') {
+            alert('Not Yet Implemented');
+        }
+        
+    });
+
 
 
     
 });
+//-->
 </script>
 
 <div class="box shadow">
     <h1>{{title}}</h1>
 
     <button id="add" name="ajouter un {{title}}...">ajouter un {{title}}...</button>
-    <div id="form" class="box shadow">
+    <div id="form" class="box shadow hide">
         <table cellspacing="1">
         <tbody>
 %for id, id_name in attrs:
             <tr>
-                <th>{{id_name}}</th>
-                <td style="text-align: right; font-size: smaller;font-family: monospace">({{id}})</td>
+                <th title="champs LDAP: {{id}}">{{id_name}}</th>
+                <!--td style="text-align: right; font-size: smaller;font-family: monospace" title="champs LDAP">({{id}})</td -->
+            %if id == 'description':
+                <td><input type="text" name="{{id}}" size="50"/></td>
+            %else:
                 <td><input type="text" name="{{id}}"/></td>
+            %end
             </tr>
 %end
+            <tr id="tr-uid" class='hide'>
+                <th>uid</th>
+                <td><input type="text" name="uid"/></td>
+            </tr>
             <tr>
-                <td></td>
+                <th>type d'utilisateur</th>
+                <td>
+                    <select name="usertype" id="select-usertype">
+                    %for type, name in [('p', 'pernament'), ('d', 'doctorant'), ('t', u'étudiant ou invité')]:
+                    <option value="{{type}}">{{name}}</option>
+                    %end
+                    </select>
+                </td>
+            </tr>
+            <tr id="tr-group">
+                <th>équipe</th>
+                <td><select name="group" id="select-group"></select></td>
+            </tr>
+            <tr id="tr-manager" class="hide">
+                <th>directeur</th>
+                <td>
+                    <input type="text" name="manager">
+                    <button name="manager">chercher</button>
+                    <br/>
+                    <select id="select-manager" class="hide"></select>
+                </td>
+            </tr>
+            <tr>
+                <td>&nbsp;</td>
                 <td colspan="2" style="text-align: right"><button name="ajouter">ajouter</button></td>
             </tr>
         </tbody>

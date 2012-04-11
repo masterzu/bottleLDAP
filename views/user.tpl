@@ -34,6 +34,10 @@ $(function() {
         }
         $(span_filters_hide).css(css_hide);
         $(button_filters).css(css_hide);
+        if (name == 'mail') {
+            var mailto = 'mailto:'+text;
+            $("a[name='mail']").attr('href',mailto).text(text);
+        }
     };
     
     // #fields span.click()
@@ -64,20 +68,17 @@ $(function() {
             $.post(url,{'attr': attr, 'newval': newval},function(data, textStatus){
                 if (textStatus == 'success') { // ajax OK
                     //alert('OK JSON='+data[attr]);
-                    if (! data['success']) {
+                    if (! data['success']) { // operation failed
                         show_warning(data['message']);
                         set_fields(attr, this_span.val());
-                        
-                    } else {
+                    } else { // operation done
                         newval = data[attr];
                         set_fields(attr, newval);
                         this_span.show();
                         this_input.hide();
                         this_button.hide();
-
                     }
-
-                } else {
+                } else { // ajax failed
                     show_warning('AJAX: error: POST '+url);
                     set_fields(attr, this_span.val());
                 };

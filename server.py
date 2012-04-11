@@ -22,37 +22,28 @@ from bottle import debug
 import ldap
 import ldap.filter
 import ldap.dn
-#import ldap.modlist
+#import ldap.modlist It may ne bugged ?
 
 
 __author__ = 'P. Cao Huu Thien'
-__version__ = 5
+__version__ = 6
 
 """
 History
-* ?? - 1
-- initial version
-
-* Mon Mar 12 10:33:20 CET 2012 - 2
-- adapt to bottle 0.10.9 (current stable)
-
-* Thu Mar 15 18:30:43 CET 2012 - 3
-- Version alpha: Première version fonctionelle
-
-* Tue Mar 27 12:43:12 CET 2012 - 4
-- Fonctions de consultation disponibles
-- Ajout de la recherche avec JQuery
-
-* Mon Apr  2 21:53:51 CEST 2012 - 5
-- Ajout des onglets (JQuery)
-- Modification phase 1:
-  Mise en place des requetes AJAX (/api/)
-  interrogation et modification des champs modifiables de la fiche
-
-TODO
-* module d'importation depuis le LDAP UPMC
 """
+main_news = ( 
+    ('TODO', 'TODO', [
+        "Module d'importation des utilisateurs LDAP upmc.fr",
+        ]),
+    ('1', '1 Jan 1970',   [ u'(Très vieille) version initial :)' ]), 
+    ('2', '12 Mars 2012', [ u'Passage à la version 0.10.9 de bottlepy' ]),
+    ('3', '15 Mars 2012', [ 'Version alpha', u'Première version fonctionnelle' ]),
+    ('4', '27 Mars 2012', [ 'Fonctions de consultation disponibles', 'Ajout de la recherche avec JQuery']),
+    ('5', '2 Avril 2012', [ 'Modification phase 1', 'Ajout des onglets (JQuery)', u'Mise en place des requêtes AJAX (/api/)', 'interrogation et modification des champs modifiables de la fiche' ]),
+    ('6', '11 Avril 2012', [ 'Modification phase 2', "ajout d'un compte permanent" ]),
 
+#    ('de développement', '', [ 'Modification phase 3', "suppression d'un compte permanent" ]),
+    )
 
 main_users = {
     '*': {
@@ -97,19 +88,6 @@ main_nav = [
     ('/about', 'à propos')
     ]
 
-## FIXME: main_news will use external source, like sqlite or file
-main_news = ( 
-    ('TODO', 'TODO', [
-        "Module d'importation des utilisateurs LDAP upmc.fr",
-        ]),
-    ('1', '1 Jan 1970',   [ u'(Très vieille) version initial :)' ]), 
-    ('2', '12 Mars 2012', [ u'Passage à la version 0.10.9 de bottlepy' ]),
-    ('3', '15 Mars 2012', [ 'Version alpha', u'Première version fonctionelle' ]),
-    ('4', '27 Mars 2012', [ 'Fonctions de consultation disponibles', 'Ajout de la recherche avec JQuery']),
-    ('5', '2 Avril 2012', [ 'Modification phase 1', 'Ajout des onglets (JQuery)', 'Mise en place des requetes AJAX (/api/)', 'interrogation et modification des champs modifiables de la fiche' ]),
-
-    ('de développement', '', [ 'Modification phase 2', 'suppression des champs modifiables de la fiche' ]),
-    )
 
 main_ldap_server = {}
 
@@ -201,7 +179,11 @@ def _html_escape(text):
     return "".join(escape_table.get(c,c) for c in text)
 
 #----------------------------------------------------------
-# LDAP functions
+# private LDAP functions
+# 
+# Dont call none private function (ldap_initialize or else)
+#+, It must be done in the caller function
+#----------------------------------------------------------
 
 def _ldap_uri(kargs):
     if 'host' not in kargs or 'name' not in kargs:
@@ -297,7 +279,7 @@ def _ldap_search(base, list_filters=[], list_attrs=None, filterstr=''):
     """
 
     if 'file' not in main_ldap_server or not main_ldap_server['file']:
-        _debug('CALL _ldap_search', 'base=%s, list_filters=%s, list_attrs=%s, filterstr=%s - None' % (base, list_filters, list_attrs, filterstr))
+        _debug('CALL _ldap_search', 'base=%s, list_filters=%s, list_attrs=%s, filterstr=%s - None (LDAP not connected?)' % (base, list_filters, list_attrs, filterstr))
         return None
     
     _debug('CALL _ldap_search', 'base=%s, list_filters=%s, list_attrs=%s, filterstr=%s' % (base, list_filters, list_attrs, filterstr))
@@ -318,10 +300,13 @@ def _ldap_modify_attr(dn, attr, val):
 
     _debug('CALL _ldap_modify_attr','(dn=%s, attr=%s, val=%s)' % (dn,attr,val))
 
+    # I dont use ldap.modlist because it may be buged !!
     ldif = [(ldap.MOD_REPLACE, attr, [val])]
     _debug('_ldap_modify_attr/ldif',ldif)
 
+    # do the job
     objs = main_ldap_server['file'].modify_s(dn, ldif)
+
     _debug('_ldap_modify_attr/modify_s',objs)
     return objs
 
@@ -332,39 +317,108 @@ def _ldap_delete_attr(dn, attr):
 
     _debug('CALL _ldap_delete_attr','(dn=%s, attr=%s)' % (dn,attr))
 
+    # I dont use ldap.modlist because it may be buged !!
     ldif = [(ldap.MOD_DELETE,attr,'')]
     _debug('_ldap_delete_attr/ldif',ldif)
 
+
+    # do the job
     objs = main_ldap_server['file'].modify_s(dn, ldif)
     _debug('_ldap_delete_attr/modify_s',objs)
     return objs
     
-def _ldap_user_type(dn=None, uid=None):
+def _ldap_new_uid(givenName, sn, usertype):
     """
-    return dict {name: <type string>, code: <type_code>}
-
-    <type_code> like in main_users
+    Search and return a new uid
+    or None if error
     """
-    _debug('_ldap_user_type','dn=%s, uid=%s' % (dn, uid))
+    _debug('CALL _ldap_new_uid','(%s, %s, %s)' % (givenName, sn, usertype))
+    if usertype not in ['p', 'd', 't'] or not givenName or not sn:
+        return None
 
-    if uid is not None:
-        users = ldap_users(list_filters=['uid='+uid], list_attrs=['gidNumber'])
-    elif dn is not None:
-        uid = ldap.dn.explode_dn(dn,notypes=1)[0]
-        users = ldap_users(list_filters=['uid='+uid], list_attrs=['gidNumber'])
+    if usertype == 'p' or usertype == 'd':
+        gn = givenName[0].replace(' ','').lower()
+        fn = sn.split()[0].replace(' ','').lower()
+        uid = gn+fn
+        _debug('_ldap_new_uid/uid',uid)
+
+        ## FIXME check if newuid OK
+        objs = _ldap_search(main_users[usertype]['basedn'], filterstr='uid=%s' % uid)
+        if len(objs) != 0:
+            _debug('_ldap_new_uid/uid','user %s alredy exists: exit' % uid)
+            return None
+
+        _debug('_ldap_new_uid/uid','user %s aldont exists : OK' % uid)
+
+        return uid
+
     else:
-        return []
+        return None
 
-    gid = users[0]['gidNumber']
-    if gid == 30000: return {'name':'permanant', 'code':'p'}
-    elif gid == 40000: return {'name': 'doctorant', 'code':'d'}
-    elif gid == 50000: return {'name':'étudiants et invités', 'code':'t'}
-    else: return {'name':'inconnu', 'code':None}
+def _ldap_new_posixAccount(usertype, uid):
+    """
+    Return uidNumber, gidNumber, homeDirectory (in string) 
+    or None on error
+    """
+    _debug('_ldap_new_posixAccount','(usertype=%s)' % usertype)
+    if usertype not in ['p', 'd', 't'] or not uid:
+        return None
 
+    if usertype == 'p':
+        gidNumber = 30000
+        homeDirectory = '/home/permanents/'+uid
+    elif usertype == 'd':
+        gidNumber = 40000
+        homeDirectory = '/home/doctorants/'+uid
+    else:
+        gidNumber = 50000
+        homeDirectory = '/home/temporaires/'+uid
+        
+    objs = _ldap_search(main_users[usertype]['basedn'], filterstr='objectClass=person', list_attrs=['uidNumber'])
+    _debug('_ldap_new_posixAccount/objs',objs)
+    _debug('_ldap_new_posixAccount/len(objs)',len(objs))
+
+    _list_uidNumber = [o[1]['uidNumber'][0] for o in objs]
+    _list_uidNumber.sort()
+    _debug('_ldap_new_posixAccount/_list_uidNumber',_list_uidNumber)
     
 
+    uidNumber = gidNumber
+    uidNumberMax = uidNumber + 10001
 
-    
+    for i in range(uidNumber,uidNumberMax):
+        if repr(i) not in _list_uidNumber:
+            _debug('_ldap_new_posixAccount/uidNumber','Found a free uidNumber: '+repr(i))
+            break
+    if i == uidNumberMax:
+        return None
+
+    uidNumber = repr(i)
+    gidNumber = repr(gidNumber)
+
+    _debug('_ldap_new_posixAccount = ','(%s,%s,%s)' % (uidNumber, gidNumber, homeDirectory))
+    return (uidNumber, gidNumber, homeDirectory)
+        
+
+
+
+def _ldap_useradd(dn, kargs):
+    if 'file' not in main_ldap_server:
+        _debug('CALL _ldap_useradd','(dn=%s, kargs=%s) - None (not connected?)' % (dn,kargs))
+        return None
+
+    _debug('CALL _ldap_useradd','(dn=%s, kargs=%s)' % (dn,kargs))
+
+    # I dont use ldap.modlist because it may be buged !!
+    ldif=[]
+    for k,v in kargs.items():
+        ldif.append((k,v))
+    _debug('_ldap_useradd/ldif',ldif)
+
+    # do the job
+    objs = main_ldap_server['file'].add_s(dn, ldif)
+
+    return objs
 
 #----------------------------------------------------------
 # Public Functions
@@ -507,7 +561,10 @@ def ldap_users(base=None, list_filters=None, list_attrs=None, filterstr=''):
 
     _debug('ldap_users/list_filters',list_filters)
 
-    return _ldap_search(base, list_filters, list_attrs)
+    objs = _ldap_search(base, list_filters, list_attrs)
+    _debug('ldap_users/objs',objs)
+
+    return objs
     
 def ldap_users_by_type(type):
     """
@@ -572,10 +629,9 @@ def groups():
     _debug_route()
     ldap_initialize()
     groups = ldap_groups(list_attrs=['cn','description'])
-    if groups is None:
-        ldap_close()
-        return _dict(warn='LDAP main server "%s" error' % main_ldap_server['name'], groups={})
     ldap_close()
+    if groups is None:
+        return _dict(warn='LDAP main server "%s" error' % main_ldap_server['name'], groups={})
     return _dict(groups=groups)
 
 @route('/group/<group>')
@@ -747,6 +803,107 @@ def about():
 #----------------------------------------------------------
 # Routing JSON Functions
 
+@route('/api/useradd', method='POST')
+def json_useradd():
+    """
+    add user and return the uid of the new user
+    or None on error
+
+    Mandatory fields passed in POST: 
+    'cn', 'sn', 'givenName', 'mail', 'description', 'usertype'
+    
+    Mandatory fields for usertype == p:
+    'group'
+
+    TODO: Mandatory fields for usertype == t or d:
+    'manager'
+
+    Optional fields:
+    'uid'
+
+    """
+    _debug_route()
+    datas = request.params
+    ldap_data = {}
+
+    # mandatory/LDAP attrs
+    for attr in ['cn', 'sn', 'givenName', 'mail', 'description']:
+        if attr not in datas or not datas[attr]:
+            return _json_result(success=False, message='missing mandatory/LDAP parameter: '+attr)
+        ldap_data[attr] = [datas[attr]]
+        # add local variable: `attr` = datas[attr]
+        
+
+    # mandatory/none LDAP attrs
+    for attr in ['usertype']:
+        if attr not in datas or not datas[attr]:
+            return _json_result(success=False, message='missing mandatory/none LDAP parameter: '+attr)
+        usertype = datas['usertype']
+
+    if usertype not in ['p', 'd', 't']:
+        return _json_result(success=False, message='bad attr usertype: '+usertype)
+    
+    # usertype == p mandatory attrs
+    if usertype == 'p':
+        for attr in ['group']:
+            if attr not in datas or not datas[attr]:
+                return _json_result(success=False, message='missing permanents parameter: '+attr)
+    # usertype == t|d mandatory attrs
+    elif usertype == 'd' or usertype == 't':
+        for attr in ['manager']:
+            if attr not in datas or not datas[attr]:
+                return _json_result(success=False, message='missing permanents parameter: '+attr)
+
+    ldap_initialize(True)
+    if 'uid' in datas and datas['uid']:
+        uid = datas['uid']
+    else:
+        uid = _ldap_new_uid(datas['givenName'], datas['sn'], datas['usertype'])
+        if uid is None:
+            ldap_close()
+            return _json_result(success=False, message='no_free_uid')
+
+    _t = _ldap_new_posixAccount(usertype, uid)
+    if _t is None:
+        ldap_close()
+        return _json_result(success=False, message='pas de d information POSIX disponible pour %s' % uid)
+
+    uidNumber, gidNumber, homeDirectory = _t
+
+    ldap_data['objectClass'] = ['top', 'person', 'organizationalPerson', 'inetOrgPerson', 'posixAccount']
+    ldap_data['homeDirectory'] = [homeDirectory]
+    ldap_data['loginShell'] = ['/bin/bash']
+    ldap_data['uid'] = [uid]
+    ldap_data['uidNumber'] = [uidNumber]
+    ldap_data['gidNumber'] = [gidNumber]
+    if usertype == 'd' or usertype == 't':
+        ldap_data['manager'] = [datas['manager']]
+    _debug('ldap_data',ldap_data)
+
+    dn = 'uid=' + uid + ',' + main_users[datas['usertype']]['basedn'] 
+    _debug('dn='+dn)
+
+    # user creation
+    try:
+        objs = _ldap_useradd(dn, ldap_data)
+    except ldap.LDAPError, e:
+        _debug('json_useradd/Exception',repr(e))
+        return _json_result(success=False, message='message du serveur LDAP: '+repr(e))
+
+    # group update
+    if usertype == 'p':
+        group = datas['group']
+        ldif = [(ldap.MOD_ADD, 'uniqueMember', dn)]
+        _debug('json_useradd/ldif_addmember',ldif)
+        try:
+            objs = main_ldap_server['file'].modify_s(group, ldif)
+        except ldap.ALREADY_EXISTS,e:
+            return _json_result(success=True, message='message du serveur LDAP: '+repr(e))
+            
+    ldap_close()
+
+    return _json_result(success=True, uid=uid)
+
 @route('/api/user/<uid>/attr/<attr>', method='POST')
 def json_user_set_attr(uid,attr):
     """
@@ -820,6 +977,32 @@ def json_user_get_attr(uid,attr):
     return resu
 
 
+@route('/api/groups')
+def json_groups():
+    """
+    Get group lists
+    """
+    _debug_route()
+
+    ldap_initialize()
+    groups = ldap_groups(list_attrs=['cn','description'])
+    ldap_close()
+
+    if groups is None:
+        return _json_result(success=False, message='no group found')
+
+    _list = []
+    for dn,g in groups:
+        _d = {'cn': g['cn'][0], 'description': g['description'][0], 'dn': dn}
+        _list.append(_d)
+
+    resu = _json_result()
+    resu['groups'] = _list
+
+    return resu
+
+
+        
 
 #----------------------------------------------------------
 # MAIN
