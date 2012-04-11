@@ -16,6 +16,7 @@ To launch the server just type:
 import os, os.path
 import sys
 import ConfigParser
+import textwrap
 import bottle
 from bottle import route, run, view, template, static_file, request, redirect
 from bottle import debug
@@ -33,14 +34,16 @@ History
 """
 main_news = ( 
     ('TODO', 'TODO', [
-        "Module d'importation des utilisateurs LDAP upmc.fr",
+        "suppression d'un compte utilisateur",
+        "ajout d'un compte doctorant/temporaire avec manager",
+        "importation des utilisateurs depuis LDAP upmc.fr",
         ]),
     ('1', '1 Jan 1970',   [ u'(Très vieille) version initial :)' ]), 
     ('2', '12 Mars 2012', [ u'Passage à la version 0.10.9 de bottlepy' ]),
     ('3', '15 Mars 2012', [ 'Version alpha', u'Première version fonctionnelle' ]),
     ('4', '27 Mars 2012', [ 'Fonctions de consultation disponibles', 'Ajout de la recherche avec JQuery']),
     ('5', '2 Avril 2012', [ 'Modification phase 1', 'Ajout des onglets (JQuery)', u'Mise en place des requêtes AJAX (/api/)', 'interrogation et modification des champs modifiables de la fiche' ]),
-    ('6', '11 Avril 2012', [ 'Modification phase 2', "ajout d'un compte permanent" ]),
+    ('6', '11 Avril 2012', [ 'Modification phase 2', "ajout d'un compte permanent", "suppression d'un compte" ]),
 
 #    ('de développement', '', [ 'Modification phase 3', "suppression d'un compte permanent" ]),
     )
@@ -126,12 +129,21 @@ def _debug(title, text=None):
     if text is None:
         print _colors.HEADER + '[DEBUG] '+ _colors.OKGREEN + title + _colors.NONE
     else:
-        print _colors.HEADER + '[DEBUG] '+ _colors.OKGREEN + title + _colors.OKBLUE
-        pprint(text)
-        print _colors.NONE
+        if isinstance(text,type('qwe')):
+            print _colors.HEADER + '[DEBUG] '+ _colors.OKGREEN + title + _colors.NONE + ' = ' + _colors.OKBLUE \
+                + text + _colors.NONE
+            #for t in textwrap.wrap(text, 80): print t
+            #print text + _colors.NONE
+
+        else:
+            print _colors.HEADER + '[DEBUG] '+ _colors.OKGREEN + title + _colors.NONE + ' = ' + _colors.OKBLUE
+            pprint(text)
+            print _colors.NONE
 
 def _debug_route():
     _debug("routing %s ..." % request.path)
+    if len(request.params) > 0:
+        _debug("    ... with %s" % repr(request.params.items()))
 
 def _nav():
     """
@@ -897,12 +909,58 @@ def json_useradd():
         _debug('json_useradd/ldif_addmember',ldif)
         try:
             objs = main_ldap_server['file'].modify_s(group, ldif)
-        except ldap.ALREADY_EXISTS,e:
+        except ldap.LDAPError,e:
             return _json_result(success=True, message='message du serveur LDAP: '+repr(e))
             
     ldap_close()
 
     return _json_result(success=True, uid=uid)
+
+@route('/api/userdel', method='POST')
+def json_userdel():
+    _debug_route()
+    datas = request.params
+    if 'uid' not in datas or not datas['uid']:
+        return _json_result(success=False, message='missing parameter: uid')
+
+    uid = datas['uid']
+
+    ldap_initialize(True)
+
+    objs = _ldap_search(main_users['*']['basedn'], list_filters=['objectClass=person','uid='+uid])
+    if len(objs) != 1:
+        return _json_result(success=False, message="pas d'utilisateur %s" % uid)
+
+    dn = objs[0][0]
+
+    groups = _ldap_search(main_ldap_server['basegroup'], 
+        list_filters=['objectClass=groupOfUniqueNames','uniqueMember=%s' % dn], 
+        list_attrs=['cn'])
+
+    if len(groups) != 0:
+        ldif = [(ldap.MOD_DELETE, 'uniqueMember', dn)]
+        for dngroup, group in groups:
+            cn = group['cn'][0]
+            _debug('json_userdel/group', 'removing %s from %s ...' % (uid, cn))
+            try: 
+                main_ldap_server['file'].modify_s(dngroup, ldif)
+            except ldap.LDAPError,e:
+                return _json_result(success=False, message="serveur LDAP message: %s" % str(e))
+            _debug('json_userdel/group', 'removing %s from %s ... OK' % (uid, cn))
+    else:
+        _debug('json_userdel','no group with member '+dn)
+            
+
+    _debug('json_userdel/user','deleting user %s ...' % uid)
+    try:
+        main_ldap_server['file'].delete_s(dn)
+    except ldap.LDAPError, e:
+        return _json_result(success=False, message='message du serveur LDAP: '+repr(e))
+    _debug('json_userdel/user','deleting user %s ... OK' % uid)
+        
+    ldap_close()
+
+    return _json_result(success=True)
 
 @route('/api/user/<uid>/attr/<attr>', method='POST')
 def json_user_set_attr(uid,attr):

@@ -117,6 +117,41 @@ $(function() {
 
         });
     });
+
+    // #fields button#delete
+    $('#delete').click(function(){
+        $(this).hide();
+        $('#dialog').show();
+    });
+    
+    // #fields button#delete_no
+    $('#delete_no').click(function(){
+        $('#dialog').hide();
+        $('#delete').show();
+    });
+    
+    // #fields button#delete_yes
+    $('#delete_yes').click(function(){
+        $('#dialog').hide();
+        $('#delete').show();
+        var uid = $('#uid').text();
+        var url = '/api/userdel';
+        $.post(url,{'uid': uid},function(data, textStatus){
+            if (textStatus == 'success') { // ajax OK
+                //alert('OK JSON='+data[attr]);
+                if (data['success']) { // operation done
+                    alert('utilisateur '+uid+' supprimé');
+                    location.href='/';
+                } else { // operation failed
+                    show_warning(data['message']);
+                }
+            } else { // ajax failed
+                show_warning('AJAX: error: POST '+url);
+                set_fields(attr, this_span.val());
+            };
+        } ,'json');
+
+    });
 })
 // -->
 </script>
@@ -205,6 +240,8 @@ $(function() {
 
     <div id="fiche" class="onglet box shadow">
         <h1>fiche LDAP : {{u['cn'][0]}}</h1>
+        <button id="delete">supprimer la fiche</button>
+        <div id="dialog" class="hide">Ètes vous sure ? <button id="delete_yes">oui</button><button id="delete_no">non</button></div>
         <h2>champs fixes</h2>
         <table>
             <tr>
