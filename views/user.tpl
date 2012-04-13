@@ -140,7 +140,8 @@ $(function() {
             if (textStatus == 'success') { // ajax OK
                 //alert('OK JSON='+data[attr]);
                 if (data['success']) { // operation done
-                    alert('utilisateur '+uid+' supprimé');
+                    alert('Utilisateur '+uid+' supprimé');
+                    alert('Il reste a supprimer le compte sur le serveur NFS (olympe)');
                     location.href='/';
                 } else { // operation failed
                     show_warning(data['message']);
@@ -164,22 +165,22 @@ $(function() {
         <dl>
             <dt title="givenName">Prénom</dt>
         %if 'givenName' in u:
-                <dd><span name="givenName">{{u['givenName'][0]}}</span></dd>
+            <dd><span name="givenName">{{u['givenName'][0]}}</span></dd>
         %else:
-                <dd class="warning">pas de prénom définit !</dd>
+            <dd class="warning">pas de prénom définit !</dd>
         %end
             <dt title="sn">Nom de famille</dt>
-                <dd><span name="sn">{{u['sn'][0]}}</span></dd>
+            <dd><span name="sn">{{u['sn'][0]}}</span></dd>
             <dt title="mail">email</dt>
         %if 'mail' in u:
-                <dd><a name="mail" class="email" href="mailto:{{u['mail'][0]}}">{{u['mail'][0]}}</a></dd>
+            <dd><a name="mail" class="email" href="mailto:{{u['mail'][0]}}">{{u['mail'][0]}}</a></dd>
         %else:
-                <dd class="warning">pas d'email définit !</dd>
+            <dd class="warning">pas d'email définit !</dd>
         %end
 
         %if 'description' in u:
             <dt title="description">description</dt>
-                <dd><span name="description">{{u['description'][0]}}</span></dd>
+            <dd><span name="description">{{u['description'][0]}}</span></dd>
         %end
 
         %if len(teams) > 1:
@@ -190,7 +191,7 @@ $(function() {
             %end
         %end
         %for tdn, t in teams:
-                <dd><a href="/group/{{t['cn'][0]}}">{{t['description'][0]}}</a></dd>
+            <dd><a href="/group/{{t['cn'][0]}}">{{t['description'][0]}}</a></dd>
         %end
 
         %if len(managers) > 1:
@@ -201,7 +202,7 @@ $(function() {
             %end
         %end
         %for mandn, man in managers:
-                <dd><a href="/user/{{man['uid'][0]}}">{{man['cn'][0]}}</a></dd>
+            <dd><a href="/user/{{man['uid'][0]}}">{{man['cn'][0]}}</a></dd>
         %end
 
         %if len(phds) > 1:
@@ -217,7 +218,7 @@ $(function() {
             %else:
                 %desc = ''
             %end
-                <dd><a href="/user/{{phd['uid'][0]}}">{{phd['cn'][0]}}</a> {{desc}}</dd>
+            <dd><a href="/user/{{phd['uid'][0]}}">{{phd['cn'][0]}}</a> {{desc}}</dd>
         %end
 
         %if len(students) > 1:
@@ -233,7 +234,7 @@ $(function() {
             %else:
                 %desc = ''
             %end
-                <dd><a href="/user/{{stu['uid'][0]}}">{{stu['cn'][0]}}</a> {{desc}}</dd>
+            <dd><a href="/user/{{stu['uid'][0]}}">{{stu['cn'][0]}}</a> {{desc}}</dd>
         %end
         </dl>
     </div><!-- onglet page -->
@@ -268,7 +269,7 @@ $(function() {
 
         <h2>champs modifiables</h2>
         <table id="fields">
-        %for f in ['cn','givenName','sn','description','mail','uidNumber','gidNumber','homeDirectory','loginShell']:
+        %for f in ['givenName','sn','cn','description','mail','uidNumber','gidNumber','homeDirectory','loginShell','userPassword']:
             %if f in u:
                 %span_val = u[f][0]
                 %input_val = u[f][0]

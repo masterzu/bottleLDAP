@@ -34,8 +34,8 @@ History
 """
 main_news = ( 
     ('TODO', 'TODO', [
-        "suppression d'un compte utilisateur",
         "ajout d'un compte doctorant/temporaire avec manager",
+        "gestion des membres/directeurs",
         "importation des utilisateurs depuis LDAP upmc.fr",
         ]),
     ('1', '1 Jan 1970',   [ u'(Très vieille) version initial :)' ]), 
@@ -743,14 +743,15 @@ def user(uid):
     _debug_route()
 
     # special uid * for the search form
-    if uid == '*':
-        return _dict(users=[], uid=uid, manager=[], students=[], phds=[],teams=[])
-        
-    ldap_initialize()
+    #if uid == '*':
+    #    return _dict(users=[], uid=uid)
+    
+    # connect as root to access userPassword
+    ldap_initialize(True)
     users = ldap_users(list_filters=['uid=%s' % uid])
     if len(users) == 0:
         ldap_close()
-        return _dict(warn='Pas d\'utilisateurs trouvé pour uid=%s' % uid, users=[], uid=uid, managers=[], students=[], phds=[], teams=[])
+        return _dict(warn='Pas d\'utilisateurs trouvé pour uid=%s' % uid, users=[], uid=uid)
     if len(users) > 1:
         warn=u'Plusieurs utilisateur ont le même uid'
     else:
@@ -882,10 +883,19 @@ def json_useradd():
 
     uidNumber, gidNumber, homeDirectory = _t
 
+    def passwd(size=8):
+        import string
+        from random import choice
+        _list = (string.letters + string.digits).translate(None,'1lo0')
+        return ''.join([choice(_list) for i in range(size)])
+
+    userPassword = passwd()
+
     ldap_data['objectClass'] = ['top', 'person', 'organizationalPerson', 'inetOrgPerson', 'posixAccount']
     ldap_data['homeDirectory'] = [homeDirectory]
     ldap_data['loginShell'] = ['/bin/bash']
     ldap_data['uid'] = [uid]
+    ldap_data['userPassword'] = [userPassword]
     ldap_data['uidNumber'] = [uidNumber]
     ldap_data['gidNumber'] = [gidNumber]
     if usertype == 'd' or usertype == 't':
@@ -914,7 +924,7 @@ def json_useradd():
             
     ldap_close()
 
-    return _json_result(success=True, uid=uid)
+    return _json_result(success=True, uid=uid, userPassword=userPassword)
 
 @route('/api/userdel', method='POST')
 def json_userdel():
@@ -1009,7 +1019,11 @@ def json_user_get_attr(uid,attr):
     """
     _debug_route()
 
-    ldap_initialize()
+    if attr == 'userPassword':
+        ## FIXME must be protected by some auth mecanism
+        ldap_initialize(True)
+    else:
+        ldap_initialize()
     users = ldap_users(list_filters=['uid=%s' % uid], list_attrs=[attr])
     _debug('json_user_get_attr/users',users)
 

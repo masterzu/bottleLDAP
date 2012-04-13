@@ -14,12 +14,18 @@ $(function() {
         var val = $(this).val().capitalize();
         $(this).val(val);
         $("input[name='cn']").val($("input[name='givenName']").val()+' '+$("input[name='sn']").val());
+        var pre = $("input[name='givenName']").val().toLowerCase();
+        var nom = $("input[name='sn']").val().toLowerCase();
+        if (pre && nom) $("input[name='mail']").val(pre+'.'+nom+'@upmc.fr');
     });
     // upper the familly name (sn) && update field cn
     $("input[name='sn']").change(function(){
         var val = $(this).val().toUpperCase();
         $(this).val(val);
         $("input[name='cn']").val($("input[name='givenName']").val()+' '+$("input[name='sn']").val());
+        var pre = $("input[name='givenName']").val().toLowerCase();
+        var nom = $("input[name='sn']").val().toLowerCase();
+        if (pre && nom) $("input[name='mail']").val(pre+'.'+nom+'@upmc.fr');
     });
     // email validation
     // http://www.designchemical.com/blog/index.php/jquery/email-validation-using-jquery/
@@ -96,7 +102,6 @@ $(function() {
             var group = $("#select-group").val();
             //alert('group='+group);
 
-            var url = '/api/useradd';
             var data = {};
             data['givenName'] = givenName;
             data['sn'] = sn;
@@ -107,13 +112,16 @@ $(function() {
             data['group'] = group;
             if (uid) data['uid'] = uid;
             
+            var url = '/api/useradd';
             //alert('post on '+url+' with: '+data);
             $.post(url,data,function(dataout, textStatus){
                 if (textStatus == 'success') { // ajax OK
                     //alert('OK JSON='+dataout['uid']);
                     if (dataout['success']) { // operation done
                         var uid = dataout['uid'];
-                        alert('utilisateur crée avec le login:'+uid);
+                        var userPassword = dataout['userPassword'];
+                        alert('Utilisateur crée avec le login:'+uid+' et le mot de passe:'+userPassword);
+                        alert('Il reste a créer le compte sur le serveur NFS (olympe)');
                         location.href='/user/'+uid;
 
                     } else { // operation failed
@@ -150,8 +158,11 @@ $(function() {
 
     <button id="add" name="ajouter un {{title}}...">ajouter un {{title}}...</button>
     <div id="form" class="box shadow hide">
-        <table cellspacing="1">
+        <table cellspacing="1" width="100%">
         <tbody>
+            <tr>
+                <td colspan="2"><hr/><td>
+            </tr>
 %for id, id_name in attrs:
             <tr>
                 <th title="champs LDAP: {{id}}">{{id_name}}</th>
@@ -163,8 +174,8 @@ $(function() {
             %end
             </tr>
 %end
-            <tr id="tr-uid" class='hide'>
-                <th>uid</th>
+            <tr id="tr-uid">
+                <td style="text-align: center">login (optionnel)</td>
                 <td><input type="text" name="uid"/></td>
             </tr>
             <tr>
@@ -191,8 +202,10 @@ $(function() {
                 </td>
             </tr>
             <tr>
-                <td>&nbsp;</td>
-                <td colspan="2" style="text-align: right"><button name="ajouter">ajouter</button></td>
+                <td colspan="2"><hr/><td>
+            </tr>
+            <tr>
+                <td colspan="2" style="text-align: center"><button name="ajouter">ajouter</button></td>
             </tr>
         </tbody>
         </table>
