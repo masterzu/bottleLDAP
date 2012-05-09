@@ -20,6 +20,7 @@ import textwrap
 import bottle
 from bottle import route, run, view, template, static_file, request, redirect
 from bottle import debug
+import json
 import ldap
 import ldap.filter
 import ldap.dn
@@ -27,7 +28,7 @@ import ldap.dn
 
 
 __author__ = 'P. Cao Huu Thien'
-__version__ = 6
+__version__ = 7
 
 """
 History
@@ -37,6 +38,8 @@ main_news = (
         "ajout d'un compte doctorant/temporaire avec manager",
         "gestion des membres/directeurs",
         "importation des utilisateurs depuis LDAP upmc.fr",
+        "envoie d'email a tous les stagiaires/permanents/permanents ayant un stagiaires-doctorants",
+        "outils de diagnostique: liste des utilisateurs sans email; stagiaires/phds sans directeur ...",
         ]),
     ('1', '1 Jan 1970',   [ u'(Très vieille) version initial :)' ]), 
     ('2', '12 Mars 2012', [ u'Passage à la version 0.10.9 de bottlepy' ]),
@@ -44,8 +47,9 @@ main_news = (
     ('4', '27 Mars 2012', [ 'Fonctions de consultation disponibles', 'Ajout de la recherche avec JQuery']),
     ('5', '2 Avril 2012', [ 'Modification phase 1', 'Ajout des onglets (JQuery)', u'Mise en place des requêtes AJAX (/api/)', 'interrogation et modification des champs modifiables de la fiche' ]),
     ('6', '11 Avril 2012', [ 'Modification phase 2', "ajout d'un compte permanent", "suppression d'un compte" ]),
+    ('7', '9 Mai 2012', [ 'Modification phase 3', "modification de champs directeur", "ajout de jquery UI/autocomplete" ]),
 
-#    ('de développement', '', [ 'Modification phase 3', "suppression d'un compte permanent" ]),
+#    ('de développement', '', [ 'Modification phase 3', "ajout d'un compte stagiaire/doct avec un lien vers son directeur" ]),
     )
 
 main_users = {
@@ -86,7 +90,7 @@ main_nav = [
     ('','sites'),
     ('','réseaux'),
     ('',''), 
-    ('*', 'site '), 
+    ('*', 'site web'), 
     ('/news', 'news') , 
     ('/about', 'à propos')
     ]
@@ -244,38 +248,38 @@ def _ldap_filter_base(list_filters):
             filter += f
         else:
             filter += '('+f+')'
-    _debug('_ldap_build_ldapfilter_base/filter',filter)
+    #_debug('_ldap_build_ldapfilter_base/filter',filter)
     return filter
 
 
 def _ldap_build_ldapfilter_and(list_filters):
     if list_filters is None:
-        _debug('_ldap_build_ldapfilter_and(None)')
+        #_debug('_ldap_build_ldapfilter_and(None)')
         return ''
     if len(list_filters) == 0:
-        _debug('_ldap_build_ldapfilter_and([])')
+        #_debug('_ldap_build_ldapfilter_and([])')
         return ''
     if len(list_filters) == 1:
         resu = list_filters[0]
-        _debug('_ldap_build_ldapfilter_and([<singleton>]) = %s' % resu)
+        #_debug('_ldap_build_ldapfilter_and([<singleton>]) = %s' % resu)
         return resu
     resu = '(&' + _ldap_filter_base(list_filters) + ')'
-    _debug('_ldap_build_ldapfilter_and', resu)
+    #_debug('_ldap_build_ldapfilter_and', resu)
     return resu
 
 def _ldap_build_ldapfilter_or(list_filters):
     if list_filters is None:
-        _debug('_ldap_build_ldapfilter_or(None)')
+        #_debug('_ldap_build_ldapfilter_or(None)')
         return ''
     if len(list_filters) == 0:
-        _debug('_ldap_build_ldapfilter_or([])')
+        #_debug('_ldap_build_ldapfilter_or([])')
         return ''
     if len(list_filters) == 1:
         resu = list_filters[0]
-        _debug('_ldap_build_ldapfilter_or([<singleton>]) = %s' % resu)
+        #_debug('_ldap_build_ldapfilter_or([<singleton>]) = %s' % resu)
         return resu
     resu = '(|' + _ldap_filter_base(list_filters) + ')'
-    _debug('_ldap_build_ldapfilter_or', resu)
+    #_debug('_ldap_build_ldapfilter_or', resu)
     return resu
 
 def _ldap_search(base, list_filters=[], list_attrs=None, filterstr=''):
@@ -306,38 +310,47 @@ def _ldap_search(base, list_filters=[], list_attrs=None, filterstr=''):
     return objs
 
 def _ldap_modify_attr(dn, attr, val):
+    """
+    modify attribute for any entry:
+    - not handle manager
+    - cant change uid to ''
+    - if val = '', use MOD_DELETE instead of MOD_REPLACE
+    """
     if 'file' not in main_ldap_server:
-        _debug('CALL _ldap_modify_attr','(dn=%s, attr=%s, val=%s) - None' % (dn,attr,val))
+        _debug('CALL _ldap_modify_attr','(dn=%s, attr=%s, val=%s) - No connexion to server' % (dn,attr,val))
         return None
 
     _debug('CALL _ldap_modify_attr','(dn=%s, attr=%s, val=%s)' % (dn,attr,val))
 
-    # I dont use ldap.modlist because it may be buged !!
-    ldif = [(ldap.MOD_REPLACE, attr, [val])]
-    _debug('_ldap_modify_attr/ldif',ldif)
+    
+    # Dont handle manager because it is multi-valued
+    if attr == 'manager':
+        return None
 
-    # do the job
-    objs = main_ldap_server['file'].modify_s(dn, ldif)
+    if attr == 'uid':
+        # check for empty value
+        if not val:
+            return None
+
+        # do the job
+        objs = main_ldap_server['file'].modrdn_s(dn, list_modify_attrs)
+
+    else:
+        if val:
+            list_modify_attrs = [(ldap.MOD_REPLACE, attr, [val])]
+            _debug('_ldap_modify_attr/list_modify_attrs',list_modify_attrs)
+        else:
+            list_modify_attrs = [(ldap.MOD_DELETE, attr, None)]
+            _debug('_ldap_modify_attr/list_modify_attrs',list_modify_attrs)
+
+        # do the job
+        objs = main_ldap_server['file'].modify_s(dn, list_modify_attrs)
 
     _debug('_ldap_modify_attr/modify_s',objs)
     return objs
 
 def _ldap_delete_attr(dn, attr):
-    if 'file' not in main_ldap_server:
-        _debug('CALL _ldap_delete_attr','(dn=%s, attr=%s) - None' % (dn,attr))
-        return None
-
-    _debug('CALL _ldap_delete_attr','(dn=%s, attr=%s)' % (dn,attr))
-
-    # I dont use ldap.modlist because it may be buged !!
-    ldif = [(ldap.MOD_DELETE,attr,'')]
-    _debug('_ldap_delete_attr/ldif',ldif)
-
-
-    # do the job
-    objs = main_ldap_server['file'].modify_s(dn, ldif)
-    _debug('_ldap_delete_attr/modify_s',objs)
-    return objs
+    return _ldap_modify_attr(dn, attr, '')
     
 def _ldap_new_uid(givenName, sn, usertype):
     """
@@ -422,15 +435,134 @@ def _ldap_useradd(dn, kargs):
     _debug('CALL _ldap_useradd','(dn=%s, kargs=%s)' % (dn,kargs))
 
     # I dont use ldap.modlist because it may be buged !!
-    ldif=[]
+    list_modify_attrs=[]
     for k,v in kargs.items():
-        ldif.append((k,v))
-    _debug('_ldap_useradd/ldif',ldif)
+        list_modify_attrs.append((k,v))
+    _debug('_ldap_useradd/list_modify_attrs',list_modify_attrs)
 
     # do the job
-    objs = main_ldap_server['file'].add_s(dn, ldif)
+    objs = main_ldap_server['file'].add_s(dn, list_modify_attrs)
 
     return objs
+
+def _json_user_getset_manager(uid, vals=None):
+    """
+    Get / Set special multivalued manager attr
+    uid: uid of the user 
+    vals: string with ; separated of managers' dn
+
+    Return json obj
+    """
+    _debug('CALL _json_user_getset_manager','(%s, %s)' % (uid,vals))
+
+    ldap_initialize(True)
+
+    # get managers of user(uid)
+    users = ldap_users(list_filters=['uid=%s' % uid], list_attrs=['manager'])
+    _debug('_json_user_getset_manager/users',users)
+
+    if vals is None:
+        # mode GET
+        _debug('_json_user_getset_manager/mode GET')
+
+        if len(users) == 0:
+            ldap_close()
+            return _json_result(success=False, message='no user found')
+
+        u = users[0][1]
+        message = ''
+        success=True
+
+        try:
+            vals = u['manager']
+        except:
+            vals = []
+            message = 'manager not found'
+            success = False
+            ldap_close()
+            return _json_result(success=success, message=message)
+
+        # get (dn,cn) of all managers
+        list_filters = []
+        for dn in vals:
+            list_filters.append(ldap.dn.explode_dn(dn)[0])
+
+        users = ldap_users(base=main_users['p']['basedn'],filterstr=_ldap_build_ldapfilter_or(list_filters), list_attrs=['cn'])
+        resu_dn = '; '.join([dn for dn, u in users]) + ' ; '
+        resu_cn = ', '.join([u['cn'][0] for dn, u in users])
+        _debug('_json_user_getset_manager/resu_dn',resu_dn)
+        _debug('_json_user_getset_manager/resu_cn',resu_cn)
+
+    else:
+        # mode SET
+        _debug('_json_user_getset_manager/mode SET')
+       
+        dn = users[0][0]
+        try:
+            old_managers_str = users[0][1]['manager']
+        except:
+            old_managers_str = ''
+        _debug('_json_user_getset_manager/old_managers',old_managers_str)
+        _vals = vals.rstrip('\s*;\s*')
+        managers = _vals.split(';')
+        _debug('_json_user_getset_manager/managers',managers)
+        managers_len = len(managers)
+
+        # check for managers existance
+        # + and prepare the ldap/modify_s opp
+        list_filters = []
+        if old_managers_str != '':
+            list_modify_attrs = [(ldap.MOD_DELETE, 'manager',None)]
+        else:
+            list_modify_attrs = []
+        for _mandn in managers:
+            mandn = _mandn.strip()
+            if not mandn: continue
+
+            try:
+                _uid = ldap.dn.explode_dn(mandn, notypes=1)[0]     
+            except ldap.DECODING_ERROR, e:
+                resu = _json_result(success=False, message='invalid manager (dn=%s)' % mandn)
+                resu['cn'] = old_managers_str
+                return resu
+
+            u = ldap_users(base=main_users['p']['basedn'], 
+                filterstr='uid=%s' % _uid,
+                list_attrs=['uid'])
+            if len(u) != 1:
+                return _json_result(success=False, message='invalid manager (uid=%s)' % _uid)
+            else:
+                _debug('_json_user_getset_manager/test manager',mandn+' OK')
+            list_filters.append('uid=%s' % _uid)
+            list_modify_attrs.append((ldap.MOD_ADD, 'manager', mandn))
+        _debug('_json_user_getset_manager/list_modify_attrs',list_modify_attrs)
+
+        # do the modify
+        objs = main_ldap_server['file'].modify_s(dn, list_modify_attrs)
+
+        if len(list_filters) > 0:
+            # get the dn,cn of managers
+            users = ldap_users(base=main_users['p']['basedn'],filterstr=_ldap_build_ldapfilter_or(list_filters), list_attrs=['cn'])
+            resu_dn = '; '.join([dn for dn, u in users]) + ' ; '
+            resu_cn = ', '.join([u['cn'][0] for dn, u in users])
+        else:
+            resu_dn = ''
+            resu_cn = ''
+
+        _debug('_json_user_getset_manager/resu_dn',resu_dn)
+        _debug('_json_user_getset_manager/resu_cn',resu_cn)
+
+                
+    ldap_close()
+
+    resu = _json_result()
+    resu['dn'] = resu_dn
+    resu['cn'] = resu_cn
+
+    return resu
+
+
+    
 
 #----------------------------------------------------------
 # Public Functions
@@ -685,11 +817,14 @@ def users_search(str_filter):
     return list of users with string filter=<str_filter>
     """
     _debug_route()
+    #_debug('users_search/str_filter',str_filter)
+    _filter = ldap.filter.escape_filter_chars(str_filter)
+    #_debug('users_search/_filter',_filter)
 
     _list_filters = []
     for st in ['cn', 'sn', 'givenName','uid']:
-        _list_filters.append('%s=*%s*' % (st, str_filter))
-        _list_filters.append('%s~=%s' % (st, str_filter))
+        _list_filters.append('%s=*%s*' % (st, _filter))
+        _list_filters.append('%s~=%s' % (st, _filter))
         
     _filters = _ldap_build_ldapfilter_or(_list_filters)
 
@@ -698,7 +833,7 @@ def users_search(str_filter):
         users = ldap_users(filterstr=_filters)
     except ldap.TIMEOUT:
         ldap_close()
-        return _dict(warn="Réponse du searveur trop longue pour la recherche %s" % str_filter, 
+        return _dict(warn=u"Réponse du serveur trop longue pour la recherche %s" % str_filter, 
             users=[], query=str_filter, ldap_filter=_filters)
 
     if len(users) == 0:
@@ -915,10 +1050,10 @@ def json_useradd():
     # group update
     if usertype == 'p':
         group = datas['group']
-        ldif = [(ldap.MOD_ADD, 'uniqueMember', dn)]
-        _debug('json_useradd/ldif_addmember',ldif)
+        list_modify_attrs = [(ldap.MOD_ADD, 'uniqueMember', dn)]
+        #_debug('json_useradd/list_modify_attrs',list_modify_attrs)
         try:
-            objs = main_ldap_server['file'].modify_s(group, ldif)
+            objs = main_ldap_server['file'].modify_s(group, list_modify_attrs)
         except ldap.LDAPError,e:
             return _json_result(success=True, message='message du serveur LDAP: '+repr(e))
             
@@ -948,12 +1083,12 @@ def json_userdel():
         list_attrs=['cn'])
 
     if len(groups) != 0:
-        ldif = [(ldap.MOD_DELETE, 'uniqueMember', dn)]
+        list_modify_attrs = [(ldap.MOD_DELETE, 'uniqueMember', dn)]
         for dngroup, group in groups:
             cn = group['cn'][0]
             _debug('json_userdel/group', 'removing %s from %s ...' % (uid, cn))
             try: 
-                main_ldap_server['file'].modify_s(dngroup, ldif)
+                main_ldap_server['file'].modify_s(dngroup, list_modify_attrs)
             except ldap.LDAPError,e:
                 return _json_result(success=False, message="serveur LDAP message: %s" % str(e))
             _debug('json_userdel/group', 'removing %s from %s ... OK' % (uid, cn))
@@ -979,13 +1114,21 @@ def json_user_set_attr(uid,attr):
     """
     _debug_route()
     datas = request.params
+    _debug('json_user_set_attr/datas.keys',datas.keys())
+    if not attr:
+        return _json_result(success=False, message='no parameters attr')
+
     try:
-        attr = datas['attr']
         newval = datas['newval']
     except:
         return _json_result(success=False, message='wrong parameters')
 
+    # handle multi-valuation manager
+    if attr == 'manager':
+        return _json_user_getset_manager(uid, newval)
+
     ldap_initialize(True)
+
     users = ldap_users(list_filters=['uid=%s' % uid], list_attrs=[attr])
     _debug('json_user_set_attr/users',users)
 
@@ -996,13 +1139,12 @@ def json_user_set_attr(uid,attr):
     dn = users[0][0]
 
     try:
-        resu = _ldap_modify_attr(dn, attr, newval)   
+        if _ldap_modify_attr(dn, attr, newval) is None:
+            raise ldap.LDAPError, "can't change attribut %s" % attr 
     except ldap.LDAPError, e:
         ldap_close()
         return _json_result(success=False, message='LDAP ERROR (%s)' % e)
         
-    _debug('json_user_set_attr/ldap_modify',resu)
-
     resu =_json_result(success=True)
     resu[attr] = newval
     _debug('json_user_set_attr=',resu)
@@ -1019,16 +1161,24 @@ def json_user_get_attr(uid,attr):
     """
     _debug_route()
 
+    if not uid or not attr:
+        return _json_result(success=False, message='bad parameters')
+
+    if attr == 'manager':
+        return _json_user_getset_manager(uid)
+    
     if attr == 'userPassword':
         ## FIXME must be protected by some auth mecanism
         ldap_initialize(True)
     else:
         ldap_initialize()
+
     users = ldap_users(list_filters=['uid=%s' % uid], list_attrs=[attr])
     _debug('json_user_get_attr/users',users)
 
+    ldap_close()
+
     if len(users) == 0:
-        ldap_close()
         return _json_result(success=False, message='no user found')
 
     u = users[0][1]
@@ -1045,7 +1195,6 @@ def json_user_get_attr(uid,attr):
     resu = _json_result(success=success, message=message)
     resu[attr]=val
     _debug('json_user_get_attr/resu',resu)
-    ldap_close()
     return resu
 
 
@@ -1073,6 +1222,58 @@ def json_groups():
 
     return resu
 
+@route('/api/autocomplete_manager')
+def json_autocomplete_manager():
+    """
+    search for permanents user with 
+    term=<search string>
+    """
+    _debug_route()
+    datas = request.params
+    try:
+        term = datas['term']
+    except:
+        return ['no term']
+        #return _json_result(success=False, message='wrong parameters')
+
+    if term == '':
+        return ['term empty']
+
+    _term = ldap.filter.escape_filter_chars(term)
+
+    _list_filters = []
+    for st in ['cn', 'sn', 'givenName','uid']:
+        _list_filters.append('%s=*%s*' % (st, _term))
+        _list_filters.append('%s~=%s' % (st, _term))
+        
+    _filters = _ldap_build_ldapfilter_or(_list_filters)
+
+    ldap_initialize()
+    json_resu = []
+    try:
+        users = ldap_users(base=main_users['p']['basedn'], filterstr=_filters)
+    except ldap.TIMEOUT:
+        users = []
+        pass
+        #return _json_result(succes=False, message=u"Réponse du serveur trop longue pour la recherche %s" % term)
+    ldap_close()
+
+    # return only the first 10 items
+    _users = users[0:10]
+    _debug('json_autocomplete_manager/users', users)
+
+    for dn,o in _users:
+        resu = dict(id=dn, label=o['cn'][0], value=dn)
+        _debug('json_autocomplete_manager/resu',resu)
+        json_resu.append(resu)
+   
+    _debug('json_autocomplete_manager/json_resu',json_resu)
+    return json.dumps(json_resu)
+
+
+
+        
+        
 
         
 

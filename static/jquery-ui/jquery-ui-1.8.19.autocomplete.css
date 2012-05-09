@@ -337,12 +337,3 @@
 	font-weight: normal;
 	margin: -1px;
 }
-
-/**********************************************************
- PCHT CSS
-*/
-.ui-autocomplete-loading { background: white url('images/ui-anim_basic_16x16.gif') right center no-repeat; }
-
-.ui-menu {
-    font: 13px/22px 'Droid Sans', 'Trebuchet MS', sans-serif;
-}

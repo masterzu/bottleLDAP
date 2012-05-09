@@ -5,11 +5,17 @@
  - link #author 
 */
 
-// add string.capitalize() function
+// http://stackoverflow.com/questions/1026069/capitalize-the-first-letter-of-string-in-javascript
+// from Murat Kucukosman
 String.prototype.capitalize = function(){
     return this.replace( /(^|\s)([a-z])/g , function(m,p1,p2){ return p1+p2.toUpperCase(); } );
 };
 
+// http://snippets.dzone.com/posts/show/701
+// from cornflakesuperstar
+String.prototype.trim = function() { 
+    return this.replace(/^\s+|\s+$/g, ''); 
+};
 
 /**********************************************************
  show warning

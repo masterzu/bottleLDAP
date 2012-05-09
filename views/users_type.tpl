@@ -62,8 +62,6 @@ $(function() {
             $("#tr-group").hide();
             $("#tr-manager").show();
             alert('Not Yet Implemented');
-        } else {
-            alert('user WTF ?');
         }
     });
     // bouton ajouter
@@ -156,7 +154,7 @@ $(function() {
 <div class="box shadow">
     <h1>{{title}}</h1>
 
-    <button id="add" name="ajouter un {{title}}...">ajouter un {{title}}...</button>
+    <button id="add" name="add">ajouter un utilisateur...</button>
     <div id="form" class="box shadow hide">
         <table cellspacing="1" width="100%">
         <tbody>

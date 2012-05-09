@@ -2,14 +2,16 @@
 <html>
 <head>
   <title>{{"bottleLDAP | " + title or 'No title'}}</title>
+  <link rel="stylesheet" type="text/css" href="/static/jquery-ui/jquery-ui-1.8.19.autocomplete.css" />
   <link rel="stylesheet" type="text/css" href="/static/base.css" />
-
   <link rel="shortcut icon" href="/static/favicon.ico" />
 </head>
 <body>
     <script src="/static/jquery.1.7.1.min.js"></script>
+    <script src="/static/jquery-ui/jquery-ui-1.8.19.autocomplete.min.js"></script><!-- jquery-ui-custom-autocomplete -->
     <script src="/static/jquery.tablesorter.min.js"></script><!-- http://tablesorter.com/docs/ -->
-    <script src="/static/jquery.base.js"></script><!-- research engine -->
+    <script src="/static/jquery.autogrowinput.js"></script>
+    <script src="/static/jquery.base.js"></script><!-- my research engine -->
     <div id="top-container">
     <div id="top-center">
         <div id="top">
@@ -59,7 +61,15 @@
 <!------------------------------ -->
         </div><!-- content -->
         <div id="bottom">
-	    &copy; 2011&ndash;2012 <span id="author">{{author}}</span> &bull; bottledap v{{version}} &bull; propulsé par <a href="http://bottlepy.org/docs/0.10/">bottlepy</a>
+        bottledap v{{version}} 
+        &bull; 
+	    &copy; <span id="author">{{author}}</span>, 2011&ndash;2012 
+        &bull; 
+        animé par <a href="http://jquery.com">jQUERY</a>
+        &bull; 
+        propulsé par <a href="http://bottlepy.org/docs/0.10/">bottlepy</a> 
+        &bull; 
+        coagulé par <a href="http://www.python-ldap.org/">python-ldap</a>
         </div><!-- bottom -->
     </div><!-- content-center -->
     </div><!-- content-container -->
