@@ -6,6 +6,15 @@
 // script to handle add user form
 $(function() { 
     
+    // autocomplete functions to handle multivalue ; separated fields
+    function autocomplete_split (val){
+        return val.split(/\s*;\s*/);
+    };
+    function autocomplete_last(term) {
+        return autocomplete_split(term).pop();
+    };
+
+    // add user slide
     $('button#add').click(function () {
         $('#form').slideToggle('slow');
     });
@@ -61,9 +70,42 @@ $(function() {
         } else if (val == 'd' || val == 't') {
             $("#tr-group").hide();
             $("#tr-manager").show();
-            alert('Not Yet Implemented');
+            //alert('Not Yet Implemented');
         }
     });
+
+
+    // directeur
+    $("input[name='manager']").autocomplete({
+        source: function (request, response) {
+            $.getJSON( '/api/autocomplete_manager', 
+                { term: autocomplete_last(request.term) }, 
+                response );
+        }, 
+        search: function () {
+            var term = autocomplete_last(this.value);
+            if (term.length < 2) {
+                return false;
+            }
+        }, 
+        select: function(e,ui) {
+           // alert('SELECT item.id='+ui.item.id+'; item.value='+ui.item.value);
+           var terms = autocomplete_split(this.value);
+           // remove the last
+           terms.pop();
+           // add the new selected item
+           terms.push(ui.item.value);
+           // add an empty item to have the last ;
+           terms.push('');
+           this.value = terms.join(' ; ');
+           // update width handled by autoGrowInput (blur event)
+           this.blur(); this.focus();
+           return false;
+        }
+    }).autoGrowInput(
+        {maxWidth: 600, comfortZone: 10}
+    );
+
     // bouton ajouter
     $("button[name='ajouter']").click(function(){
         var givenName = $("input[name='givenName']").val();
@@ -96,52 +138,59 @@ $(function() {
             return;
         };
         //alert(givenName+'|'+sn+'|'+cn+'|'+mail+'|'+description+'|'+usertype);
+
+        var data = {};
+        data['givenName'] = givenName;
+        data['sn'] = sn;
+        data['cn'] = cn;
+        data['mail'] = mail;
+        data['description'] = description;
+        data['usertype'] = usertype;
+        if (uid) data['uid'] = uid;
+        
+
         if (usertype == 'p') {
             var group = $("#select-group").val();
-            //alert('group='+group);
-
-            var data = {};
-            data['givenName'] = givenName;
-            data['sn'] = sn;
-            data['cn'] = cn;
-            data['mail'] = mail;
-            data['description'] = description;
-            data['usertype'] = usertype;
             data['group'] = group;
-            if (uid) data['uid'] = uid;
-            
-            var url = '/api/useradd';
-            //alert('post on '+url+' with: '+data);
-            $.post(url,data,function(dataout, textStatus){
-                if (textStatus == 'success') { // ajax OK
-                    //alert('OK JSON='+dataout['uid']);
-                    if (dataout['success']) { // operation done
-                        var uid = dataout['uid'];
-                        var userPassword = dataout['userPassword'];
-                        alert('Utilisateur crée avec le login:'+uid+' et le mot de passe:'+userPassword);
-                        alert('Il reste a créer le compte sur le serveur NFS (olympe)');
-                        location.href='/user/'+uid;
-
-                    } else { // operation failed
-                        var message = dataout['message'];
-                        if (message == 'no_free_uid'){
-                            $('#tr-uid').show('fast');
-                            show_warning('champs uid existe déjà. Choisissez une autre valeur.');
-                            $('#tr-uid input').focus();
-                        } else {
-                            show_warning(dataout['message']);
-                        }
-                    }
-                } else { // ajax failed
-                    show_warning('AJAX: error: POST '+url);
-                };
-            } ,'json');
-
 
         } else if (usertype == 'd' || usertype == 't') {
-            alert('Not Yet Implemented');
+            //alert('Not Yet Implemented');
+            var manager = $("input[name='manager']").val();
+            data['manager'] = manager;
+            if (! manager) {
+                alert('Mettre un directeur');
+                $("input[name='manager']").focus();
+                return;
+            }
         }
         
+        var url = '/api/useradd';
+        //alert('post on '+url+' with: '+data);
+        $.post(url,data,function(dataout, textStatus){
+            if (textStatus == 'success') { // ajax OK
+                //alert('OK JSON='+dataout['uid']);
+                if (dataout['success']) { // operation done
+                    var uid = dataout['uid'];
+                    var userPassword = dataout['userPassword'];
+                    alert('Utilisateur crée avec le login:'+uid+' et le mot de passe:'+userPassword);
+                    alert('Il reste a créer le compte sur le serveur NFS (olympe)');
+                    location.href='/user/'+uid;
+
+                } else { // operation failed
+                    var message = dataout['message'];
+                    if (message == 'no_free_uid'){
+                        $('#tr-uid').show('fast');
+                        show_warning('champs uid existe déjà. Choisissez une autre valeur.');
+                        $('#tr-uid input').focus();
+                    } else {
+                        show_warning(dataout['message']);
+                    }
+                }
+            } else { // ajax failed
+                show_warning('AJAX: error: POST '+url);
+            };
+        } ,'json');
+
     });
 
 
@@ -194,9 +243,6 @@ $(function() {
                 <th>directeur</th>
                 <td>
                     <input type="text" name="manager">
-                    <button name="manager">chercher</button>
-                    <br/>
-                    <select id="select-manager" class="hide"></select>
                 </td>
             </tr>
             <tr>

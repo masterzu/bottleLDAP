@@ -24,18 +24,22 @@ import json
 import ldap
 import ldap.filter
 import ldap.dn
-#import ldap.modlist It may ne bugged ?
+
+
+
+
 
 
 __author__ = 'P. Cao Huu Thien'
-__version__ = 7
+__version__ = 8
 
 """
 History
 """
 main_news = ( 
     ('TODO', 'TODO', [
-        "ajout d'un compte doctorant/temporaire avec manager",
+        u"création de l'environnement POSIX sur le serveur NFS avec fabric",
+        "verification AJAX d'un login",
         "gestion des membres/directeurs",
         "importation des utilisateurs depuis LDAP upmc.fr",
         "envoie d'email a tous les stagiaires/permanents/permanents ayant un stagiaires-doctorants",
@@ -48,9 +52,13 @@ main_news = (
     ('5', '2 Avril 2012', [ 'Modification phase 1', 'Ajout des onglets (JQuery)', u'Mise en place des requêtes AJAX (/api/)', 'interrogation et modification des champs modifiables de la fiche' ]),
     ('6', '11 Avril 2012', [ 'Modification phase 2', "ajout d'un compte permanent", "suppression d'un compte" ]),
     ('7', '9 Mai 2012', [ 'Modification phase 3', "modification de champs directeur", "ajout de jquery UI/autocomplete" ]),
+    ('8', '10 Mai 2012', [ 'Modification phase 4', u"ajout d'un compte doctorant/étudiant avec son directeur" ]),
 
 #    ('de développement', '', [ 'Modification phase 3', "ajout d'un compte stagiaire/doct avec un lien vers son directeur" ]),
     )
+
+
+
 
 main_users = {
     '*': {
@@ -103,7 +111,35 @@ main_ldap_servers = []
 main_ldap_servers_name = []
 
 #----------------------------------------------------------
-# Privates Functions
+# Exceptions 
+#----------------------------------------------------------
+class USER_TYPE_UNKNOWN(ldap.LDAPError):
+    pass
+
+class USER_EXISTS(ldap.LDAPError):
+    pass
+
+class USER_PERM_EXISTS(USER_EXISTS):
+    """
+    Use in _ldap_new_uid to usertype 'p'
+    """
+    pass
+
+class USER_STAGIAIRE_LOGIN_FULL(USER_EXISTS):
+    """
+    Used in _ldap_new_uid to usertype 't'
+    """
+    pass
+
+class POSIX(ldap.LDAPError):
+    pass
+
+class POSIX_UID_FULL(POSIX):
+    "Used in _ldap_new_posixAccount"
+    pass
+
+#----------------------------------------------------------
+# Privates Functions and Classes
 #----------------------------------------------------------
 
 class _colors:
@@ -354,11 +390,13 @@ def _ldap_delete_attr(dn, attr):
     
 def _ldap_new_uid(givenName, sn, usertype):
     """
-    Search and return a new uid
-    or None if error
+    Search and return a new uid (string)
+
+    raise USER_EXISTS or USER_STAGIAIRE_LOGIN_FULL or USER_TYPE_UNKNOWN
     """
-    _debug('CALL _ldap_new_uid','(%s, %s, %s)' % (givenName, sn, usertype))
-    if usertype not in ['p', 'd', 't'] or not givenName or not sn:
+    _debug('CALL _ldap_new_uid','(givenName=%s, sn=%s, usertype=%s)' % (givenName, sn, usertype))
+
+    if not givenName or not sn:
         return None
 
     if usertype == 'p' or usertype == 'd':
@@ -371,22 +409,39 @@ def _ldap_new_uid(givenName, sn, usertype):
         objs = _ldap_search(main_users[usertype]['basedn'], filterstr='uid=%s' % uid)
         if len(objs) != 0:
             _debug('_ldap_new_uid/uid','user %s alredy exists: exit' % uid)
-            return None
+            raise USER_EXISTS
 
-        _debug('_ldap_new_uid/uid','user %s aldont exists : OK' % uid)
+        _debug('_ldap_new_uid/uid','login %s : OK' % uid)
 
         return uid
 
-    else:
-        return None
+    elif usertype == 't':
+        uid = None
+        for i in range(1,200):
+            objs = ldap_users(base=main_users[usertype]['basedn'], filterstr='uid=stagiaire%d' % i, list_attrs=['uid'])
+            #_debug('_ldap_new_uid/for/objs',objs)
+            if len(objs) == 0:
+                uid = 'stagiaire%d' % i
+                break
+        if uid is None:
+            raise USER_STAGIAIRE_LOGIN_FULL
+
+        return uid
+
+    # not suppose to be here
+    raise USER_TYPE_UNKNOWN
 
 def _ldap_new_posixAccount(usertype, uid):
     """
     Return uidNumber, gidNumber, homeDirectory (in string) 
     or None on error
     """
-    _debug('_ldap_new_posixAccount','(usertype=%s)' % usertype)
-    if usertype not in ['p', 'd', 't'] or not uid:
+    _debug('CALL _ldap_new_posixAccount','(usertype=%s, uid=%s)' % (usertype,uid))
+
+    if usertype not in ['p', 'd', 't']:
+        raise USER_TYPE_UNKNOWN
+
+    if not uid:
         return None
 
     if usertype == 'p':
@@ -400,12 +455,12 @@ def _ldap_new_posixAccount(usertype, uid):
         homeDirectory = '/home/temporaires/'+uid
         
     objs = _ldap_search(main_users[usertype]['basedn'], filterstr='objectClass=person', list_attrs=['uidNumber'])
-    _debug('_ldap_new_posixAccount/objs',objs)
+    #_debug('_ldap_new_posixAccount/objs',objs)
     _debug('_ldap_new_posixAccount/len(objs)',len(objs))
 
     _list_uidNumber = [o[1]['uidNumber'][0] for o in objs]
     _list_uidNumber.sort()
-    _debug('_ldap_new_posixAccount/_list_uidNumber',_list_uidNumber)
+    #_debug('_ldap_new_posixAccount/_list_uidNumber',_list_uidNumber)
     
 
     uidNumber = gidNumber
@@ -415,8 +470,9 @@ def _ldap_new_posixAccount(usertype, uid):
         if repr(i) not in _list_uidNumber:
             _debug('_ldap_new_posixAccount/uidNumber','Found a free uidNumber: '+repr(i))
             break
-    if i == uidNumberMax:
-        return None
+
+    if i == (uidNumberMax - 1):
+        raise POSIX_UID_FULL
 
     uidNumber = repr(i)
     gidNumber = repr(gidNumber)
@@ -963,7 +1019,7 @@ def json_useradd():
     Mandatory fields for usertype == p:
     'group'
 
-    TODO: Mandatory fields for usertype == t or d:
+    Mandatory fields for usertype == t or d:
     'manager'
 
     Optional fields:
@@ -998,21 +1054,27 @@ def json_useradd():
                 return _json_result(success=False, message='missing permanents parameter: '+attr)
     # usertype == t|d mandatory attrs
     elif usertype == 'd' or usertype == 't':
-        for attr in ['manager']:
-            if attr not in datas or not datas[attr]:
-                return _json_result(success=False, message='missing permanents parameter: '+attr)
+        if 'manager' not in datas or not datas['manager']:
+            return _json_result(success=False, message='missing PHD/student parameter: '+'manager')
 
     ldap_initialize(True)
     if 'uid' in datas and datas['uid']:
         uid = datas['uid']
     else:
-        uid = _ldap_new_uid(datas['givenName'], datas['sn'], datas['usertype'])
-        if uid is None:
+        try:
+            uid = _ldap_new_uid(datas['givenName'], datas['sn'], datas['usertype'])
+        except USER_EXISTS:
             ldap_close()
-            return _json_result(success=False, message='no_free_uid')
+            return _json_result(success=False, message='user_exists')
+        except USER_STAGIAIRE_LOGIN_FULL:
+            ldap_close()
+            return _json_result(success=False, message='no_emtpy_uid')
+    _debug('json_useradd/uid',uid)
+            
 
-    _t = _ldap_new_posixAccount(usertype, uid)
-    if _t is None:
+    try:
+        _t = _ldap_new_posixAccount(usertype, uid)
+    except POSIX_UID_FULL:
         ldap_close()
         return _json_result(success=False, message='pas de d information POSIX disponible pour %s' % uid)
 
@@ -1026,6 +1088,9 @@ def json_useradd():
 
     userPassword = passwd()
 
+    dn = 'uid=' + uid + ',' + main_users[datas['usertype']]['basedn'] 
+    _debug('dn='+dn)
+
     ldap_data['objectClass'] = ['top', 'person', 'organizationalPerson', 'inetOrgPerson', 'posixAccount']
     ldap_data['homeDirectory'] = [homeDirectory]
     ldap_data['loginShell'] = ['/bin/bash']
@@ -1034,11 +1099,13 @@ def json_useradd():
     ldap_data['uidNumber'] = [uidNumber]
     ldap_data['gidNumber'] = [gidNumber]
     if usertype == 'd' or usertype == 't':
-        ldap_data['manager'] = [datas['manager']]
+        _attr = datas['manager'].rstrip('\s*;\s*')
+        ldap_data['manager'] = []
+        for man in _attr.split(';'):
+            _man = man.strip()
+            if _man:
+                ldap_data['manager'].append(_man)
     _debug('ldap_data',ldap_data)
-
-    dn = 'uid=' + uid + ',' + main_users[datas['usertype']]['basedn'] 
-    _debug('dn='+dn)
 
     # user creation
     try:

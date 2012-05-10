@@ -132,23 +132,7 @@ $(function() {
         });
     });
 
-    // autocomplete & autogrowinput #fields_special input[name=manager]
-    /* FIXME calculation of the widthMax attrib to autoGrowInput
-    $('#fiche').show();
-    var th_manager_width = $("th[name='manager']").eq(0).width();
-    var button_manager = $("button[name='manager']").eq(0); button_manager.show();
-    var button_manager_width = button_manager.width();
-    var input_manager_width = $() - 10 - th_manager_width - button_manager_width;
-    button_manager.hide();
-    $('#fiche').hide();
-    alert('th='+th_manager_width);
-    alert('button='+button_manager_width);
-    alert('maxWidth='+input_manager_width);
-    alert('page='+$('#page').width());
-    */
-    
     $("input[name='manager']").autocomplete({
-        //source: '/static/test_autocomplete.json',
         source: function (request, response) {
             $.getJSON( '/api/autocomplete_manager', 
                 { term: autocomplete_last(request.term) }, 
