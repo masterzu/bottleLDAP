@@ -22,10 +22,14 @@ String.prototype.trim = function() {
 */
 
 function show_warning(text) {
-    if (text)
-        $('#warning').show('fast').text(text)
-    else
-        $('#warning').hide('fast');
+    if (text) {
+        $('#warning').show('slow').text(text);
+        alert(text);
+        // close after 20s
+        setTimeout("$('#warning').hide('slow')", 20000);
+    } else {
+        $('#warning').hide('slow');
+    }
 };
 
 $(function(){

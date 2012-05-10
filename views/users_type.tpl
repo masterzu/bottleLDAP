@@ -178,12 +178,12 @@ $(function() {
 
                 } else { // operation failed
                     var message = dataout['message'];
-                    if (message == 'no_free_uid'){
+                    if (message == 'user_exists'){
                         $('#tr-uid').show('fast');
-                        show_warning('champs uid existe déjà. Choisissez une autre valeur.');
+                        show_warning('champs login existe déjà. Choisissez une autre valeur.');
                         $('#tr-uid input').focus();
                     } else {
-                        show_warning(dataout['message']);
+                        show_warning(message);
                     }
                 }
             } else { // ajax failed
