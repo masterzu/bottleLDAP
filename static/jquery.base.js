@@ -24,9 +24,9 @@ String.prototype.trim = function() {
 function show_warning(text) {
     if (text) {
         $('#warning').show('slow').text(text);
-        alert(text);
         // close after 20s
         setTimeout("$('#warning').hide('slow')", 20000);
+        //alert(text);
     } else {
         $('#warning').hide('slow');
     }
@@ -42,7 +42,7 @@ $(function(){
             } else if (val != "") {
                 window.location='/users/search/'+val;
             } else {
-                alert("hum ?!");
+                show_warning("hum ?!");
                 $(this).focus();
                 return false;
             }

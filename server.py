@@ -30,6 +30,9 @@ import ldap.dn
 
 
 
+
+
+
 __author__ = 'P. Cao Huu Thien'
 __version__ = 8
 
@@ -38,12 +41,13 @@ History
 """
 main_news = ( 
     ('TODO', 'TODO', [
-        u"création de l'environnement POSIX sur le serveur NFS avec fabric",
+        u"création de l'environnement POSIX sur le serveur NFS en SSH",
         "verification AJAX d'un login",
         "gestion des membres/directeurs",
         "importation des utilisateurs depuis LDAP upmc.fr",
-        "envoie d'email a tous les stagiaires/permanents/permanents ayant un stagiaires-doctorants",
-        "outils de diagnostique: liste des utilisateurs sans email; stagiaires/phds sans directeur ...",
+        "outils de gestion des utilsateurs: envoi d'email a tous les stagiaires/permanents/permanents ayant un stagiaires-doctorants ...",
+        "outils de diagnostic: liste des utilisateurs sans email; stagiaires/phds sans directeur ...",
+        "gestion de l'environnement POSIX sur le serveur NFS en SSH",
         ]),
     ('1', '1 Jan 1970',   [ u'(Très vieille) version initial :)' ]), 
     ('2', '12 Mars 2012', [ u'Passage à la version 0.10.9 de bottlepy' ]),
@@ -216,6 +220,11 @@ def _json_result(**kargs):
     _debug('_json_result=', temp)
     return temp
 
+def _modules_version(mod):
+    try:
+        print _colors.HEADER + '[module] ' + _colors.OKBLUE + mod.__name__ + ' ' + _colors.OKGREEN + mod.__version__ + _colors.NONE
+    except:
+        pass
 
 #----------------------------------------------------------
 # HTML functions
@@ -617,7 +626,170 @@ def _json_user_getset_manager(uid, vals=None):
 
     return resu
 
+def _ssh_exec(host, user, list_cmds):
+    """
+    execute a list of ssh command - generic function
 
+    Return a string of stdout and stderr commands result
+    or None on error
+    """
+    return _ssh_exec_paramiko(host, user, list_cmds)
+
+def _ssh_exec_paramiko(host, user, list_cmds):
+    """
+    execute a list of command with paramiko
+
+    Return a string of stdout and stderr commands result
+    or None on error
+    """
+    import socket
+    from paramiko.util import hexlify
+    try:
+        import paramiko
+    except:
+        _debug('_ssh_exec_paramiko','module paramiko not found. Return!')
+        return None
+
+    paramiko.util.log_to_file('paramiko.log')
+
+    ### 1. socket
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((host, 22))
+    except Exception, e:
+        _debug('_ssh_exec_paramiko','*** Connect failed: ' + str(e))
+        #traceback.print_exc()
+        #sys.exit(1)
+        return None
+
+    ### 2. transport
+    t = paramiko.Transport(sock)
+    try:
+        t.start_client()
+    except paramiko.SSHException:
+        _debug('_ssh_exec_paramiko','*** SSH negotiation failed.')
+        return None
+
+
+    def agent_auth(transport, user):
+        agent = paramiko.Agent()
+        agent_keys = agent.get_keys()
+        if len(agent_keys) == 0:
+            agent.close()
+            _debug('_ssh_exec_paramiko/Agent', 'no key found')  
+            return
+        for key in agent_keys:
+            try:
+                transport.auth_publickey(user, key)
+                _debug('_ssh_exec_paramiko/Agent', 'Trying key %s ... success!' % hexlify(key.get_fingerprint()))
+                return
+            except paramiko.SSHException:
+                _debug('_ssh_exec_paramiko/Agent', 'Trying key %s ... nope' % hexlify(key.get_fingerprint()))
+
+
+
+    """
+    ssh = paramiko.SSHClient()
+
+    ### load server keys
+    #ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.load_system_host_keys()
+    ssh.load_host_keys(os.path.expanduser('~/.ssh/known_hosts'))
+    _debug('_ssh_exec_paramiko/host_keys', ssh.get_host_keys().keys().__str__())
+
+    t = ssh.get_transport()
+    """
+
+    ### 3. check server's host key -- this is important.
+    _debug('_ssh_exec_paramiko','transport: '+repr(t))
+    known_hosts = paramiko.util.load_host_keys(os.path.expanduser('~/.ssh/known_hosts'))
+    host_key = t.get_remote_server_key()
+    _debug('_ssh_exec_paramiko/host_key',hexlify(host_key.get_fingerprint()))
+    if host not in known_hosts or host_key.get_name() not in known_hosts[host]:
+        _debug('_ssh_exec_paramiko/host_key', 'Unknown host key!')
+    elif known_hosts[host][host_key.get_name()] != host_key:
+        _debug('_ssh_exec_paramiko/host_key', '*** WARNING: Host key has changed!!! ')
+        t.close()
+        return None
+    else:
+        _debug('_ssh_exec_paramiko/host_key', 'Host key OK.')
+
+
+    ### 4. private keys
+    #agent_auth(t, 'root')
+    try:
+        private_key = paramiko.RSAKey.from_private_key_file(os.path.expanduser('~/.ssh/id_rsa'))
+    except paramiko.PasswordRequiredException:
+        _debug('_ssh_exec_paramiko','private key need password')
+        private_key = paramiko.RSAKey.from_private_key_file(os.path.expanduser('~/.ssh/id_rsa'), '')
+
+    _debug('_ssh_exec_paramiko/private_key',hexlify(private_key.get_fingerprint()))
+    _debug('_ssh_exec_paramiko/private_key','Private key OK.')
+
+
+    ### 5. auth_publickey
+    try:
+        t.auth_publickey(user, private_key)
+    except paramiko.AuthenticationException, e:
+        _debug( '*** Authentication failed. :(',e)
+        t.close()
+        return None
+
+    ### 6. channel "session"
+    chan = t.open_session()
+    chan.get_pty()
+    _debug('_ssh_exec_paramiko/channel',repr(chan))
+
+    #ssh.connect(host, username='root', password='', key_filename=os.path.expanduser('~/.ssh/id_rsa') )
+    #ssh.connect(host, username='root', password='', pkey=private_key) 
+
+    ### 7. exec ... ouf !
+    list_out = []
+    for cmd in list_cmds:
+        _debug('_ssh_exec_paramiko','Try to execute "%s" ...' % cmd)
+        stdin, stdout, stderr = chan.exec_command('uname -a')
+        out = stdout.readlines()
+        _debug('_ssh_exec_paramiko/exec',cmd+'='+out)
+        list_out.append(out)
+
+    chan.close()
+    t.close()
+
+    return "\n".join(list_out)
+    
+
+    
+
+
+
+
+def _ssh_exec_subprocess(host, user, list_cmds):
+    """
+    execute a list of command with ssh user@host
+
+    Return a string of stdout and stderr commands result
+    FIXME: ssh user@host must have a empty key installed
+    FIXME: does no work
+    """
+    import subprocess
+
+    if not host or not user:
+        return ''
+
+    list_out = []
+    for cmd in list_cmds:
+        try:
+            pout = subprocess.Popen( ['ssh','%s@%s' % (user, host), cmd],
+                bufsize=1024, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True
+                ).stdout
+            out = pout.read() 
+            pout.close()
+        except subprocess.CalledProcessError:
+            out = ''
+            pass
+        _debug('_ssh_exec_subprocess/'+cmd,out)
+        list_out.append(out)
+    return "\n".join(list_out)
     
 
 #----------------------------------------------------------
@@ -807,7 +979,6 @@ def server_attr(server=None):
     * servers : for warning redirection
     """
     _debug_route()
-    _debug('server_attr/server/', server)
     for se in main_ldap_servers:
         if 'name' not in se:
             _debug('server_attr/se[name]','Dont exists !!')
@@ -818,7 +989,7 @@ def server_attr(server=None):
             if ldap_conn is None:
                 return template('servers', _dict(warn='LDAP server "%s" connexion error' 
                     % server, servers=main_ldap_servers_name))
-            return template('server_attr', _dict(name=se['name'], uri=_ldap_uri(se)))
+            return template('server_attr', _dict(name=se['name'], server=se))
 
     return template('servers', _dict(warn='LDAP server "%s" not found' % server, servers=main_ldap_servers_name))
 
@@ -1338,11 +1509,34 @@ def json_autocomplete_manager():
     return json.dumps(json_resu)
 
 
+@route('/api/server/<server>')
+def json_server(server):
+    """
+    check for local info in server with ssh
+    """
+    _debug_route()
 
-        
-        
+    if not server: 
+        return _json_result(success=False, message='Server not specified')
 
-        
+    host = ''
+    for se in main_ldap_servers:
+        if 'name' in se and se['name'] == server:
+            host = se['host']
+            break
+
+    if not host:
+        return _json_result(success=False, message='Server %s unknown' % server)
+   
+    output = _ssh_exec(host,'root',['uname -a'])
+    if output is None:
+        resu = _json_result(success=False, message="SSH auth failed")
+    else:
+        resu = _json_result(message=output)
+    _debug('json_server/resu',resu)
+
+    return resu
+    
 
 #----------------------------------------------------------
 # MAIN
@@ -1352,7 +1546,10 @@ if __name__ == '__main__':
     #----------------------------------------------------------
     # DEBUG MODE
     #----------------------------------------------------------
+
     debug(True)
+    for m in [ConfigParser, textwrap, bottle, json, ldap]:
+        _modules_version(m)
 
     import pprint
     pprint = pprint.PrettyPrinter(indent=4).pprint
