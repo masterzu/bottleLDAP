@@ -69,9 +69,7 @@ main_news = (
         u"création/suppression de l'environnement POSIX sur le serveur NFS en SSH", 
         u"HOME créé, Droits modifiés, Quotas appliqués"]
     ),
-
-#    ('de développement', '', [ 'Modification phase 3', "ajout d'un compte stagiaire/doct avec un lien vers son directeur" ]),
-    )
+)
 
 
 
