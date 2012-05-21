@@ -172,8 +172,10 @@ $(function() {
                 if (dataout['success']) { // operation done
                     var uid = dataout['uid'];
                     var userPassword = dataout['userPassword'];
-                    alert('Utilisateur crée avec le login:'+uid+' et le mot de passe:'+userPassword);
-                    alert('Il reste a créer le compte sur le serveur NFS (olympe)');
+                    var mess = dataout['message'];
+                    var message = 'Utilisateur crée avec le login: '+uid+"\net le mot de passe: "+userPassword;
+                    if (mess) message += "\n\n"+mess;
+                    alert(message);
                     location.href='/user/'+uid;
 
                 } else { // operation failed

@@ -230,6 +230,7 @@ $(function() {
     $('#delete').click(function(){
         $(this).hide();
         $('#dialog').show();
+        alert('ATTENTION : Cette opération va supprimer toutes les informations LDAP et NFS du compte');
     });
     
     // #fields button#delete_no
@@ -249,7 +250,7 @@ $(function() {
                 //alert('OK JSON='+data[attr]);
                 if (data['success']) { // operation done
                     alert('Utilisateur '+uid+' supprimé');
-                    alert('Il reste a supprimer le compte sur le serveur NFS (olympe)');
+                    //alert('Il reste a supprimer le compte sur le serveur NFS (olympe)');
                     location.href='/';
                 } else { // operation failed
                     show_warning(data['message']);

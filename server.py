@@ -24,6 +24,7 @@ import json
 import ldap
 import ldap.filter
 import ldap.dn
+import paramiko
 
 
 
@@ -34,14 +35,13 @@ import ldap.dn
 
 
 __author__ = 'P. Cao Huu Thien'
-__version__ = 8
+__version__ = 9
 
 """
 History
 """
 main_news = ( 
     ('TODO', 'TODO', [
-        u"création de l'environnement POSIX sur le serveur NFS en SSH",
         "verification AJAX d'un login",
         "gestion des membres/directeurs",
         "importation des utilisateurs depuis LDAP upmc.fr",
@@ -51,12 +51,24 @@ main_news = (
         ]),
     ('1', '1 Jan 1970',   [ u'(Très vieille) version initial :)' ]), 
     ('2', '12 Mars 2012', [ u'Passage à la version 0.10.9 de bottlepy' ]),
-    ('3', '15 Mars 2012', [ 'Version alpha', u'Première version fonctionnelle' ]),
-    ('4', '27 Mars 2012', [ 'Fonctions de consultation disponibles', 'Ajout de la recherche avec JQuery']),
-    ('5', '2 Avril 2012', [ 'Modification phase 1', 'Ajout des onglets (JQuery)', u'Mise en place des requêtes AJAX (/api/)', 'interrogation et modification des champs modifiables de la fiche' ]),
-    ('6', '11 Avril 2012', [ 'Modification phase 2', "ajout d'un compte permanent", "suppression d'un compte" ]),
-    ('7', '9 Mai 2012', [ 'Modification phase 3', "modification de champs directeur", "ajout de jquery UI/autocomplete" ]),
-    ('8', '10 Mai 2012', [ 'Modification phase 4', u"ajout d'un compte doctorant/étudiant avec son directeur" ]),
+    ('3', '15 Mars 2012', [ 'Version alpha', 
+        u'Première version fonctionnelle' ]),
+    ('4', '27 Mars 2012', [ 'Fonctions de consultation disponibles', 
+        'Ajout de la recherche avec JQuery']),
+    ('5', '2 Avril 2012', [ 'Modification phase 1', 
+        'Ajout des onglets (JQuery)', 
+        u'Mise en place des requêtes AJAX (/api/)', 
+        'interrogation et modification des champs modifiables de la fiche' ]),
+    ('6', '11 Avril 2012', [ 'Modification phase 2', "ajout d'un compte permanent", 
+        "suppression d'un compte" ]),
+    ('7', '9 Mai 2012', [ 'Modification phase 3', "modification de champs directeur", 
+        "ajout de jquery UI/autocomplete" ]),
+    ('8', '10 Mai 2012', [ 'Modification phase 4', 
+        u"ajout d'un compte doctorant/étudiant avec son directeur" ]),
+    ('9', '21 Mai 2012', [ 'Modification phase 5', 
+        u"création/suppression de l'environnement POSIX sur le serveur NFS en SSH", 
+        u"HOME créé, Droits modifiés, Quotas appliqués"]
+    ),
 
 #    ('de développement', '', [ 'Modification phase 3', "ajout d'un compte stagiaire/doct avec un lien vers son directeur" ]),
     )
@@ -72,14 +84,26 @@ main_users = {
     'p': {
         'name': 'permanents',
         'basedn': 'ou=permanents,ou=personnels,o=ijlrda',
+        'gid': 30000,
+        'homebase': '/home/permanents/',
+        'quotasoft': 0,
+        'quotahard': 0,
     },
     'd': {
         'name': 'thésards',
-        'basedn': 'ou=doctorants,ou=personnels,o=ijlrda'
+        'basedn': 'ou=doctorants,ou=personnels,o=ijlrda',
+        'gid': 40000,
+        'homebase': '/home/doctorants/',
+        'quotasoft': 0,
+        'quotahard': 0,
     },
     't': {
         'name': 'étudiants et invités',
-        'basedn': 'ou=temporaires,ou=personnels,o=ijlrda'
+        'basedn': 'ou=temporaires,ou=personnels,o=ijlrda',
+        'gid': 50000,
+        'homebase': '/home/temporaires/',
+        'quotasoft': 10485760,
+        'quotahard': 20971520,
     },
 }
 
@@ -117,17 +141,38 @@ main_ldap_servers_name = []
 #----------------------------------------------------------
 # Exceptions 
 #----------------------------------------------------------
-class USER_TYPE_UNKNOWN(ldap.LDAPError):
+
+class ERROR(Exception):
+    """
+    base exception class for this project
+    """
+    def __init__(self, msg=None):
+        if msg is None:
+            self.msg=''
+        else:
+            self.msg = msg
+    def __str__(self):
+        return '[' + self.__class__ + '] ' + repr(self.msg)
+
+
+class USER_TYPE_UNKNOWN(ERROR):
     pass
 
-class USER_EXISTS(ldap.LDAPError):
-    pass
+class USER_EXISTS(ERROR):
+    """
+    USER error
+    """
+    def __init__(self, user, msg=None):
+        self.user = user
+        ERROR.__init__(self,msg)
+
 
 class USER_PERM_EXISTS(USER_EXISTS):
     """
     Use in _ldap_new_uid to usertype 'p'
     """
-    pass
+    def __init__(self):
+        USER_EXISTS.__init__(self,user,msg='account "permanant" already exists !')
 
 class USER_STAGIAIRE_LOGIN_FULL(USER_EXISTS):
     """
@@ -135,12 +180,24 @@ class USER_STAGIAIRE_LOGIN_FULL(USER_EXISTS):
     """
     pass
 
-class POSIX(ldap.LDAPError):
+class POSIX(ERROR):
     pass
 
 class POSIX_UID_FULL(POSIX):
     "Used in _ldap_new_posixAccount"
     pass
+
+class SSH_ERROR(ERROR):
+    def __init__(self):
+        ERROR.__init__(self,'SSH error')
+        
+class SSH_AUTH_ERROR(SSH_ERROR):
+    def __init__(self):
+        ERROR.__init__(self,'SSH auth error')
+    
+class SSH_EXEC_ERROR(SSH_ERROR):
+    def __init__(self, msg):
+        ERROR.__init__(self, 'SSH exec error: '+msg)
 
 #----------------------------------------------------------
 # Privates Functions and Classes
@@ -418,7 +475,7 @@ def _ldap_new_uid(givenName, sn, usertype):
         objs = _ldap_search(main_users[usertype]['basedn'], filterstr='uid=%s' % uid)
         if len(objs) != 0:
             _debug('_ldap_new_uid/uid','user %s alredy exists: exit' % uid)
-            raise USER_EXISTS
+            raise USER_EXISTS(uid)
 
         _debug('_ldap_new_uid/uid','login %s : OK' % uid)
 
@@ -453,6 +510,10 @@ def _ldap_new_posixAccount(usertype, uid):
     if not uid:
         return None
 
+    gidNumber = main_users[usertype]['gid']
+    homeDirectory = main_users[usertype]['homebase']+uid
+
+    """
     if usertype == 'p':
         gidNumber = 30000
         homeDirectory = '/home/permanents/'+uid
@@ -462,6 +523,7 @@ def _ldap_new_posixAccount(usertype, uid):
     else:
         gidNumber = 50000
         homeDirectory = '/home/temporaires/'+uid
+    """
         
     objs = _ldap_search(main_users[usertype]['basedn'], filterstr='objectClass=person', list_attrs=['uidNumber'])
     #_debug('_ldap_new_posixAccount/objs',objs)
@@ -630,24 +692,76 @@ def _ssh_exec(host, user, list_cmds):
     """
     execute a list of ssh command - generic function
 
-    Return a string of stdout and stderr commands result
+    Return a list of string (stdout and stderr) commands result
     or None on error
     """
+    _debug('_ssh_exec(%s, %s, %s)' % (host, user, list_cmds))
     return _ssh_exec_paramiko(host, user, list_cmds)
 
-def _ssh_exec_paramiko(host, user, list_cmds):
+def _ssh_exec_paramiko (host, user, list_cmds):
     """
-    execute a list of command with paramiko
+    execute a list of command with paramiko - easy one
 
-    Return a string of stdout and stderr commands result
+    Return a list of string (stdout and stderr) commands result
+    
+    Raise SSH_ERROR, SSH_AUTH_ERROR, SSH_EXEC_ERROR
+    """
+    try:
+        from paramiko.util import hexlify
+    except:
+        _debug('_ssh_exec_paramiko','module paramiko.util not found. Return!')
+        raise SSH_ERROR
+        
+
+    if not host or not user or len(list_cmds) == 0:
+        return []
+
+    paramiko.util.log_to_file('paramiko.log')
+
+    ### client SSH
+    ssh = paramiko.SSHClient()
+
+    ### known_hosts
+    ssh.load_system_host_keys()
+    ssh.load_host_keys(os.path.expanduser('~/.ssh/known_hosts'))
+
+
+    ### connection
+    #ssh.connect(host, username='root', password='', pkey=private_key)
+    try:
+        ssh.connect(host, username='root', password='', key_filename=os.path.expanduser('~/.ssh/id_rsa') )
+    except BadHostKeyException, AuthenticationException:
+        raise SSH_AUTH_ERROR
+
+    ### commands
+    list_out = []
+    for cmd in list_cmds:
+        _debug('_ssh_exec_paramiko','Try to execute "%s" ...' % cmd)
+        stdin, stdout, stderr = ssh.exec_command(cmd)
+        err = stderr.read()
+        if err:
+            _debug('_ssh_exec_paramiko/exec cmd(%s)/sdterr' % cmd, err)
+            raise SSH_EXEC_ERROR(err)
+        else:
+            _debug('_ssh_exec_paramiko/exec cmd(%s)' % cmd, 'OK')
+        list_out = list_out + stdout.readlines()
+
+    return list_out
+
+
+def _ssh_exec_paramiko_extented(host, user, list_cmds):
+    """
+    execute a list of command with paramiko - step by step
+
+    Return a list of string of stdout and stderr commands result
     or None on error
     """
     import socket
-    from paramiko.util import hexlify
     try:
         import paramiko
+        from paramiko.util import hexlify
     except:
-        _debug('_ssh_exec_paramiko','module paramiko not found. Return!')
+        _debug('_ssh_exec_paramiko_extented','module paramiko not found. Return!')
         return None
 
     paramiko.util.log_to_file('paramiko.log')
@@ -657,7 +771,7 @@ def _ssh_exec_paramiko(host, user, list_cmds):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((host, 22))
     except Exception, e:
-        _debug('_ssh_exec_paramiko','*** Connect failed: ' + str(e))
+        _debug('_ssh_exec_paramiko_extented','*** Connect failed: ' + str(e))
         #traceback.print_exc()
         #sys.exit(1)
         return None
@@ -667,52 +781,23 @@ def _ssh_exec_paramiko(host, user, list_cmds):
     try:
         t.start_client()
     except paramiko.SSHException:
-        _debug('_ssh_exec_paramiko','*** SSH negotiation failed.')
+        _debug('_ssh_exec_paramiko_extented','*** SSH negotiation failed.')
         return None
 
 
-    def agent_auth(transport, user):
-        agent = paramiko.Agent()
-        agent_keys = agent.get_keys()
-        if len(agent_keys) == 0:
-            agent.close()
-            _debug('_ssh_exec_paramiko/Agent', 'no key found')  
-            return
-        for key in agent_keys:
-            try:
-                transport.auth_publickey(user, key)
-                _debug('_ssh_exec_paramiko/Agent', 'Trying key %s ... success!' % hexlify(key.get_fingerprint()))
-                return
-            except paramiko.SSHException:
-                _debug('_ssh_exec_paramiko/Agent', 'Trying key %s ... nope' % hexlify(key.get_fingerprint()))
-
-
-
-    """
-    ssh = paramiko.SSHClient()
-
-    ### load server keys
-    #ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.load_system_host_keys()
-    ssh.load_host_keys(os.path.expanduser('~/.ssh/known_hosts'))
-    _debug('_ssh_exec_paramiko/host_keys', ssh.get_host_keys().keys().__str__())
-
-    t = ssh.get_transport()
-    """
-
     ### 3. check server's host key -- this is important.
-    _debug('_ssh_exec_paramiko','transport: '+repr(t))
+    _debug('_ssh_exec_paramiko_extented','transport: '+repr(t))
     known_hosts = paramiko.util.load_host_keys(os.path.expanduser('~/.ssh/known_hosts'))
     host_key = t.get_remote_server_key()
-    _debug('_ssh_exec_paramiko/host_key',hexlify(host_key.get_fingerprint()))
+    _debug('_ssh_exec_paramiko_extented/host_key',hexlify(host_key.get_fingerprint()))
     if host not in known_hosts or host_key.get_name() not in known_hosts[host]:
-        _debug('_ssh_exec_paramiko/host_key', 'Unknown host key!')
+        _debug('_ssh_exec_paramiko_extented/host_key', 'Unknown host key!')
     elif known_hosts[host][host_key.get_name()] != host_key:
-        _debug('_ssh_exec_paramiko/host_key', '*** WARNING: Host key has changed!!! ')
+        _debug('_ssh_exec_paramiko_extented/host_key', '*** WARNING: Host key has changed!!! ')
         t.close()
         return None
     else:
-        _debug('_ssh_exec_paramiko/host_key', 'Host key OK.')
+        _debug('_ssh_exec_paramiko_extented/host_key', 'Host key OK.')
 
 
     ### 4. private keys
@@ -720,11 +805,11 @@ def _ssh_exec_paramiko(host, user, list_cmds):
     try:
         private_key = paramiko.RSAKey.from_private_key_file(os.path.expanduser('~/.ssh/id_rsa'))
     except paramiko.PasswordRequiredException:
-        _debug('_ssh_exec_paramiko','private key need password')
+        _debug('_ssh_exec_paramiko_extented','private key need password')
         private_key = paramiko.RSAKey.from_private_key_file(os.path.expanduser('~/.ssh/id_rsa'), '')
 
-    _debug('_ssh_exec_paramiko/private_key',hexlify(private_key.get_fingerprint()))
-    _debug('_ssh_exec_paramiko/private_key','Private key OK.')
+    _debug('_ssh_exec_paramiko_extented/private_key',hexlify(private_key.get_fingerprint()))
+    _debug('_ssh_exec_paramiko_extented/private_key','Private key OK.')
 
 
     ### 5. auth_publickey
@@ -735,39 +820,30 @@ def _ssh_exec_paramiko(host, user, list_cmds):
         t.close()
         return None
 
-    ### 6. channel "session"
-    chan = t.open_session()
-    chan.get_pty()
-    _debug('_ssh_exec_paramiko/channel',repr(chan))
-
-    #ssh.connect(host, username='root', password='', key_filename=os.path.expanduser('~/.ssh/id_rsa') )
-    #ssh.connect(host, username='root', password='', pkey=private_key) 
-
-    ### 7. exec ... ouf !
+    ### 6. create a channel and execute in it
     list_out = []
     for cmd in list_cmds:
-        _debug('_ssh_exec_paramiko','Try to execute "%s" ...' % cmd)
-        stdin, stdout, stderr = chan.exec_command('uname -a')
-        out = stdout.readlines()
-        _debug('_ssh_exec_paramiko/exec',cmd+'='+out)
+        chan = t.open_session()
+        # do I need it ?
+        #chan.get_pty()
+        _debug('_ssh_exec_paramiko_extented/channel',repr(chan))
+        _debug('_ssh_exec_paramiko_extented','Try to execute "%s" ...' % cmd)
+        chan.exec_command(cmd)
+        stdout = chan.makefile()
+        chan.close()
+        out = stdout.read()
+        _debug('_ssh_exec_paramiko_extented/exec',cmd+'='+out)
         list_out.append(out)
 
-    chan.close()
     t.close()
 
-    return "\n".join(list_out)
+    return list_out
     
-
-    
-
-
-
-
 def _ssh_exec_subprocess(host, user, list_cmds):
     """
     execute a list of command with ssh user@host
 
-    Return a string of stdout and stderr commands result
+    Return a list of string (stdout and stderr) commands result
     FIXME: ssh user@host must have a empty key installed
     FIXME: does no work
     """
@@ -789,8 +865,26 @@ def _ssh_exec_subprocess(host, user, list_cmds):
             pass
         _debug('_ssh_exec_subprocess/'+cmd,out)
         list_out.append(out)
-    return "\n".join(list_out)
+    return list_out
     
+def _ssh_setquota(host,login,soft=0,hard=0):
+    """
+    Define a user quota on path as 'soft hard 0 0'
+
+    return True if OK
+    """
+    if not host or not login:
+        return False
+
+    cmd = 'setquota -u ' + login + ' %d %d 0 0 /home' % (soft, hard) 
+    _debug('_ssh_setquota(%s, %s, %d, %d)' % (host, login, soft, hard), 'cmd=%s' % cmd)
+
+    try:
+        _ssh_exec(host,'root', [cmd])
+    except SSH_EXEC_ERROR:
+        return False
+
+    return True
 
 #----------------------------------------------------------
 # Public Functions
@@ -1201,6 +1295,8 @@ def json_useradd():
     datas = request.params
     ldap_data = {}
 
+    ### LDAP operations
+
     # mandatory/LDAP attrs
     for attr in ['cn', 'sn', 'givenName', 'mail', 'description']:
         if attr not in datas or not datas[attr]:
@@ -1293,11 +1389,33 @@ def json_useradd():
         try:
             objs = main_ldap_server['file'].modify_s(group, list_modify_attrs)
         except ldap.LDAPError,e:
-            return _json_result(success=True, message='message du serveur LDAP: '+repr(e))
+            return _json_result(success=False, message='message du serveur LDAP: '+repr(e))
             
     ldap_close()
 
-    return _json_result(success=True, uid=uid, userPassword=userPassword)
+    ### NFS operations
+    list_print_cmds = []
+    for text, cmd in [
+        (u'création du HOME', 'mkdir %s' % homeDirectory),
+        (u'changement du propriétaire','chown %s:%s %s' % (uidNumber, gidNumber, homeDirectory)),
+        ('changement des droits','chmod u=rwx,go= %s' % homeDirectory),
+        ]:
+        _debug('json_useradd/Try to exec %s [%s]' % (cmd, text))
+        try:
+            _ssh_exec(main_ldap_server['host'],'root',[cmd])
+        except SSH_EXEC_ERROR as e:
+            return _json_result(success=False, message=e.msg)
+        _debug('json_useradd/Try to exec %s' % cmd, 'OK')
+
+    
+    if not _ssh_setquota(main_ldap_server['host'], 
+            uid, 
+            main_users[usertype]['quotasoft'], 
+            main_users[usertype]['quotahard']) :
+        return _json_result(success=False, message='erreur de Quota')
+
+            
+    return _json_result(success=True, uid=uid, userPassword=userPassword, message=u'répertoire crée, droits changés, quotas appliqués')
 
 @route('/api/userdel', method='POST')
 def json_userdel():
@@ -1315,6 +1433,9 @@ def json_userdel():
         return _json_result(success=False, message="pas d'utilisateur %s" % uid)
 
     dn = objs[0][0]
+    _debug('json_userdel/dn',dn)
+    homeDirectory = objs[0][1]['homeDirectory'][0]
+    _debug('json_userdel/homeDirectory',homeDirectory)
 
     groups = _ldap_search(main_ldap_server['basegroup'], 
         list_filters=['objectClass=groupOfUniqueNames','uniqueMember=%s' % dn], 
@@ -1342,6 +1463,10 @@ def json_userdel():
     _debug('json_userdel/user','deleting user %s ... OK' % uid)
         
     ldap_close()
+
+    ### NFS operations
+    _ssh_exec(main_ldap_server['host'],'root',['rm -rf ' + homeDirectory])
+    
 
     return _json_result(success=True)
 
@@ -1527,12 +1652,16 @@ def json_server(server):
 
     if not host:
         return _json_result(success=False, message='Server %s unknown' % server)
-   
-    output = _ssh_exec(host,'root',['uname -a'])
+  
+    try: 
+        output = _ssh_exec(host,'root',['hostname'])
+    except SSH_EXEC_ERROR as e:
+        return _json_result(success=False, message=e.msg)
+
     if output is None:
         resu = _json_result(success=False, message="SSH auth failed")
     else:
-        resu = _json_result(message=output)
+        resu = _json_result(message="\n".join(output))
     _debug('json_server/resu',resu)
 
     return resu
@@ -1548,7 +1677,7 @@ if __name__ == '__main__':
     #----------------------------------------------------------
 
     debug(True)
-    for m in [ConfigParser, textwrap, bottle, json, ldap]:
+    for m in [ConfigParser, textwrap, bottle, json, ldap, paramiko]:
         _modules_version(m)
 
     import pprint
