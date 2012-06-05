@@ -230,7 +230,7 @@ $(function() {
     $('#delete').click(function(){
         $(this).hide();
         $('#dialog').show();
-        alert('ATTENTION : Cette opération va supprimer toutes les informations LDAP et NFS du compte');
+        alert("ATTENTION : Cette opération va supprimer toutes les informations LDAP et NFS du compte.\nCette action peut bloquer la reactivité du serveur ... c'est un comportement attendu.");
     });
     
     // #fields button#delete_no
