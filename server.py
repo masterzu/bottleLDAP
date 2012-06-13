@@ -26,14 +26,6 @@ import ldap.filter
 import ldap.dn
 import paramiko
 
-
-
-
-
-
-
-
-
 __author__ = 'P. Cao Huu Thien'
 __version__ = 9
 
@@ -44,6 +36,7 @@ main_news = (
     ('TODO', 'TODO', [
         "verification AJAX d'un login",
         "gestion des membres/directeurs",
+        "gestion multi-NFS",
         "importation des utilisateurs depuis LDAP upmc.fr",
         "outils de gestion des utilsateurs: envoi d'email a tous les stagiaires/permanents/permanents ayant un stagiaires-doctorants ...",
         "outils de diagnostic: liste des utilisateurs sans email; stagiaires/phds sans directeur ...",
@@ -750,6 +743,7 @@ def _ssh_exec_paramiko (host, user, list_cmds):
 def _ssh_exec_paramiko_extented(host, user, list_cmds):
     """
     execute a list of command with paramiko - step by step
+    NOT USED
 
     Return a list of string of stdout and stderr commands result
     or None on error
@@ -1394,9 +1388,9 @@ def json_useradd():
     ### NFS operations
     list_print_cmds = []
     for text, cmd in [
-        (u'création du HOME', 'mkdir %s' % homeDirectory),
-        (u'changement du propriétaire','chown %s:%s %s' % (uidNumber, gidNumber, homeDirectory)),
-        ('changement des droits','chmod u=rwx,go= %s' % homeDirectory),
+        ('creation du HOME par copie des fichiers /etc/skel','cp -r /etc/skel %s' % homeDirectory),
+        (u'changement du propriétaire','chown -R %s:%s %s' % (uidNumber, gidNumber, homeDirectory)),
+        ('changement des droits','chmod -R u=rwx,go= %s' % homeDirectory),
         ]:
         _debug('json_useradd/Try to exec %s [%s]' % (cmd, text))
         try:
