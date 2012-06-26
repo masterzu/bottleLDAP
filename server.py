@@ -701,7 +701,7 @@ def _ssh_exec_paramiko (host, user, list_cmds):
         from paramiko.util import hexlify
     except:
         _debug('_ssh_exec_paramiko','module paramiko.util not found. Return!')
-        raise SSH_ERROR
+        raise SSH_ERROR('module paramiko not found')
         
 
     if not host or not user or len(list_cmds) == 0:
@@ -720,9 +720,14 @@ def _ssh_exec_paramiko (host, user, list_cmds):
     ### connection
     #ssh.connect(host, username='root', password='', pkey=private_key)
     try:
-        ssh.connect(host, username='root', password='', key_filename=os.path.expanduser('~/.ssh/id_rsa') )
-    except BadHostKeyException, AuthenticationException:
-        raise SSH_AUTH_ERROR
+        ssh.connect(host, username='root', password='', key_filename=os.path.expanduser('id_rsa') )
+    except paramiko.BadHostKeyException, paramiko.AuthenticationException:
+        _debug('_ssh_exec_paramiko','connection to %s with `id_rsa` ... FAILED' % host)
+        try:
+            ssh.connect(host, username='root', password='', key_filename=os.path.expanduser('~/.ssh/id_rsa') )
+        except paramiko.BadHostKeyException, paramiko.AuthenticationException:
+            _debug('_ssh_exec_paramiko','connection to %s with `~/.ssh/id_rsa` ... FAILED' % host)
+            raise SSH_ERROR('Can not connect to host %s. You need to set a public key' % host)
 
     ### commands
     list_out = []
@@ -732,7 +737,7 @@ def _ssh_exec_paramiko (host, user, list_cmds):
         err = stderr.read()
         if err:
             _debug('_ssh_exec_paramiko/exec cmd(%s)/sdterr' % cmd, err)
-            raise SSH_EXEC_ERROR(err)
+            raise SSH_ERROR(err)
         else:
             _debug('_ssh_exec_paramiko/exec cmd(%s)' % cmd, 'OK')
         list_out = list_out + stdout.readlines()
@@ -1646,8 +1651,8 @@ def json_server(server):
         return _json_result(success=False, message='Server %s unknown' % server)
   
     try: 
-        output = _ssh_exec(host,'root',['hostname'])
-    except SSH_EXEC_ERROR as e:
+        output = _ssh_exec(host,'root',['cat /etc/issue | head -1'])
+    except (SSH_AUTH_ERROR, SSH_EXEC_ERROR, SSH_ERROR) as e:
         return _json_result(success=False, message=e.msg)
 
     if output is None:
