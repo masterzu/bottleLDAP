@@ -9,11 +9,11 @@ $(function() {
         var this_span = $(this).next();
         var url = '/api/server/{{name}}';
         //alert('serveur {{name}} with url:'+url);
-        this_span.addClass('ui-qutocomplete-loading').text('en recherche ...');
+        this_span.addClass('ui-autocomplete-loading').text('connecting to {{name}} ......');
 
 
         $.getJSON(url,function(data, textStatus){
-            this_span.removeClass('ui-qutocomplete-loading').text('');
+            this_span.removeClass('ui-autocomplete-loading').text('');
             if (textStatus == 'success') { // ajax OK
                 if (data['success']) {
                     this_span.text(data['message']);
