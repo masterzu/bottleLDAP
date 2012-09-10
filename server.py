@@ -27,7 +27,7 @@ import ldap.dn
 import paramiko
 
 __author__ = 'P. Cao Huu Thien'
-__version__ = 9
+__version__ = 'git'
 
 """
 History
@@ -1681,7 +1681,7 @@ if __name__ == '__main__':
     pprint = pprint.PrettyPrinter(indent=4).pprint
     print _colors.OKBLUE + 'mode DEBUG' + _colors.NONE
     ldap_load_config('ldap_servers.ini')
-    run(host='0.0.0.0', port=8080, reloader=True)
+    run(host='0.0.0.0', port=8888, reloader=True)
     
 
     #----------------------------------------------------------

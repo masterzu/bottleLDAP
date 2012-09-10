@@ -158,6 +158,8 @@ pre {
 #content-container {
     width: 1000px;
     margin: 0px auto;
+    background-image: url(/static/WIP.png);
+    background-repeat: repeat-y;
 }
 #content-center {
     margin: 0;padding: 0 20px;

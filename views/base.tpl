@@ -17,7 +17,7 @@
         <div id="top">
         </div><!-- top -->
         <div id="top-content">
-            {{title or "Administration de l'annuaire LDAP"}}
+            {{title or "[DEVEL]"}}
         </div><!-- top-content -->
     </div><!-- top-center -->
     </div><!-- top-container -->
@@ -61,7 +61,7 @@
 <!------------------------------ -->
         </div><!-- content -->
         <div id="bottom">
-        bottledap v{{version}} 
+        bottledap version {{version}} 
         &bull; 
 	    &copy; <span id="author">{{author}}</span>, 2011&ndash;2012 
         &bull; 
