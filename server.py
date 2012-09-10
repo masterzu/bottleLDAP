@@ -456,34 +456,44 @@ def _ldap_new_uid(givenName, sn, usertype):
     if not givenName or not sn:
         return None
 
-    if usertype == 'p' or usertype == 'd':
+    if usertype == 'p' or usertype == 'd' or usertype == 't':
         gn = givenName[0].replace(' ','').lower()
         fn = sn.split()[0].replace(' ','').lower()
         uid = gn+fn
         _debug('_ldap_new_uid/uid',uid)
 
         ## FIXME check if newuid OK
-        objs = _ldap_search(main_users[usertype]['basedn'], filterstr='uid=%s' % uid)
+        objs = _ldap_search(main_users['*']['basedn'], filterstr='uid=%s' % uid)
         if len(objs) != 0:
             _debug('_ldap_new_uid/uid','user %s alredy exists: exit' % uid)
+
+            # check uid+number from 1 to 99
+            for i in range(1,100):
+                uidn = '%s%i' % (uid,i)
+                objs = _ldap_search(main_users['*']['basedn'], filterstr='uid=%s' % uidn)
+                if len(objs) != 0:
+                    _debug('_ldap_new_uid/uid','user %s alredy exists: exit' % uidn)
+                else:
+                    _debug('_ldap_new_uid/uid','login %s : OK' % uidn)
+                    return uidn
+                    
             raise USER_EXISTS(uid)
 
         _debug('_ldap_new_uid/uid','login %s : OK' % uid)
 
         return uid
 
-    elif usertype == 't':
-        uid = None
-        for i in range(1,200):
-            objs = ldap_users(base=main_users[usertype]['basedn'], filterstr='uid=stagiaire%d' % i, list_attrs=['uid'])
-            #_debug('_ldap_new_uid/for/objs',objs)
-            if len(objs) == 0:
-                uid = 'stagiaire%d' % i
-                break
-        if uid is None:
-            raise USER_STAGIAIRE_LOGIN_FULL
-
-        return uid
+    #elif usertype == 't':
+    #    uid = None
+    #    for i in range(1,200):
+    #        objs = ldap_users(base=main_users[usertype]['basedn'], filterstr='uid=stagiaire%d' % i, list_attrs=['uid'])
+    #        #_debug('_ldap_new_uid/for/objs',objs)
+    #        if len(objs) == 0:
+    #            uid = 'stagiaire%d' % i
+    #            break
+    #    if uid is None:
+    #        raise USER_STAGIAIRE_LOGIN_FULL
+    #    return uid
 
     # not suppose to be here
     raise USER_TYPE_UNKNOWN
@@ -707,7 +717,8 @@ def _ssh_exec_paramiko (host, user, list_cmds):
     if not host or not user or len(list_cmds) == 0:
         return []
 
-    paramiko.util.log_to_file('paramiko.log')
+    if bottle.DEBUG:
+        paramiko.util.log_to_file('paramiko.log')
 
     ### client SSH
     ssh = paramiko.SSHClient()
@@ -1670,27 +1681,26 @@ def json_server(server):
 if __name__ == '__main__':
 
     #----------------------------------------------------------
-    # DEBUG MODE
+    # DEBUG MODE/PRODUCTION
     #----------------------------------------------------------
-
     debug(True)
+    #----------------------------------------------------------
     for m in [ConfigParser, textwrap, bottle, json, ldap, paramiko]:
         _modules_version(m)
 
     import pprint
     pprint = pprint.PrettyPrinter(indent=4).pprint
-    print _colors.OKBLUE + 'mode DEBUG' + _colors.NONE
+
+    if bottle.DEBUG:
+        port = 8888
+        reloader = True
+        print _colors.OKBLUE + 'mode DEBUG' + _colors.NONE
+    else:
+        port = 8080
+        reloader = False
+        
     ldap_load_config('ldap_servers.ini')
-    run(host='0.0.0.0', port=8888, reloader=True)
-    
+    run(host='0.0.0.0', port=port, reloader=reloader)
 
-    #----------------------------------------------------------
-    # PROD MODE
-    #----------------------------------------------------------
-    #pprint = __buidin__.print
-    #ldap_load_config('ldap_servers.ini')
-    #run(host='0.0.0.0', port=80)
-
- 
 
 # vim:spelllang=en:
