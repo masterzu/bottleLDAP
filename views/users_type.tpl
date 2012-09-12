@@ -154,7 +154,6 @@ $(function() {
             data['group'] = group;
 
         } else if (usertype == 'd' || usertype == 't') {
-            //alert('Not Yet Implemented');
             var manager = $("input[name='manager']").val();
             data['manager'] = manager;
             if (! manager) {

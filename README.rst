@@ -35,7 +35,9 @@ Ce site est donc programmé entièrement en Python, avec l'aide de la micro web-
 Démarrage du serveur
 ====================
 
-Pour démarrer le serveur, il faut créer une fichier `ldap_servers.ini` contenant les informations suivantes::
+Pour démarrer le serveur, il faut :
+
+#. créer une fichier `ldap_servers.ini` contenant les informations suivantes::
 
     [<serveur_id>]
     name = <server name>
@@ -47,7 +49,9 @@ Pour démarrer le serveur, il faut créer une fichier `ldap_servers.ini` contena
     binddn = <DN to bind>
     bindpwd = <password of %(binddn)s>
 
-Puis dans une console, taper la commande::
+#. copier le fichier de clé privée `id_rsa` pour permettre d'avoir un accès ``root`` au serveur NFS
+
+#. Puis dans une console, taper la commande::
 
     $ python server.py
     Bottle server starting up (using WSGIRefServer())...

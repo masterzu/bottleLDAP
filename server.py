@@ -27,20 +27,20 @@ import ldap.dn
 import paramiko
 
 __author__ = 'P. Cao Huu Thien'
-__version__ = 'git'
+__version__ = '10'
 
 """
 History
 """
 main_news = ( 
     ('TODO', 'TODO', [
+    'FIXME: json_userdel(): check if user have students',
         "verification AJAX d'un login",
         "gestion des membres/directeurs",
         "gestion multi-NFS",
         "importation des utilisateurs depuis LDAP upmc.fr",
         "outils de gestion des utilsateurs: envoi d'email a tous les stagiaires/permanents/permanents ayant un stagiaires-doctorants ...",
         "outils de diagnostic: liste des utilisateurs sans email; stagiaires/phds sans directeur ...",
-        "gestion de l'environnement POSIX sur le serveur NFS en SSH",
         ]),
     ('1', '1 Jan 1970',   [ u'(Très vieille) version initial :)' ]), 
     ('2', '12 Mars 2012', [ u'Passage à la version 0.10.9 de bottlepy' ]),
@@ -61,6 +61,10 @@ main_news = (
     ('9', '21 Mai 2012', [ 'Modification phase 5', 
         u"création/suppression de l'environnement POSIX sur le serveur NFS en SSH", 
         u"HOME créé, Droits modifiés, Quotas appliqués"]
+    ),
+    ('10', '12 Sept 2012', [ 'Modification sur demande', 
+        u"changement de login pour les étudiants : suppression du motif <stagiaireX>",
+        u"vérification du login unique lors de la création un compte"]
     ),
 )
 
@@ -112,10 +116,8 @@ main_nav = [
     ('/users/t',main_users['t']['name']),
     ('',''), 
     ('*', 'structure'),
-    ('/groups','équipes'),
-    ('/users','utilisateurs'),
-    ('','sites'),
-    ('','réseaux'),
+    ('/groups','les équipes'),
+    ('/users','les utilisateurs'),
     ('',''), 
     ('*', 'site web'), 
     ('/news', 'news') , 
@@ -1406,7 +1408,7 @@ def json_useradd():
     for text, cmd in [
         ('creation du HOME par copie des fichiers /etc/skel','cp -r /etc/skel %s' % homeDirectory),
         (u'changement du propriétaire','chown -R %s:%s %s' % (uidNumber, gidNumber, homeDirectory)),
-        ('changement des droits','chmod -R u=rwx,go= %s' % homeDirectory),
+        ('changement des droits','chmod -R u=rwX,go= %s' % homeDirectory),
         ]:
         _debug('json_useradd/Try to exec %s [%s]' % (cmd, text))
         try:
@@ -1462,6 +1464,7 @@ def json_userdel():
     else:
         _debug('json_userdel','no group with member '+dn)
             
+    # TODO : check if user have students
 
     _debug('json_userdel/user','deleting user %s ...' % uid)
     try:
