@@ -17,7 +17,7 @@
         <div id="top">
         </div><!-- top -->
         <div id="top-content">
-            {{title or "[DEVEL]"}}
+            {{title or "Administration LDAP"}}
         </div><!-- top-content -->
     </div><!-- top-center -->
     </div><!-- top-container -->
