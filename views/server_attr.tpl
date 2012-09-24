@@ -1,4 +1,4 @@
-%rebase base title="serveurs LDAP : %s" % name, nav=nav, warn=warn, author=author, version=version
+%rebase base title="serveur LDAP : %s" % name, nav=nav, warn=warn, author=author, version=version
 
 <script type="text/javascript">
 <!--
@@ -12,6 +12,7 @@ $(function() {
         this_span.addClass('ui-autocomplete-loading').text('connecting to {{name}} ......');
 
 
+        /*
         $.getJSON(url,function(data, textStatus){
             this_span.removeClass('ui-autocomplete-loading').text('');
             if (textStatus == 'success') { // ajax OK
@@ -20,13 +21,34 @@ $(function() {
                 } else {
                     show_warning(data['message']);
                 }
-                
             } else {
                 show_warning('NOOOOO !!! ajax error');
             }
         });
+        */
+        // test timeout http://stackoverflow.com/questions/3543683/jquery-ajax-timeout-setting
+        $.ajax({
+            url: url,
+            type: "GET",
+            dataType: "json",
+            timeout: 1500,
+            success: function(response) {
+                this_span.removeClass('ui-autocomplete-loading').text('');
+                if (response['success']) {
+                    this_span.text(response['message']);
+                } else {
+                    show_warning(response['message']);
+                }
+            },
+            error: function(xhr, textStatus, error) {
+                this_span.removeClass('ui-autocomplete-loading').text('');
+                if (textStatus == "timeout")
+                    show_warning('Serveur Timeout ... Réessayez si vous osez :)')
+                else 
+                    show_warning('Erreur de serveur: '+error+' ('+textStatus+')');
+            }
+        });
     }); 
-
 });
 // -->
 </script>
