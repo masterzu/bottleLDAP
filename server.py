@@ -11,6 +11,9 @@ To download latest 0.10 (stable) version
 To launch the server just type:
 
 # python server.py
+
+### code chacked with Google Python Style Guide
+### http://google-styleguide.googlecode.com/svn/trunk/pyguide.html
 """
 
 import os, os.path
@@ -27,7 +30,7 @@ import ldap.dn
 import paramiko
 
 __author__ = 'P. Cao Huu Thien'
-__version__ = '10'
+__version__ = '11'
 
 """
 History
@@ -65,6 +68,11 @@ main_news = (
     ('10', '12 Sept 2012', [ 'Modification sur demande', 
         u"changement de login pour les étudiants : suppression du motif <stagiaireX>",
         u"vérification du login unique lors de la création un compte"]
+    ),
+    ('11', 'x Sept 2012', [ 'Modification phase 6', 
+        u"changement de login pour les étudiants : suppression du motif <stagiaireX>",
+        u"vérification du login unique lors de la création un compte",
+        ]
     ),
 )
 
@@ -206,7 +214,7 @@ class _colors:
     OKGREEN = '\033[92m'
     WARNING = '\033[93m'
     FAIL = '\033[91m'
-    NONE = '\033[0m'
+    NOCOLOR = '\033[0m'
 
     def disable(self):
         self.HEADER = ''
@@ -214,25 +222,25 @@ class _colors:
         self.OKGREEN = ''
         self.WARNING = ''
         self.FAIL = ''
-        self.NONE = ''
+        self.NOCOLOR = ''
 
 def _debug(title, text=None):
     if not bottle.DEBUG:
         return
         
     if text is None:
-        print _colors.HEADER + '[DEBUG] '+ _colors.OKGREEN + title + _colors.NONE
+        print _colors.HEADER + '[DEBUG] '+ _colors.OKGREEN + title + _colors.NOCOLOR
     else:
         if isinstance(text,type('qwe')):
-            print _colors.HEADER + '[DEBUG] '+ _colors.OKGREEN + title + _colors.NONE + ' = ' + _colors.OKBLUE \
-                + text + _colors.NONE
+            print _colors.HEADER + '[DEBUG] '+ _colors.OKGREEN + title + _colors.NOCOLOR + ' = ' + _colors.OKBLUE \
+                + text + _colors.NOCOLOR
             #for t in textwrap.wrap(text, 80): print t
-            #print text + _colors.NONE
+            #print text + _colors.NOCOLOR
 
         else:
-            print _colors.HEADER + '[DEBUG] '+ _colors.OKGREEN + title + _colors.NONE + ' = ' + _colors.OKBLUE
+            print _colors.HEADER + '[DEBUG] '+ _colors.OKGREEN + title + _colors.NOCOLOR + ' = ' + _colors.OKBLUE
             pprint(text)
-            print _colors.NONE
+            print _colors.NOCOLOR
 
 def _debug_route():
     _debug("routing %s ..." % request.path)
@@ -272,7 +280,7 @@ def _json_result(**kargs):
 
 def _modules_version(mod):
     try:
-        print _colors.HEADER + '[module] ' + _colors.OKBLUE + mod.__name__ + ' ' + _colors.OKGREEN + mod.__version__ + _colors.NONE
+        print _colors.HEADER + '[module] ' + _colors.OKBLUE + mod.__name__ + ' ' + _colors.OKGREEN + mod.__version__ + _colors.NOCOLOR
     except:
         pass
 
@@ -336,15 +344,15 @@ def _ldap_filter_base(list_filters):
 
     Dont use ldap.filter.filter_format HERE
     """
-    filter = ''
+    _filter = ''
     for f in list_filters:
         if not f: continue
         if f[0] == '(':
-            filter += f
+            _filter += f
         else:
-            filter += '('+f+')'
-    #_debug('_ldap_build_ldapfilter_base/filter',filter)
-    return filter
+            _filter += '('+f+')'
+    #_debug('_ldap_build_ldapfilter_base/filter',_filter)
+    return _filter
 
 
 def _ldap_build_ldapfilter_and(list_filters):
@@ -410,6 +418,8 @@ def _ldap_modify_attr(dn, attr, val):
     - not handle manager
     - cant change uid to ''
     - if val = '', use MOD_DELETE instead of MOD_REPLACE
+
+    Return None on error
     """
     if 'file' not in main_ldap_server:
         _debug('CALL _ldap_modify_attr','(dn=%s, attr=%s, val=%s) - No connexion to server' % (dn,attr,val))
@@ -428,7 +438,8 @@ def _ldap_modify_attr(dn, attr, val):
             return None
 
         # do the job
-        objs = main_ldap_server['file'].modrdn_s(dn, list_modify_attrs)
+        # FIXME objs = main_ldap_server['file'].modrdn_s(dn, list_modify_attrs)
+        return None
 
     else:
         if val:
@@ -636,7 +647,6 @@ def _json_user_getset_manager(uid, vals=None):
         _vals = vals.rstrip('\s*;\s*')
         managers = _vals.split(';')
         _debug('_json_user_getset_manager/managers',managers)
-        managers_len = len(managers)
 
         # check for managers existance
         # + and prepare the ldap/modify_s opp
@@ -651,7 +661,7 @@ def _json_user_getset_manager(uid, vals=None):
 
             try:
                 _uid = ldap.dn.explode_dn(mandn, notypes=1)[0]     
-            except ldap.DECODING_ERROR, e:
+            except ldap.DECODING_ERROR:
                 resu = _json_result(success=False, message='invalid manager (dn=%s)' % mandn)
                 resu['cn'] = old_managers_str
                 return resu
@@ -668,7 +678,7 @@ def _json_user_getset_manager(uid, vals=None):
         _debug('_json_user_getset_manager/list_modify_attrs',list_modify_attrs)
 
         # do the modify
-        objs = main_ldap_server['file'].modify_s(dn, list_modify_attrs)
+        main_ldap_server['file'].modify_s(dn, list_modify_attrs)
 
         if len(list_filters) > 0:
             # get the dn,cn of managers
@@ -709,13 +719,6 @@ def _ssh_exec_paramiko (host, user, list_cmds):
     
     Raise SSH_ERROR, SSH_AUTH_ERROR, SSH_EXEC_ERROR
     """
-    try:
-        from paramiko.util import hexlify
-    except:
-        _debug('_ssh_exec_paramiko','module paramiko.util not found. Return!')
-        raise SSH_ERROR('module paramiko not found')
-        
-
     if not host or not user or len(list_cmds) == 0:
         return []
 
@@ -740,7 +743,7 @@ def _ssh_exec_paramiko (host, user, list_cmds):
             ssh.connect(host, username='root', password='', key_filename=os.path.expanduser('~/.ssh/id_rsa') )
         except paramiko.BadHostKeyException, paramiko.AuthenticationException:
             _debug('_ssh_exec_paramiko','connection to %s with `~/.ssh/id_rsa` ... FAILED' % host)
-            raise SSH_ERROR('Can not connect to host %s. You need to set a public key' % host)
+            raise SSH_ERROR, 'Can not connect to host %s. You need to set a public key' % host
 
     ### commands
     list_out = []
@@ -750,7 +753,7 @@ def _ssh_exec_paramiko (host, user, list_cmds):
         err = stderr.read()
         if err:
             _debug('_ssh_exec_paramiko/exec cmd(%s)/sdterr' % cmd, err)
-            raise SSH_ERROR(err)
+            raise SSH_ERROR, err
         else:
             _debug('_ssh_exec_paramiko/exec cmd(%s)' % cmd, 'OK')
         list_out = list_out + stdout.readlines()
@@ -768,7 +771,6 @@ def _ssh_exec_paramiko_extented(host, user, list_cmds):
     """
     import socket
     try:
-        import paramiko
         from paramiko.util import hexlify
     except:
         _debug('_ssh_exec_paramiko_extented','module paramiko not found. Return!')
@@ -922,10 +924,10 @@ def ldap_load_config(filename):
     def usage():
         print
         print '#The syntax for the configuration file is:'
-        print '[' + _colors.OKGREEN + '<server_id>' + _colors.NONE + ']'
+        print '[' + _colors.OKGREEN + '<server_id>' + _colors.NOCOLOR + ']'
 
         def t(name, text):
-            print name + ' = ' + _colors.OKGREEN + text + _colors.NONE
+            print name + ' = ' + _colors.OKGREEN + text + _colors.NOCOLOR
     
         _keys_sorted = config_attrs.keys()
         _keys_sorted.sort()
@@ -936,13 +938,13 @@ def ldap_load_config(filename):
     config.read(filename)
 
     if not os.path.isfile(filename):
-        print _colors.FAIL + 'Configuration File "%s" does not exists' % filename + _colors.NONE
+        print _colors.FAIL + 'Configuration File "%s" does not exists' % filename + _colors.NOCOLOR
         usage()
         sys.exit(1)
 
     sections = config.sections()
     if len(sections) == 0:
-        print _colors.FAIL + 'no section in file \'%s\'' % os.path.abspath(filename) + _colors.NONE
+        print _colors.FAIL + 'no section in file \'%s\'' % os.path.abspath(filename) + _colors.NOCOLOR
         usage()
         sys.exit(1)
     
@@ -995,12 +997,13 @@ def ldap_groups(list_filters=[], list_attrs=None):
     base = main_ldap_server['basegroup']
 
     # filter build
+    _filters = list_filters
     if 'objectClass=groupOfUniqueNames' not in list_filters:
-        list_filters.append('objectClass=groupOfUniqueNames')
+        _filters.append('objectClass=groupOfUniqueNames')
 
-    _debug('ldap_groups/list_filters',list_filters)
+    _debug('ldap_groups/list_filters',_filters)
 
-    return _ldap_search(base, list_filters=list_filters, list_attrs=list_attrs)
+    return _ldap_search(base, list_filters=_filters, list_attrs=list_attrs)
     
    
 def ldap_users(base=None, list_filters=None, list_attrs=None, filterstr=''):
@@ -1386,7 +1389,7 @@ def json_useradd():
 
     # user creation
     try:
-        objs = _ldap_useradd(dn, ldap_data)
+        _ldap_useradd(dn, ldap_data)
     except ldap.LDAPError, e:
         _debug('json_useradd/Exception',repr(e))
         return _json_result(success=False, message='message du serveur LDAP: '+repr(e))
@@ -1404,7 +1407,6 @@ def json_useradd():
     ldap_close()
 
     ### NFS operations
-    list_print_cmds = []
     for text, cmd in [
         ('creation du HOME par copie des fichiers /etc/skel','cp -r /etc/skel %s' % homeDirectory),
         (u'changement du propriétaire','chown -R %s:%s %s' % (uidNumber, gidNumber, homeDirectory)),
@@ -1697,7 +1699,7 @@ if __name__ == '__main__':
     if bottle.DEBUG:
         port = 8888
         reloader = True
-        print _colors.OKBLUE + 'mode DEBUG' + _colors.NONE
+        print _colors.OKBLUE + 'mode DEBUG' + _colors.NOCOLOR
     else:
         port = 8080
         reloader = False
