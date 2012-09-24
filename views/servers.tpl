@@ -6,4 +6,5 @@
         <li><a href="/server/{{s}}">{{s}}</a>. <input type="button" id="{{s}}" value="test connexion" onclick="alert('Not Yet Implemented')"/></li>
     %end
     </ul>
+</div>
 
