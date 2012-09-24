@@ -50,15 +50,15 @@
             %else:
                 <div id="warning" style="display:none;"></div>
             %end
+            <div id="content-text">
 <!------------------------------ -->
 <!-- BEGIN INCLUDE from base.tpl -->
 
-            <div id="content-text">
             %include
-            </div><!-- content-text -->
 
 <!-- END   INCLUDE from base.tpl -->
 <!------------------------------ -->
+            </div><!-- content-text -->
         </div><!-- content -->
         <div id="bottom">
         bottledap version {{version}} 
