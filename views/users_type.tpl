@@ -114,6 +114,7 @@ $(function() {
         var mail = $("input[name='mail']").val();
         var description = $("input[name='description']").val();
         var usertype = $("#select-usertype").val();
+        var hostname = $("#select-hostname").val();
         var uid = $("#tr-uid input").val();
 
         if (! givenName) {
@@ -146,6 +147,7 @@ $(function() {
         data['mail'] = mail;
         data['description'] = description;
         data['usertype'] = usertype;
+        data['hostname'] = hostname;
         if (uid) data['uid'] = uid;
         
 
@@ -244,6 +246,23 @@ $(function() {
                 <th>directeur</th>
                 <td>
                     <input type="text" name="manager">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2"><hr/><td>
+            </tr>
+            <tr>
+                <th>serveur NFS</th>
+                <td>
+                    <select name="hostname" id="select-hostname">
+                    %for nfs in nfs_servers: 
+                    <option value="{{nfs}}"
+                        %if nfs == 'poisson':
+                            selected="selected"
+                        %end
+                    >{{nfs}}</option>
+                    %end
+                    </select>
                 </td>
             </tr>
             <tr>

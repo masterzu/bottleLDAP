@@ -68,15 +68,23 @@ a.email {
     color: #555;
     font-family: 'Droid Sans', 'Trebuchet MS', sans-serif;
 }
-
 a:hover {
     text-decoration: underline;
 }
 
-ol li {
+ul {
+    list-style-type:none;
+    list-style-position:inside;
+}
+
+li {
 
 }
 
+li a {
+    padding:0;
+    /*border: */
+}
 dt {
     font-weight: bold;
     /*font-family: monospace;*/
@@ -87,6 +95,10 @@ pre {
     /*white-space:pre;*/
     background-color: white;
     border-left: 1px solid #444;
+}
+button {
+    font-size: 12px;
+    font-stretch:narrower;
 }
 
 /**********************************************************
@@ -122,6 +134,32 @@ pre {
 .hide {
     display: none; 
 }
+.term {
+    font: 10/12px "VT-100",Terminal,monospace;
+    font-weight: bold;
+    white-space:pre;
+    background-color: white;
+    color: green;
+}
+.widget_ok {
+    background-color: green;
+}
+.widget_notok {
+    background-color: red;
+}
+.server {
+    float: left;
+}
+.noserver {
+    clear: left;
+}
+.nfs {
+    color: #0a0;
+}
+.ldap {
+    color: #a00;
+}
+
 
 
 /**********************************************************
@@ -217,7 +255,6 @@ pre {
     text-decoration: none;
     margin: 0; padding: 0; 
 }
-
 #nav ul {
     margin: 0; padding: 0; 
 }
@@ -265,6 +302,7 @@ pre {
     width:768px;float:left;
     /*margin-top: 20px;*/
     font: 13px/22px 'Droid Sans', 'Trebuchet MS', sans-serif;
+    text-shadow: none;
 }
 
 #content-text {
@@ -278,6 +316,9 @@ pre {
     top: -7px; 
     margin:0; padding:3px 10px;
 }
+#content h1, #content h2, #content h3 {
+    clear: left;
+}
 
 #content div#fiche th {
     font-family: monospace;
@@ -285,6 +326,41 @@ pre {
 }
 #content div#fiche input {
     font-family: monospace;
+}
+#content ul {
+    margin: 0; padding: 0; 
+    list-style-type:none;
+}
+#content li {
+    margin: 0; padding: 0; 
+}
+#content a {
+    text-decoration: none;
+    margin: 0; padding: 0; 
+}
+#content a:hover {
+    text-decoration: underline;
+    margin: 0; padding: 0; 
+}
+#content a.server {
+    text-decoration:none;
+    display:block;
+    /*
+    color: rgba(25,25,255,.5);
+    */
+    background: rgba(255,255,2555,.5);
+    margin: 5px; padding:5px;
+    font-variant:small-caps;
+    font-size:larger;
+    border: 3px outset #aaa;
+}
+#content a.server:hover {
+    text-decoration:none;
+    /*
+    color: #000;
+    */
+    background: #fff;
+    border: 3px inset #aaa;
 }
 /**********************************************************
  table sortable with JQuery and plugin tablesorter 
@@ -418,4 +494,13 @@ pre {
 
 .ui-menu {
     font: 13px/22px 'Droid Sans', 'Trebuchet MS', sans-serif;
+}
+
+
+/**********************************************************
+ raphael graph
+*/
+#pie svg {
+    background-color: white;
+    border: 1px solid;
 }

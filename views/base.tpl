@@ -61,15 +61,17 @@
             </div><!-- content-text -->
         </div><!-- content -->
         <div id="bottom">
-        bottledap version {{version}} 
+        bottleLDAP {{version}} 
         &bull; 
 	    &copy; <span id="author">{{author}}</span>, 2011&ndash;2012 
         &bull; 
-        animé par <a href="http://jquery.com">jQUERY</a>
+        illustré par <a href="http://raphaeljs.com" target="_blanck">Raphaël JS</a>
         &bull; 
-        propulsé par <a href="http://bottlepy.org/docs/0.10/">bottlepy</a> 
+        animé par <a href="http://jquery.com" target="_blanck">jQUERY</a>
         &bull; 
-        coagulé par <a href="http://www.python-ldap.org/">python-ldap</a>
+        propulsé par <a href="http://bottlepy.org/docs/0.11/" target="_blanck">bottlepy</a> 
+        &bull; 
+        coagulé par <a href="http://www.python-ldap.org/" target="_blanck">python-ldap</a>
         </div><!-- bottom -->
     </div><!-- content-center -->
     </div><!-- content-container -->

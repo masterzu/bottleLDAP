@@ -17,6 +17,61 @@ String.prototype.trim = function() {
     return this.replace(/^\s+|\s+$/g, ''); 
 };
 
+
+/**********************************************************
+ ajax functions
+*/
+
+
+// general function to handle button/span/url
+// button && span not null: print message in span
+// button not null && spann null: change class to button
+function ajax_button_span_url(button, span, url){
+    var this_button = button;
+    var this_span = span;
+
+    if (button == null && span == null) {
+        show_warning('ERROR in ajax_button_span_url: null !');
+        return;
+    }
+
+    //hide warning
+    show_warning();
+
+    //alert('serveur {{name}} with url:'+url);
+    if (this_span != null) this_span.addClass('ui-autocomplete-loading').html('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
+
+    // do the ajax job with a timeout
+    $.ajax({
+        url: url,
+        type: "GET",
+        dataType: "json",
+        timeout: 1500,
+        success: function(response) {
+            if (this_span != null) this_span.removeClass('ui-autocomplete-loading').text('');
+            if (response['success']) {
+                if (this_span != null)
+                    this_span.text(response['message'])
+                else
+                    this_button.addClass('widget_ok').removeClass('widget_notok');
+            } else {
+                if (this_span != null)
+                    show_warning(response['message'])
+                else
+                    this_button.addClass('widget_notok').removeClass('widget_ok');
+            }
+        },
+        error: function(xhr, textStatus, error) {
+            this_span.removeClass('ui-autocomplete-loading').text('');
+            if (textStatus == "timeout")
+                show_warning('Serveur Timeout ... Réessayez si vous osez :)')
+            else 
+                show_warning('Erreur de serveur: '+error+' ('+textStatus+')');
+        }
+    });
+}; 
+
+
 /**********************************************************
  show warning
 */

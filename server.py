@@ -12,7 +12,7 @@ To launch the server just type:
 
 # python server.py
 
-### code chacked with Google Python Style Guide
+### code checked with Google Python Style Guide
 ### http://google-styleguide.googlecode.com/svn/trunk/pyguide.html
 """
 
@@ -30,7 +30,7 @@ import ldap.dn
 import paramiko
 
 __author__ = 'P. Cao Huu Thien'
-__version__ = '11'
+__version__ = 'devel'
 
 """
 History
@@ -38,6 +38,7 @@ History
 main_news = ( 
     ('TODO', 'TODO', [
     'FIXME: json_userdel(): check if user have students',
+    'FIXME: supprimer les lettres lI du generateur de mot de pass',
         "verification AJAX d'un login",
         "gestion des membres/directeurs",
         "gestion multi-NFS",
@@ -45,7 +46,7 @@ main_news = (
         "outils de gestion des utilsateurs: envoi d'email a tous les stagiaires/permanents/permanents ayant un stagiaires-doctorants ...",
         "outils de diagnostic: liste des utilisateurs sans email; stagiaires/phds sans directeur ...",
         ]),
-    ('1', '1 Jan 1970',   [ u'(Très vieille) version initial :)' ]), 
+    ('1', '1 Jan 1970',   [ u'(Très vieille) version initiale :)' ]), 
     ('2', '12 Mars 2012', [ u'Passage à la version 0.10.9 de bottlepy' ]),
     ('3', '15 Mars 2012', [ 'Version alpha', 
         u'Première version fonctionnelle' ]),
@@ -67,11 +68,13 @@ main_news = (
     ),
     ('10', '12 Sept 2012', [ 'Modification sur demande', 
         u"changement de login pour les étudiants : suppression du motif <stagiaireX>",
-        u"vérification du login unique lors de la création un compte"]
+        u"BUGFIX: vérification du login unique lors de la création un compte"]
     ),
-    ('11', 'x Sept 2012', [ 'Modification phase 6', 
-        u"changement de login pour les étudiants : suppression du motif <stagiaireX>",
-        u"vérification du login unique lors de la création un compte",
+    ('11', '22 Oct 2012', [ 'Modification phase 6', 
+        'passage a bottle 0.11.x', 
+        'gestion multi-serveur NFS/LDAP (ldap_servers.ini, nfs_servers.ini)',
+        'tableau de bord des serveurs LDAP/NFS (graphes des quotas pour serveurs NFS, version des distrib et noyau linux)',
+        'DEVEL: utilisation du Google Python Style Guide avec pychecker',
         ]
     ),
 )
@@ -88,23 +91,24 @@ main_users = {
         'name': 'permanents',
         'basedn': 'ou=permanents,ou=personnels,o=ijlrda',
         'gid': 30000,
-        'homebase': '/home/permanents/',
+        'homebase': '/%s/permanents/',
         'quotasoft': 0,
         'quotahard': 0,
     },
     'd': {
-        'name': 'thésards',
+        'name': u'thésards',
+
         'basedn': 'ou=doctorants,ou=personnels,o=ijlrda',
         'gid': 40000,
-        'homebase': '/home/doctorants/',
+        'homebase': '/%s/doctorants/',
         'quotasoft': 0,
         'quotahard': 0,
     },
     't': {
-        'name': 'étudiants et invités',
+        'name': u'étudiants et invités',
         'basedn': 'ou=temporaires,ou=personnels,o=ijlrda',
         'gid': 50000,
-        'homebase': '/home/temporaires/',
+        'homebase': '/%s/temporaires/',
         'quotasoft': 10485760,
         'quotahard': 20971520,
     },
@@ -114,8 +118,8 @@ main_users = {
 main_nav = [ 
     ('/', 'accueil'), 
     ('*', 'serveurs'), 
-    ('/server/olympe', 'master'), 
-    ('/servers', 'liste'), 
+    ('/servers', 'tableau de bord'), 
+    ('/server_ldap/olympe', 'master ldap'), 
     ('',''), 
     ('*', 'personnels'),
     ('_SEARCH_','rechercher...'),
@@ -136,8 +140,10 @@ main_nav = [
 main_ldap_server = {}
 
 main_ldap_servers = []
-
 main_ldap_servers_name = []
+
+main_nfs_servers = []
+main_nfs_servers_name = []
 
 #----------------------------------------------------------
 # Exceptions 
@@ -189,16 +195,28 @@ class POSIX_UID_FULL(POSIX):
     pass
 
 class SSH_ERROR(ERROR):
-    def __init__(self):
-        ERROR.__init__(self,'SSH error')
+    def __init__(self, msg=None):
+        if (msg is None):
+            ERROR.__init__(self,'SSH error')
+        else:
+            ERROR.__init__(self,'SSH error: '+msg)
         
 class SSH_AUTH_ERROR(SSH_ERROR):
-    def __init__(self):
-        ERROR.__init__(self,'SSH auth error')
+    def __init__(self, msg='SSH AUTH error'):
+        ERROR.__init__(self, msg)
     
 class SSH_EXEC_ERROR(SSH_ERROR):
+    def __init__(self, msg='SSH EXEC error'):
+        ERROR.__init__(self, msg)
+
+class EXEC_NOSERVER(ERROR):
     def __init__(self, msg):
-        ERROR.__init__(self, 'SSH exec error: '+msg)
+        ERROR.__init__(self, 'EXEC on unknown server: '+msg)
+
+class EXEC_NOTALLOW(ERROR):
+    def __init__(self, msg):
+        ERROR.__init__(self, 'EXEC not allow: '+msg)
+
 
 #----------------------------------------------------------
 # Privates Functions and Classes
@@ -511,7 +529,7 @@ def _ldap_new_uid(givenName, sn, usertype):
     # not suppose to be here
     raise USER_TYPE_UNKNOWN
 
-def _ldap_new_posixAccount(usertype, uid):
+def _ldap_new_posixAccount(usertype, uid, hostname):
     """
     Return uidNumber, gidNumber, homeDirectory (in string) 
     or None on error
@@ -525,20 +543,14 @@ def _ldap_new_posixAccount(usertype, uid):
         return None
 
     gidNumber = main_users[usertype]['gid']
-    homeDirectory = main_users[usertype]['homebase']+uid
 
-    """
-    if usertype == 'p':
-        gidNumber = 30000
-        homeDirectory = '/home/permanents/'+uid
-    elif usertype == 'd':
-        gidNumber = 40000
-        homeDirectory = '/home/doctorants/'+uid
+    # FIXME : Dirty Hack for olympe : homeDirectory = /home/{group}/{user}
+    
+    if hostname=='olympe':
+        homeDirectory = (main_users[usertype]['homebase'] % 'home')+uid
     else:
-        gidNumber = 50000
-        homeDirectory = '/home/temporaires/'+uid
-    """
-        
+        homeDirectory = (main_users[usertype]['homebase'] % hostname)+uid
+
     objs = _ldap_search(main_users[usertype]['basedn'], filterstr='objectClass=person', list_attrs=['uidNumber'])
     #_debug('_ldap_new_posixAccount/objs',objs)
     _debug('_ldap_new_posixAccount/len(objs)',len(objs))
@@ -701,26 +713,194 @@ def _json_user_getset_manager(uid, vals=None):
 
     return resu
 
+def json_exec_common(server, cmd):
+    """
+    Common command executed to all NFS and LDAP servers.
+
+    Args:
+        server: the server name in main_ldap_servers or main_nfs_servers
+        cmd: command ID for a list of command to execute on server
+
+    Returns:
+        dict like in _json_result used by bottle template
+    """
+
+    ssh_kcmds = {
+        'issue': ['cat /etc/issue | head -1'],
+        'uname': ['uname -a']
+    }
+
+    host = ''
+    user = 'root'
+
+    _list = main_ldap_servers + main_nfs_servers
+    for se in _list:
+        if 'name' in se and se['name'] == server:
+            host = se['host']
+            break
+
+    if not host or not server:
+        return _json_result(success=False, message='serveur %s inconnu' % server)
+
+    if cmd not in ssh_kcmds:
+        return _json_result(success=False, message='command interdite')
+
+    try: 
+        output = _ssh_exec(host, user, ssh_kcmds[cmd])
+    except (SSH_AUTH_ERROR, SSH_EXEC_ERROR, SSH_ERROR) as e:
+        return _json_result(success=False, message=e.msg)
+
+    _debug('json_exec_common',output)
+
+    return _json_result(success=True, message="\n".join(output))
+
+
+
+def json_exec_nfs(server, cmd):
+    """
+    Command executed to all NFS servers.
+    Limited to ssh_kcmds.keys(). No arbitrary code allow
+
+    Args:
+        server: the server name in main_nfs_servers
+        cmd: command ID for a list of command to execute on server
+
+    Returns:
+        dict like in _json_result used by bottle template
+    """
+
+    ssh_kcmds = {
+        'check_home_perm': 'ls -ld %s',
+        'check_home_doct': 'ls -ld %s',
+        'check_home_temp': 'ls -ld %s',
+        'nfsstat': 'nfsstat -3sn head -n +1',
+        'quota_home_perm': 'repquota -u %s | awk \'{if (NF==8 && $1!="***" && $1!="Block") print}\'|sort -k3 -nr|head -10',
+        'quota_home_doct': 'repquota -u %s | awk \'{if (NF==8 && $1!="***" && $1!="Block") print}\'|sort -k3 -nr|head -10',
+        'quota_home_temp': 'repquota -u %s | awk \'{if (NF==8 && $1!="***" && $1!="Block") print}\'|sort -k3 -nr|head -10',
+        'quota_total': 'repquota -ua | awk \'{if (NF==8 && $1!="***" && $1!="Block") print}\'|sort -k3 -nr|head -30',
+    }
+
+    host = ''
+    user = 'root'
+    real_cmd = ''
+
+    for se in main_nfs_servers:
+        if 'name' in se and se['name'] == server:
+            host = se['host']
+            nfs_server = se
+            break
+
+    # check host/server
+    if not host or not server:
+        return _json_result(success=False, message='Serveur "%s" inconnu' % server)
+
+    # chech cmd
+    if cmd not in ssh_kcmds:
+        return _json_result(success=False, message='Commande interdite')
+
+
+    ### pre-action cmd
+    if cmd.find('check') != -1:
+        _path = nfs_server[cmd[6:]].rstrip('/')
+        _debug('json_exec_nfs/_path',_path)
+        real_cmd = ssh_kcmds[cmd] % _path
+
+    elif cmd == 'quota_total':
+        real_cmd = ssh_kcmds[cmd]
+        
+    elif cmd.find('quota') != -1:
+        _path = nfs_server[cmd[6:]].rstrip('/')
+        _path_save = _path
+        _debug('json_exec_nfs/_path',_path)
+        # calculate mount point related to _path
+        try:
+            _path = _mount_point_rel_path(host,user,_path)
+        except (SSH_EXEC_ERROR, SSH_AUTH_ERROR, SSH_EXEC_ERROR, SSH_ERROR) as e:
+            return _json_result(success=False, message=e.msg)
+        if _path is None:
+            return _json_result(success=False, message='Pas de montage pour %s' % _path_save)
+        real_cmd = ssh_kcmds[cmd] % _path
+
+    elif cmd == 'nfsstat':
+        real_cmd = ssh_kcmds[cmd]
+
+    _debug('json_exec_nfs/real_cmd',real_cmd)
+
+    try: 
+        output = _ssh_exec(host, user, [real_cmd])
+    except SSH_EXEC_ERROR as e:
+        return _json_result(success=False, message="Erreur d'execution")
+    except (SSH_AUTH_ERROR, SSH_EXEC_ERROR, SSH_ERROR) as e:
+        return _json_result(success=False, message=e.msg)
+
+    ### post-action cmd
+    if cmd.find('check') != -1:
+        message = 'OK'
+    elif cmd == 'quota_total':
+        sizes = {}
+        for line in output:
+            (login, mode, size, rest) = line.split(None, 3)
+            if login == 'root': continue
+            if login in sizes:
+                sizes[login] += int(size)
+            else:
+                sizes[login] = int(size)
+        # sort the dict related to value
+        sorted_sizes = sorted(sizes.iteritems(), key=lambda (k,v): v, reverse=True)
+        _debug('json_exec_nfs/sorted_sizes', sorted_sizes)
+        _debug('json_exec_nfs/len(sorted_sizes)', len(sorted_sizes))
+        # get only login > 10 Go
+        limit = 10 * 1024 * 1024
+        sorted_sizes_10G = filter(lambda (k,v): v > limit, sorted_sizes )
+        if len(sorted_sizes_10G) > 1:
+            message = ['Top 30 users > 10Go %s' % server]
+            message += sorted_sizes_10G
+        else:
+            message = ['Top 30 users %s' % server]
+            message += sorted_sizes
+                
+    elif cmd.find('quota') != -1:
+        #_debug('ouput',output)
+        message = ['Top 10 users %s:%s' % (server, _path)]
+        for line in output:
+            (login, mode, size, rest) = line.split(None, 3)
+            if login == 'root': continue
+            #_debug('line: ',login+'|'+size)
+            message.append((login, size))
+    else:
+        message = output
+
+    #_debug('json_exec_common/message',message)
+
+    return _json_result(success=True, message=message)
+        
 def _ssh_exec(host, user, list_cmds):
     """
-    execute a list of ssh command - generic function
-
-    Return a list of string (stdout and stderr) commands result
-    or None on error
+    High Level exec list of command with ssh
     """
     _debug('_ssh_exec(%s, %s, %s)' % (host, user, list_cmds))
     return _ssh_exec_paramiko(host, user, list_cmds)
 
 def _ssh_exec_paramiko (host, user, list_cmds):
     """
-    execute a list of command with paramiko - easy one
+    Low Level exec list of command with ssh
+    paramiko implementation of _ssh_exec - easy way
 
-    Return a list of string (stdout and stderr) commands result
+    Args: 
+        host, user: the parameters user@host for ssh
+        list_cmds: list of commands to execute to the server
     
-    Raise SSH_ERROR, SSH_AUTH_ERROR, SSH_EXEC_ERROR
+    Returns: 
+        a list of string (stdout) commands result
+    
+    Raises:
+        ERROR(msg) when host or user not valid
+        SSH_AUTH_ERROR when paramiko.BadHostKeyException, paramiko.AuthenticationException
+        SSH_EXEC_ERROR(msg) when ssh.exec_command return a none empty stderr stream
     """
+    _debug('_ssh_exec_paramiko(%s, %s, %s)' % (host, user, list_cmds))
     if not host or not user or len(list_cmds) == 0:
-        return []
+        raise ERROR('host or user not valid')
 
     if bottle.DEBUG:
         paramiko.util.log_to_file('paramiko.log')
@@ -743,7 +923,7 @@ def _ssh_exec_paramiko (host, user, list_cmds):
             ssh.connect(host, username='root', password='', key_filename=os.path.expanduser('~/.ssh/id_rsa') )
         except paramiko.BadHostKeyException, paramiko.AuthenticationException:
             _debug('_ssh_exec_paramiko','connection to %s with `~/.ssh/id_rsa` ... FAILED' % host)
-            raise SSH_ERROR, 'Can not connect to host %s. You need to set a public key' % host
+            raise SSH_AUTH_ERROR('Can not connect to host %s. You need to set a public key' % host)
 
     ### commands
     list_out = []
@@ -753,10 +933,17 @@ def _ssh_exec_paramiko (host, user, list_cmds):
         err = stderr.read()
         if err:
             _debug('_ssh_exec_paramiko/exec cmd(%s)/sdterr' % cmd, err)
-            raise SSH_ERROR, err
+            raise SSH_EXEC_ERROR(err)
         else:
-            _debug('_ssh_exec_paramiko/exec cmd(%s)' % cmd, 'OK')
-        list_out = list_out + stdout.readlines()
+            _debug('_ssh_exec_paramiko/exec cmd(%s)/sdterr' % cmd, 'OK')
+            pass
+
+        # rstripe \n on stdout
+        for o in stdout.readlines():
+            if o.endswith('\n'):
+                o = o[:-1]
+            list_out.append(o)
+        #_debug('_ssh_exec_paramiko/exec cmd(%s)/stdout' % cmd, list_out)
 
     return list_out
 
@@ -879,17 +1066,19 @@ def _ssh_exec_subprocess(host, user, list_cmds):
         list_out.append(out)
     return list_out
     
-def _ssh_setquota(host,login,soft=0,hard=0):
+def _ssh_setquota(host,login,path,soft=0,hard=0):
     """
     Define a user quota on path as 'soft hard 0 0'
 
     return True if OK
     """
-    if not host or not login:
+    if not host or not login or not path:
         return False
 
-    cmd = 'setquota -u ' + login + ' %d %d 0 0 /home' % (soft, hard) 
-    _debug('_ssh_setquota(%s, %s, %d, %d)' % (host, login, soft, hard), 'cmd=%s' % cmd)
+    mount = _mount_point_rel_path(host,user,path)
+
+    cmd = 'setquota -u ' + login + ' %d %d 0 0 %s' % (soft, hard, mount) 
+    _debug('_ssh_setquota(%s, %s, %s, %d, %d)' % (host, login, mount, soft, hard), 'cmd=%s' % cmd)
 
     try:
         _ssh_exec(host,'root', [cmd])
@@ -898,9 +1087,106 @@ def _ssh_setquota(host,login,soft=0,hard=0):
 
     return True
 
+
+def _mount_point_rel_path(host, user, path):
+    """
+    calculate mount point related to path
+
+    Args: 
+        path: the beginning of the search walk
+
+    Returns:
+        the finding mount point parent to the path
+        or None if not found
+
+    Raises:
+        SEE _ssh_exec
+    """
+    mounts = _ssh_exec(host, user, ["cat /proc/mounts |awk '{print $2}'|sort -ur"])
+    resu = path
+    ok = False
+
+    for mount in mounts:
+        if mount == path:
+            _debug('json_exec_nfs','mount point found: %s' % mount)
+            ok = True
+            break
+            
+        if os.path.commonprefix([mount, path]) == mount:
+            resu = mount
+            _debug('json_exec_nfs','sub mount point found: %s' % mount)
+            ok = True
+            break
+    if ok:
+        return resu
+    else:
+        return None
+
+
 #----------------------------------------------------------
 # Public Functions
 #----------------------------------------------------------
+
+def nfs_load_config(filename):
+    """
+    Load the file and set the GLOBAL VAR main_nfs_servers
+    """
+    global main_nfs_servers, main_nfs_servers_name
+
+    _debug('Loading NFS configuration file "'+filename+'" ...')
+
+    config = ConfigParser.RawConfigParser()
+    config_attrs = {
+        'name': '<server name>', 
+        'host': '<server URL>', 
+        'home_perm' : '<absolute path to permanents home>',
+        'home_doct' : '<absolute path to doctorants home>',
+        'home_temp' : '<absolute path to temporaires home>'
+    }
+
+    def usage():
+        print
+        print '#The syntax for the configuration file is:'
+        print '[' + _colors.OKGREEN + '<server_id>' + _colors.NOCOLOR + ']'
+
+        def t(name, text):
+            print name + ' = ' + _colors.OKGREEN + text + _colors.NOCOLOR
+    
+        _keys_sorted = config_attrs.keys()
+        _keys_sorted.sort()
+
+        for k in _keys_sorted:
+            t(k,config_attrs[k])
+
+    config.read(filename)
+
+    if not os.path.isfile(filename):
+        print _colors.FAIL + 'Configuration File "%s" does not exists' % filename + _colors.NOCOLOR
+        usage()
+        sys.exit(1)
+
+    sections = config.sections()
+    if len(sections) == 0:
+        print _colors.FAIL + 'no section in file \'%s\'' % os.path.abspath(filename) + _colors.NOCOLOR
+        usage()
+        sys.exit(1)
+    
+    for sec in sections:
+        if not sec: continue
+        _debug('... section ['+sec+'] ... ')
+        _dict = dict(config.items(sec))
+        for k in config_attrs.keys():
+            if k not in _dict:
+                print _colors.FAIL + 'Configuration File "%s" missing %s' % (filename, k) + _colors.NOCOLOR
+                usage()
+                sys.exit(1)
+        _debug('    section syntax OK')
+        
+        main_nfs_servers.append(_dict)
+        
+    main_nfs_servers_name = [se['name'] for se in main_nfs_servers]
+    _debug('main_nfs_servers:',main_nfs_servers)
+
 
 def ldap_load_config(filename):
     """
@@ -908,7 +1194,7 @@ def ldap_load_config(filename):
     """
     global main_ldap_servers, main_ldap_servers_name
 
-    _debug('Loading configuration file "'+filename+'" ...')
+    _debug('Loading LDAP configuration file "'+filename+'" ...')
 
     config = ConfigParser.RawConfigParser()
     config_attrs = {
@@ -947,16 +1233,39 @@ def ldap_load_config(filename):
         print _colors.FAIL + 'no section in file \'%s\'' % os.path.abspath(filename) + _colors.NOCOLOR
         usage()
         sys.exit(1)
-    
+   
+    sec_errors = 0
     for sec in sections:
-        if not sec: continue
-        _debug('loading section ['+sec+']')
+        if not sec: 
+            continue
+        _debug('... section ['+sec+']')
         _dict = dict(config.items(sec))
         if 'port' not in _dict or not _dict['port']: _dict['port'] = 389
-        main_ldap_servers.append(_dict)
+        sec_err = 0
+        for k in config_attrs.keys():
+            if k not in _dict or not _dict[k]:
+                print _colors.WARNING + 'Configuration File "%s":' % filename + _colors.NOCOLOR + ' missing "%s=" on section [%s]' % (k, sec) 
+                sec_errors += 1
+                sec_err += 1
+        if sec_err == 0:
+            _debug('    section syntax OK')
+            main_ldap_servers.append(_dict)
+        else:
+            _debug('    section syntax ERROR: skip')
+            print _colors.WARNING + "section [%s] not loaded" % sec + _colors.NOCOLOR
+
+    if sec_errors != 0:
+        usage()
+    else:
+        print _colors.OKGREEN + 'Configuration file "%s" loaded' % filename + _colors.NOCOLOR
+
         
     main_ldap_servers_name = [se['name'] for se in main_ldap_servers]
     #_debug('main_ldap_servers:',main_ldap_servers)
+
+    if len(main_ldap_servers_name) == 0:
+        print _colors.FAIL + 'Configuration syntax error:' + _colors.NOCOLOR + 'on file ' + filename
+        sys.exit(1)
 
 def ldap_initialize(bind=False):
     """
@@ -1076,13 +1385,18 @@ def index():
 @view('servers')
 def servers():
     _debug_route()
-    return _dict(servers=main_ldap_servers_name)
+    return _dict(ldap_servers=main_ldap_servers_name, 
+        nfs_servers=main_nfs_servers_name,
+        common_cmds=['uname', 'issue'],
+        ldap_cmds=[],
+        nfs_cmds=['check_home_perm', 'check_home_doct', 'check_home_temp','nfsstat'],
+        )
 
-@route('/server/<server>')
-def server_attr(server=None):
-    """print server information
+@route('/server_ldap/<server>')
+def server_ldap(server=None):
+    """print LDAP server information
     use mulpiple template : 
-    * server_att : for good request
+    * server_ldap : for good request
     * servers : for warning redirection
     """
     _debug_route()
@@ -1096,10 +1410,29 @@ def server_attr(server=None):
             if ldap_conn is None:
                 return template('servers', _dict(warn='LDAP server "%s" connexion error' 
                     % server, servers=main_ldap_servers_name))
-            return template('server_attr', _dict(name=se['name'], server=se))
+            return template('server_ldap', _dict(name=se['name'], server=se))
 
     return template('servers', _dict(warn='LDAP server "%s" not found' % server, servers=main_ldap_servers_name))
 
+@route('/server_nfs/<server>')
+def server_nfs(server=None):
+    """print LDAP server information
+    use multiple template : 
+    * server_nfs : for good request
+    * servers : for warning redirection
+    """
+    _debug_route()
+    for se in main_nfs_servers:
+        if 'name' not in se:
+            _debug('server_attr/se[name]','Dont exists !!')
+            continue
+        if se['name'] == server:
+            return template('server_nfs', _dict(name=se['name'], server=se))
+
+    return template('servers', 
+        _dict(warn='NFS server "%s" not found' % server, 
+        ldap_servers=main_ldap_servers_name, 
+        nfs_servers=main_nfs_servers_name))
 
 @route('/groups')
 @view('groups')
@@ -1203,7 +1536,7 @@ def users_type(type=None):
         return _dict(warn='No users of type %s' % title, title=title, users=[])
         
     ldap_close()
-    return _dict(title=title, users=users)
+    return _dict(title=title, users=users, nfs_servers=main_nfs_servers_name)
 
 
 @route('/user/<uid>')
@@ -1292,7 +1625,7 @@ def json_useradd():
     or None on error
 
     Mandatory fields passed in POST: 
-    'cn', 'sn', 'givenName', 'mail', 'description', 'usertype'
+    'cn', 'sn', 'givenName', 'mail', 'description', 'usertype', 'hostname'
     
     Mandatory fields for usertype == p:
     'group'
@@ -1319,10 +1652,14 @@ def json_useradd():
         
 
     # mandatory/none LDAP attrs
-    for attr in ['usertype']:
+    for attr in ['usertype', 'hostname']:
         if attr not in datas or not datas[attr]:
             return _json_result(success=False, message='missing mandatory/none LDAP parameter: '+attr)
-        usertype = datas['usertype']
+        else:
+            _debug(attr,datas[attr])
+            
+    usertype = datas['usertype']
+    hostname = datas['hostname']
 
     if usertype not in ['p', 'd', 't']:
         return _json_result(success=False, message='bad attr usertype: '+usertype)
@@ -1353,7 +1690,7 @@ def json_useradd():
             
 
     try:
-        _t = _ldap_new_posixAccount(usertype, uid)
+        _t = _ldap_new_posixAccount(usertype, uid, hostname)
     except POSIX_UID_FULL:
         ldap_close()
         return _json_result(success=False, message='pas de d information POSIX disponible pour %s' % uid)
@@ -1407,6 +1744,13 @@ def json_useradd():
     ldap_close()
 
     ### NFS operations
+    nfs_server_hostname = ''
+    for n in main_nfs_servers:
+        if n['name'] == hostname:
+            nfs_server_hostname = n['host']
+    if not nfs_server_hostname:
+        return _json_result(success=False, message='Cant find NFS')
+
     for text, cmd in [
         ('creation du HOME par copie des fichiers /etc/skel','cp -r /etc/skel %s' % homeDirectory),
         (u'changement du propriétaire','chown -R %s:%s %s' % (uidNumber, gidNumber, homeDirectory)),
@@ -1414,14 +1758,15 @@ def json_useradd():
         ]:
         _debug('json_useradd/Try to exec %s [%s]' % (cmd, text))
         try:
-            _ssh_exec(main_ldap_server['host'],'root',[cmd])
+            _ssh_exec(nfs_server_hostname,'root',[cmd])
         except SSH_EXEC_ERROR as e:
             return _json_result(success=False, message=e.msg)
         _debug('json_useradd/Try to exec %s' % cmd, 'OK')
 
     
-    if not _ssh_setquota(main_ldap_server['host'], 
+    if not _ssh_setquota(nfs_server_hostname, 
             uid, 
+            homeDirectory,
             main_users[usertype]['quotasoft'], 
             main_users[usertype]['quotahard']) :
         return _json_result(success=False, message='erreur de Quota')
@@ -1647,38 +1992,56 @@ def json_autocomplete_manager():
     return json.dumps(json_resu)
 
 
-@route('/api/server/<server>')
-def json_server(server):
-    """
-    check for local info in server with ssh
-    """
+@route('/api/server/<server>/issue')
+def json_server_issue(server):
     _debug_route()
+    return json_exec_common(server,'issue')
 
-    if not server: 
-        return _json_result(success=False, message='Server not specified')
+@route('/api/server/<server>/uname')
+def json_server_uname(server):
+    _debug_route()
+    return json_exec_common(server,'uname')
 
-    host = ''
-    for se in main_ldap_servers:
-        if 'name' in se and se['name'] == server:
-            host = se['host']
-            break
+@route('/api/server_nfs/<server>/check_home_perm')
+def json_server_nfs_check_home_perm(server):
+    _debug_route()
+    return json_exec_nfs(server,'check_home_perm')
 
-    if not host:
-        return _json_result(success=False, message='Server %s unknown' % server)
-  
-    try: 
-        output = _ssh_exec(host,'root',['cat /etc/issue | head -1'])
-    except (SSH_AUTH_ERROR, SSH_EXEC_ERROR, SSH_ERROR) as e:
-        return _json_result(success=False, message=e.msg)
+@route('/api/server_nfs/<server>/check_home_doct')
+def json_server_nfs_check_home_doct(server):
+    _debug_route()
+    return json_exec_nfs(server,'check_home_doct')
 
-    if output is None:
-        resu = _json_result(success=False, message="SSH auth failed")
-    else:
-        resu = _json_result(message="\n".join(output))
-    _debug('json_server/resu',resu)
+@route('/api/server_nfs/<server>/check_home_temp')
+def json_server_nfs_check_home_temp(server):
+    _debug_route()
+    return json_exec_nfs(server,'check_home_temp')
 
-    return resu
-    
+@route('/api/server_nfs/<server>/nfsstat')
+def json_server_nfs_nfsstat(server):
+    _debug_route()
+    return json_exec_nfs(server,'nfsstat')
+
+@route('/api/server_nfs/<server>/quota_home_perm')
+def json_server_nfs_quota_home_perm(server):
+    _debug_route()
+    return json_exec_nfs(server,'quota_home_perm')
+
+@route('/api/server_nfs/<server>/quota_home_doct')
+def json_server_nfs_quota_home_doct(server):
+    _debug_route()
+    return json_exec_nfs(server,'quota_home_doct')
+
+@route('/api/server_nfs/<server>/quota_home_temp')
+def json_server_nfs_quota_home_temp(server):
+    _debug_route()
+    return json_exec_nfs(server,'quota_home_temp')
+
+@route('/api/server_nfs/<server>/quota_total')
+def json_server_nfs_quota_total(server):
+    _debug_route()
+    return json_exec_nfs(server,'quota_total')
+
 
 #----------------------------------------------------------
 # MAIN
@@ -1705,7 +2068,8 @@ if __name__ == '__main__':
         reloader = False
         
     ldap_load_config('ldap_servers.ini')
-    run(host='0.0.0.0', port=port, reloader=reloader)
+    nfs_load_config('nfs_servers.ini')
+    run(host='0.0.0.0', port=port, reloader=reloader, debug=bottle.DEBUG)
 
 
 # vim:spelllang=en:
