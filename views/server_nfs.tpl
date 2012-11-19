@@ -7,6 +7,7 @@ $(function() {
 
     function ajax_button_graph(pie, span, url){
         span.addClass('ui-autocomplete-loading').html('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
+        pie.hide('slow');
         $.ajax({
             url: url,
             type: "GET",
@@ -27,6 +28,8 @@ $(function() {
                         logins.push(login);
                         sizes.push(parseInt(size, 10));
                         };
+                    // Must be BEFORE Raphael - draw
+                    pie.show('slow');
                     // (re)plot pie
                     Raphael("pie", 400, 400).pieChart(200, 200, 133, sizes, logins, title);
                 } else {
