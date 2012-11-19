@@ -78,12 +78,12 @@ Raphael.fn.pieChart = function (cx, cy, r, values, labels, title) {
             chart.push(user_size);
             start += .1;
         },
-        thetitle = paper.text(0, 15, title).attr({fill: "#000", stroke: "none", "font-size": 25}),
+        thetitle = paper.text(15, 15, title).attr({fill: "#000", stroke: "none", "font-size": 25, 'text-anchor': 'start'}),
         thetitle_w = thetitle.getBBox()['width'],
         thetitle_h = thetitle.getBBox()['height'];
 
     // place the title
-    thetitle.translate(paper.width - thetitle_w/2 -30 , 0);
+    //thetitle.transform('t'+X+',0');
     chart.push(thetitle);
 
     for (var i = 0, ii = values.length; i < ii; i++) {
