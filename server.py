@@ -16,14 +16,17 @@ To launch the server just type:
 ### http://google-styleguide.googlecode.com/svn/trunk/pyguide.html
 """
 
+### standard libraries
 import os, os.path
 import sys
-import ConfigParser
-import textwrap
-import bottle
-from bottle import route, run, view, template, static_file, request, redirect
-from bottle import debug
 import json
+import ConfigParser
+import pprint
+import textwrap
+import logging
+
+### external libraries
+import bottle
 import ldap
 import ldap.filter
 import ldap.dn
@@ -77,6 +80,11 @@ main_news = (
         'DEVEL: utilisation du Google Python Style Guide avec pychecker',
         ]
     ),
+    ('devel', 'xx 2012', [ 'Modification phase 7', 
+        "integration de l'overlat ppolicy"
+        'test matisse',
+        ]
+    ),
 )
 
 
@@ -114,29 +122,6 @@ main_users = {
     },
 }
 
-
-main_nav = [ 
-    ('/', 'accueil'), 
-    ('*', 'serveurs'), 
-    ('/servers', 'tableau de bord'), 
-    ('/server_ldap/olympe', 'master ldap'), 
-    ('',''), 
-    ('*', 'personnels'),
-    ('_SEARCH_','rechercher...'),
-    ('/users/p',main_users['p']['name']),
-    ('/users/d',main_users['d']['name']),
-    ('/users/t',main_users['t']['name']),
-    ('',''), 
-    ('*', 'structure'),
-    ('/groups','les équipes'),
-    ('/users','les utilisateurs'),
-    ('',''), 
-    ('*', 'site web'), 
-    ('/news', 'news') , 
-    ('/about', 'à propos')
-    ]
-
-
 main_ldap_server = {}
 
 main_ldap_servers = []
@@ -144,6 +129,8 @@ main_ldap_servers_name = []
 
 main_nfs_servers = []
 main_nfs_servers_name = []
+
+
 
 #----------------------------------------------------------
 # Exceptions 
@@ -245,25 +232,28 @@ class _colors:
 def _debug(title, text=None):
     if not bottle.DEBUG:
         return
+    pp = pprint.PrettyPrinter(indent=7).pprint
+
+    _tab = _colors.HEADER + "      | "
         
     if text is None:
         print _colors.HEADER + '[DEBUG] '+ _colors.OKGREEN + title + _colors.NOCOLOR
     else:
         if isinstance(text,type('qwe')):
-            print _colors.HEADER + '[DEBUG] '+ _colors.OKGREEN + title + _colors.NOCOLOR + ' = ' + _colors.OKBLUE \
-                + text + _colors.NOCOLOR
-            #for t in textwrap.wrap(text, 80): print t
-            #print text + _colors.NOCOLOR
+            print _colors.HEADER + '[DEBUG] '+ _colors.OKGREEN + title + _colors.NOCOLOR + ' : '
+            for t in textwrap.wrap(text, 80): 
+                print _tab + _colors.OKBLUE + t
+
 
         else:
             print _colors.HEADER + '[DEBUG] '+ _colors.OKGREEN + title + _colors.NOCOLOR + ' = ' + _colors.OKBLUE
-            pprint(text)
+            pp(text)
             print _colors.NOCOLOR
 
 def _debug_route():
-    _debug("routing %s ..." % request.path)
-    if len(request.params) > 0:
-        _debug("    ... with %s" % repr(request.params.items()))
+    _debug("routing %s ..." % bottle.request.path)
+    if len(bottle.request.params) > 0:
+        _debug("    ... with %s" % repr(bottle.request.params.items()))
 
 def _nav():
     """
@@ -271,7 +261,7 @@ def _nav():
     """
     nav = []
     for (l, n) in main_nav:
-        if l == request.path:
+        if l == bottle.request.path:
            nav.append(('', n))
         else:
            nav.append((l, n))
@@ -419,13 +409,14 @@ def _ldap_search(base, list_filters=[], list_attrs=None, filterstr=''):
         _debug('CALL _ldap_search', 'base=%s, list_filters=%s, list_attrs=%s, filterstr=%s - None (LDAP not connected?)' % (base, list_filters, list_attrs, filterstr))
         return None
     
-    _debug('CALL _ldap_search', 'base=%s, list_filters=%s, list_attrs=%s, filterstr=%s' % (base, list_filters, list_attrs, filterstr))
 
     if filterstr:
         _filter = filterstr
     else:
         _filter = _ldap_build_ldapfilter_and(list_filters)
+    _debug('_ldap_search/_filter', _filter)
 
+    _debug('CALL _ldap_search', 'base=%s, list_filters=%s, list_attrs=%s, filterstr=%s' % (base, list_filters, list_attrs, filterstr))
     objs = main_ldap_server['file'].search_st(base, ldap.SCOPE_SUBTREE, filterstr=_filter, attrlist=list_attrs, timeout=30)
     #_debug('RETURN _ldap_search',objs)
     return objs
@@ -943,7 +934,6 @@ def _ssh_exec_paramiko (host, user, list_cmds):
             if o.endswith('\n'):
                 o = o[:-1]
             list_out.append(o)
-        #_debug('_ssh_exec_paramiko/exec cmd(%s)/stdout' % cmd, list_out)
 
     return list_out
 
@@ -1370,19 +1360,19 @@ def ldap_users_by_type(type):
 #----------------------------------------------------------
 # Routing Functions
 
-@route('/static/<filepath:path>')
+@bottle.route('/static/<filepath:path>')
 def static(filepath):
-    return static_file(filepath, root=os.path.join('.', 'static'))
+    return bottle.static_file(filepath, root=os.path.join('.', 'static'))
 
 
-@route('/')
-@view('index')
+@bottle.route('/')
+@bottle.view('index')
 def index():
     _debug_route()
     return _dict(news=main_news)
 
-@route('/servers')
-@view('servers')
+@bottle.route('/servers')
+@bottle.view('servers')
 def servers():
     _debug_route()
     return _dict(ldap_servers=main_ldap_servers_name, 
@@ -1392,7 +1382,7 @@ def servers():
         nfs_cmds=['check_home_perm', 'check_home_doct', 'check_home_temp','nfsstat'],
         )
 
-@route('/server_ldap/<server>')
+@bottle.route('/server_ldap/<server>')
 def server_ldap(server=None):
     """print LDAP server information
     use mulpiple template : 
@@ -1408,13 +1398,13 @@ def server_ldap(server=None):
             ldap_kargs = se
             ldap_conn = _ldap_initialize(ldap_kargs)
             if ldap_conn is None:
-                return template('servers', _dict(warn='LDAP server "%s" connexion error' 
+                return bottle.template('servers', _dict(warn='LDAP server "%s" connexion error' 
                     % server, servers=main_ldap_servers_name))
-            return template('server_ldap', _dict(name=se['name'], server=se))
+            return bottle.template('server_ldap', _dict(name=se['name'], server=se))
 
-    return template('servers', _dict(warn='LDAP server "%s" not found' % server, servers=main_ldap_servers_name))
+    return bottle.template('servers', _dict(warn='LDAP server "%s" not found' % server, servers=main_ldap_servers_name))
 
-@route('/server_nfs/<server>')
+@bottle.route('/server_nfs/<server>')
 def server_nfs(server=None):
     """print LDAP server information
     use multiple template : 
@@ -1427,15 +1417,15 @@ def server_nfs(server=None):
             _debug('server_attr/se[name]','Dont exists !!')
             continue
         if se['name'] == server:
-            return template('server_nfs', _dict(name=se['name'], server=se))
+            return bottle.template('server_nfs', _dict(name=se['name'], server=se))
 
-    return template('servers', 
+    return bottle.template('servers', 
         _dict(warn='NFS server "%s" not found' % server, 
         ldap_servers=main_ldap_servers_name, 
         nfs_servers=main_nfs_servers_name))
 
-@route('/groups')
-@view('groups')
+@bottle.route('/groups')
+@bottle.view('groups')
 def groups():
     _debug_route()
     ldap_initialize()
@@ -1445,8 +1435,8 @@ def groups():
         return _dict(warn='LDAP main server "%s" error' % main_ldap_server['name'], groups={})
     return _dict(groups=groups)
 
-@route('/group/<group>')
-@view('group')
+@bottle.route('/group/<group>')
+@bottle.view('group')
 def group(group=None):
     _debug_route()
     if group is None:
@@ -1477,8 +1467,8 @@ def group(group=None):
     return _dict(cn=obj['cn'][0], desc=desc, members=members)
 
 
-@route('/users/search/<str_filter>')
-@view('users_search')
+@bottle.route('/users/search/<str_filter>')
+@bottle.view('users_search')
 def users_search(str_filter):
     """
     return list of users with string filter=<str_filter>
@@ -1490,7 +1480,7 @@ def users_search(str_filter):
 
     _list_filters = []
     for st in ['cn', 'sn', 'givenName','uid']:
-        _list_filters.append('%s=*%s*' % (st, _filter))
+        #_list_filters.append('%s=*%s*' % (st, _filter))
         _list_filters.append('%s~=%s' % (st, _filter))
         
     _filters = _ldap_build_ldapfilter_or(_list_filters)
@@ -1511,9 +1501,9 @@ def users_search(str_filter):
     ldap_close()
     return _dict(users=users, query=str_filter, ldap_filter=_filters)
 
-@route('/users')
-@route('/users/<type>')
-@view('users_type')
+@bottle.route('/users')
+@bottle.route('/users/<type>')
+@bottle.view('users_type')
 def users_type(type=None):
     _debug_route()
     
@@ -1521,7 +1511,7 @@ def users_type(type=None):
         type = '*'
 
     if type not in main_users.keys():
-        redirect('/users/*')
+        bottle.redirect('/users/*')
 
     title = main_users[type]['name']
     ldap_initialize()
@@ -1539,8 +1529,8 @@ def users_type(type=None):
     return _dict(title=title, users=users, nfs_servers=main_nfs_servers_name)
 
 
-@route('/user/<uid>')
-@view('user')
+@bottle.route('/user/<uid>')
+@bottle.view('user')
 def user(uid):
     _debug_route()
 
@@ -1600,17 +1590,17 @@ def user(uid):
     ldap_close()
     return _dict(warn=warn, users=users, uid=uid, managers=managers, students=students, phds=phds, teams=teams)
 
-@route('/news')
-@route('/news/<ver>')
-@view('news')
+@bottle.route('/news')
+@bottle.route('/news/<ver>')
+@bottle.view('news')
 def news(ver=None):
     _debug_route()
     return _dict(ver=ver, news=main_news)
 
 
 
-@route('/about')
-@view('about')
+@bottle.route('/about')
+@bottle.view('about')
 def about():
     _debug_route()
     return _dict(warn=None, ldap_ver=ldap.__version__, bottle_ver=bottle.__version__)
@@ -1618,7 +1608,7 @@ def about():
 #----------------------------------------------------------
 # Routing JSON Functions
 
-@route('/api/useradd', method='POST')
+@bottle.route('/api/useradd', method='POST')
 def json_useradd():
     """
     add user and return the uid of the new user
@@ -1638,7 +1628,7 @@ def json_useradd():
 
     """
     _debug_route()
-    datas = request.params
+    datas = bottle.request.params
     ldap_data = {}
 
     ### LDAP operations
@@ -1774,10 +1764,10 @@ def json_useradd():
             
     return _json_result(success=True, uid=uid, userPassword=userPassword, message=u'répertoire crée, droits changés, quotas appliqués')
 
-@route('/api/userdel', method='POST')
+@bottle.route('/api/userdel', method='POST')
 def json_userdel():
     _debug_route()
-    datas = request.params
+    datas = bottle.request.params
     if 'uid' not in datas or not datas['uid']:
         return _json_result(success=False, message='missing parameter: uid')
 
@@ -1828,13 +1818,13 @@ def json_userdel():
 
     return _json_result(success=True)
 
-@route('/api/user/<uid>/attr/<attr>', method='POST')
+@bottle.route('/api/user/<uid>/attr/<attr>', method='POST')
 def json_user_set_attr(uid,attr):
     """
     Set user attr with POST method
     """
     _debug_route()
-    datas = request.params
+    datas = bottle.request.params
     _debug('json_user_set_attr/datas.keys',datas.keys())
     if not attr:
         return _json_result(success=False, message='no parameters attr')
@@ -1875,7 +1865,7 @@ def json_user_set_attr(uid,attr):
 
 
 
-@route('/api/user/<uid>/attr/<attr>')
+@bottle.route('/api/user/<uid>/attr/<attr>')
 def json_user_get_attr(uid,attr):
     """
     Get user attr
@@ -1919,7 +1909,7 @@ def json_user_get_attr(uid,attr):
     return resu
 
 
-@route('/api/groups')
+@bottle.route('/api/groups')
 def json_groups():
     """
     Get group lists
@@ -1943,14 +1933,14 @@ def json_groups():
 
     return resu
 
-@route('/api/autocomplete_manager')
+@bottle.route('/api/autocomplete_manager')
 def json_autocomplete_manager():
     """
     search for permanents user with 
     term=<search string>
     """
     _debug_route()
-    datas = request.params
+    datas = bottle.request.params
     try:
         term = datas['term']
     except:
@@ -1992,52 +1982,52 @@ def json_autocomplete_manager():
     return json.dumps(json_resu)
 
 
-@route('/api/server/<server>/issue')
+@bottle.route('/api/server/<server>/issue')
 def json_server_issue(server):
     _debug_route()
     return json_exec_common(server,'issue')
 
-@route('/api/server/<server>/uname')
+@bottle.route('/api/server/<server>/uname')
 def json_server_uname(server):
     _debug_route()
     return json_exec_common(server,'uname')
 
-@route('/api/server_nfs/<server>/check_home_perm')
+@bottle.route('/api/server_nfs/<server>/check_home_perm')
 def json_server_nfs_check_home_perm(server):
     _debug_route()
     return json_exec_nfs(server,'check_home_perm')
 
-@route('/api/server_nfs/<server>/check_home_doct')
+@bottle.route('/api/server_nfs/<server>/check_home_doct')
 def json_server_nfs_check_home_doct(server):
     _debug_route()
     return json_exec_nfs(server,'check_home_doct')
 
-@route('/api/server_nfs/<server>/check_home_temp')
+@bottle.route('/api/server_nfs/<server>/check_home_temp')
 def json_server_nfs_check_home_temp(server):
     _debug_route()
     return json_exec_nfs(server,'check_home_temp')
 
-@route('/api/server_nfs/<server>/nfsstat')
+@bottle.route('/api/server_nfs/<server>/nfsstat')
 def json_server_nfs_nfsstat(server):
     _debug_route()
     return json_exec_nfs(server,'nfsstat')
 
-@route('/api/server_nfs/<server>/quota_home_perm')
+@bottle.route('/api/server_nfs/<server>/quota_home_perm')
 def json_server_nfs_quota_home_perm(server):
     _debug_route()
     return json_exec_nfs(server,'quota_home_perm')
 
-@route('/api/server_nfs/<server>/quota_home_doct')
+@bottle.route('/api/server_nfs/<server>/quota_home_doct')
 def json_server_nfs_quota_home_doct(server):
     _debug_route()
     return json_exec_nfs(server,'quota_home_doct')
 
-@route('/api/server_nfs/<server>/quota_home_temp')
+@bottle.route('/api/server_nfs/<server>/quota_home_temp')
 def json_server_nfs_quota_home_temp(server):
     _debug_route()
     return json_exec_nfs(server,'quota_home_temp')
 
-@route('/api/server_nfs/<server>/quota_total')
+@bottle.route('/api/server_nfs/<server>/quota_total')
 def json_server_nfs_quota_total(server):
     _debug_route()
     return json_exec_nfs(server,'quota_total')
@@ -2051,14 +2041,35 @@ if __name__ == '__main__':
     #----------------------------------------------------------
     # DEBUG MODE/PRODUCTION
     #----------------------------------------------------------
-    debug(True)
+    bottle.debug(True)
     #----------------------------------------------------------
-    for m in [ConfigParser, textwrap, bottle, json, ldap, paramiko]:
+    for m in [bottle, ldap, paramiko]:
         _modules_version(m)
 
-    import pprint
-    pprint = pprint.PrettyPrinter(indent=4).pprint
 
+    ldap_load_config('ldap_servers.ini')
+    nfs_load_config('nfs_servers.ini')
+
+    main_nav = [ 
+        ('/', 'accueil'), 
+        ('*', 'serveurs'), 
+        ('/servers', 'tableau de bord'), 
+        ('/server_ldap/'+main_ldap_servers_name[0], 'master ldap'), 
+        ('',''), 
+        ('*', 'personnels'),
+        ('_SEARCH_','rechercher...'),
+        ('/users/p',main_users['p']['name']),
+        ('/users/d',main_users['d']['name']),
+        ('/users/t',main_users['t']['name']),
+        ('',''), 
+        ('*', 'structure'),
+        ('/groups','les équipes'),
+        ('/users','les utilisateurs'),
+        ('',''), 
+        ('*', 'site web'), 
+        ('/news', 'news') , 
+        ('/about', 'à propos')
+        ]
     if bottle.DEBUG:
         port = 8888
         reloader = True
@@ -2067,9 +2078,7 @@ if __name__ == '__main__':
         port = 8080
         reloader = False
         
-    ldap_load_config('ldap_servers.ini')
-    nfs_load_config('nfs_servers.ini')
-    run(host='0.0.0.0', port=port, reloader=reloader, debug=bottle.DEBUG)
+    bottle.run(host='0.0.0.0', port=port, reloader=reloader, debug=bottle.DEBUG)
 
 
 # vim:spelllang=en:
