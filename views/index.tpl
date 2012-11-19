@@ -1,6 +1,6 @@
 %rebase base title='', nav=nav, warn=warn, author=author, version=version
 <div class="box shadow">
-<h1>Bienvenue Administration sur l'annuaire LDAP <em>version (beta)</em></h1>
+<h1>Bienvenue sur <strong>bottleLDAP</strong></h1>
 
 <h2>News</h2>
 %l = list()
