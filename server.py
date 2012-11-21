@@ -23,7 +23,6 @@ import json
 import ConfigParser
 import pprint
 import textwrap
-import logging
 
 ### external libraries
 import bottle
@@ -80,9 +79,10 @@ main_news = (
         'DEVEL: utilisation du Google Python Style Guide avec pychecker',
         ]
     ),
-    ('devel', 'xx 2012', [ 'Modification phase 7', 
-        "integration de l'overlat ppolicy"
+    ('devel', 'Nov 2012', [ 'Modification phase 7', 
+        "integration de l'overlay ppolicy"
         'test matisse',
+        'création des logs, stoqués dans mongoDB'
         ]
     ),
 )
@@ -129,6 +129,19 @@ main_ldap_servers_name = []
 
 main_nfs_servers = []
 main_nfs_servers_name = []
+
+main_admins = []
+
+# mongoDB database
+#+ fields:
+#+  hostname (default localhosr)
+#+  port (default 27017)
+#+  db (default bottleldap)
+mongodb = {
+    'hostname': 'localhost',
+    'port': 27017,
+    'db': 'bottleldap'
+}
 
 
 
@@ -203,6 +216,9 @@ class EXEC_NOSERVER(ERROR):
 class EXEC_NOTALLOW(ERROR):
     def __init__(self, msg):
         ERROR.__init__(self, 'EXEC not allow: '+msg)
+
+class MONGODB_ERROR(ERROR):
+    pass
 
 
 #----------------------------------------------------------
@@ -1112,10 +1128,171 @@ def _mount_point_rel_path(host, user, path):
     else:
         return None
 
+def _mongodb(actor, action, text):
+    """
+    Add log to mongoDB
+    Args:
+        logtext: text to add in DB
+
+    Returns:
+        None
+
+    Raises:
+        MONGODB_ERROR
+    """
+    pass
+
+
 
 #----------------------------------------------------------
 # Public Functions
 #----------------------------------------------------------
+
+def load_config(filename):
+    """
+    Load main config file
+    Args:
+        filename: ini file containing all the configuration
+
+    Returns:
+        sys.exit() if filename no exists
+
+    """
+    global main_ldap_servers, main_ldap_servers_name
+    global main_nfs_servers, main_nfs_servers_name
+    global main_admins
+
+    _debug('Loading Global configuration file "'+filename+'" ...')
+
+    config = ConfigParser.RawConfigParser()
+
+    # section [admin-xxxxx]
+    admin_attrs = {
+        'ip': '<ip>',
+        'name': '<username>'
+    }
+    
+    # section [ldap-xxxxx]
+    ldap_attrs = {
+        'name': '<server name>', 
+        'host': '<server URL>', 
+        'port': '<server port> OPTIONAL', 
+        'basedn': '<base DN>', 
+        'basegroup': '<DN of groupOfUniqueNames>', 
+        'baseuser': '<DN of groupOfUniqueNames>', 
+        'binddn': '<DN for bind()>', 
+        'bindpwd': '<password for bind()>'
+    }
+
+    # section [nfs-xxxxx]
+    nfs_attrs = {
+        'name': '<server name>', 
+        'host': '<server URL>', 
+        'home_perm' : '<absolute path to permanents home>',
+        'home_doct' : '<absolute path to doctorants home>',
+        'home_temp' : '<absolute path to temporaires home>'
+    }
+
+    def usage():
+        print '#The syntax for the Global Configuration File is:'
+
+        def d(t, d):
+            print '[' + _colors.OKGREEN + t + _colors.NOCOLOR + ']'
+            ks = d.keys()
+            ks.sort()
+            for k in ks:
+                print k + ' = ' + _colors.OKGREEN + d[k] + _colors.NOCOLOR
+            print ''
+                
+        d('admin-<id>', admin_attrs)
+        d('ldap-<server id>', ldap_attrs)
+        d('nfs-<server_id>', nfs_attrs)
+
+    def check_dict(datas, models):
+        sec_err = 0
+        for k in models.keys():
+            if k not in datas or not datas[k]:
+                print _colors.WARNING + 'Configuration File "%s":' % filename + _colors.NOCOLOR + ' missing "%s=" on section [%s]' % (k, sec) 
+                sec_err += 1
+        if sec_err == 0:
+            _debug('    section syntax OK')
+            resu = True
+        else:
+            _debug('    section syntax ERROR: skip')
+            print _colors.WARNING + "section [%s] not loaded" % sec + _colors.NOCOLOR
+            resu = False
+
+        return resu
+
+        
+
+    config.read(filename)
+
+    if not os.path.isfile(filename):
+        print _colors.FAIL + 'Configuration File "%s" does not exists' % filename + _colors.NOCOLOR
+        usage()
+        sys.exit(1)
+
+    sections = config.sections()
+    if len(sections) == 0:
+        print _colors.FAIL + 'no section in file \'%s\'' % os.path.abspath(filename) + _colors.NOCOLOR
+        usage()
+        sys.exit(1)
+   
+    sec_errors = 0
+    for sec in sections:
+        if not sec: 
+            continue
+
+        _dict = dict(config.items(sec))
+        _debug('... section ['+sec+']',_dict)
+        if sec[:5] == 'admin':
+            if check_dict(_dict, admin_attrs):
+                main_admins.append(_dict)
+            else:
+                print _colors.WARNING + "section [%s] not loaded : No ADMIN section" % sec + _colors.NOCOLOR
+                sec_errors += 1
+            _debug('     section admin found',_dict)
+
+        elif sec[:3] == 'nfs':
+            if check_dict(_dict, nfs_attrs):
+                main_nfs_servers.append(_dict)
+            else:
+                print _colors.WARNING + "section [%s] not loaded : No NFS section" % sec + _colors.NOCOLOR
+                sec_errors += 1
+
+        elif sec[:4] == 'ldap':
+            if 'port' not in _dict or not _dict['port']: 
+                _dict['port'] = 389
+            if check_dict(_dict, ldap_attrs):
+                main_ldap_servers.append(_dict)
+            else:
+                print _colors.WARNING + "section [%s] not loaded : No LDAP section" % sec + _colors.NOCOLOR
+                sec_errors += 1
+
+        else:
+            print _colors.WARNING + "section [%s] not loaded : unknown type" % sec + _colors.NOCOLOR
+            sec_errors += 1
+
+
+    if sec_errors != 0:
+        usage()
+        print _colors.WARNING + 'Configuration file "%s" loaded but skip %d section(s)' % (filename, sec_errors) + _colors.NOCOLOR
+    else:
+        print _colors.OKGREEN + 'Configuration file "%s" loaded' % filename + _colors.NOCOLOR
+
+        
+    _debug('main_admins',main_admins)
+    main_ldap_servers_name = [se['name'] for se in main_ldap_servers]
+    _debug('main_ldap_servers:',main_ldap_servers)
+    main_nfs_servers_name = [se['name'] for se in main_nfs_servers]
+    _debug('main_nfs_servers:',main_nfs_servers)
+
+    if len(main_ldap_servers_name) == 0:
+        print _colors.FAIL + 'Configuration syntax error:' + _colors.NOCOLOR + 'on file ' + filename
+        sys.exit(1)
+
+
 
 def nfs_load_config(filename):
     """
@@ -1176,6 +1353,9 @@ def nfs_load_config(filename):
         
     main_nfs_servers_name = [se['name'] for se in main_nfs_servers]
     _debug('main_nfs_servers:',main_nfs_servers)
+
+
+
 
 
 def ldap_load_config(filename):
@@ -2046,9 +2226,7 @@ if __name__ == '__main__':
     for m in [bottle, ldap, paramiko]:
         _modules_version(m)
 
-
-    ldap_load_config('ldap_servers.ini')
-    nfs_load_config('nfs_servers.ini')
+    load_config('config.ini')
 
     main_nav = [ 
         ('/', 'accueil'), 
