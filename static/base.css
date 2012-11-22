@@ -570,6 +570,7 @@ button {
 }
 #pie svg {
 }
+/* the closeme link*/
 #pie div {
     position:relative;
     left: 5px;
@@ -577,4 +578,15 @@ button {
 }
 #pie div a {
     font-size: 75%;
+}
+
+/* the grey tranparent background*/
+#pieblack {
+    display: none;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0,0,0,.5);
 }

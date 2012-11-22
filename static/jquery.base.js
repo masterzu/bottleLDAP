@@ -1,8 +1,7 @@
 /**********************************************************
- BASE jquery fonction to 
- - research form #input_search
- - link #top to /
- - link #author 
+ String extented:
+ - capitalize()
+ - trim()
 */
 
 // http://stackoverflow.com/questions/1026069/capitalize-the-first-letter-of-string-in-javascript
@@ -16,6 +15,36 @@ String.prototype.capitalize = function(){
 String.prototype.trim = function() { 
     return this.replace(/^\s+|\s+$/g, ''); 
 };
+
+/**********************************************************
+ jQuery extented:
+ - center()
+*/
+
+// http://stackoverflow.com/questions/210717/using-jquery-to-center-a-div-on-the-screen
+// from Tony L + PCHT
+// WARNING: dont work with .hide('slow') just before
+jQuery.fn.center = function () {
+    this.append('<div>[<a href="#">fermer</a>]</div>');
+    var w = 400, 
+        h = this.outerHeight(),
+        t = (Math.max(0, (($(window).height() - h) / 2) + $(window).scrollTop()) + "px"),
+        l = (Math.max(0, (($(window).width() - w) / 2) + $(window).scrollLeft()) + "px"),
+        calc = $('#pieblack');
+    //alert('top:'+t+', left:'+l);
+    calc.show();
+    this.css({
+        "position": "absolute",
+        "top": t,
+        "left": l
+        });
+    //this.height(h);
+    // set width
+    //this.width(w);
+    // add fermer link
+    $('a',this).click(function(){ calc.hide(); });
+    return this;
+}
 
 
 /**********************************************************
@@ -86,6 +115,13 @@ function show_warning(text) {
         $('#warning').hide('slow');
     }
 };
+
+/**********************************************************
+ BASE jquery fonction to 
+ - research form #input_search
+ - link #top to /
+ - link #author 
+*/
 
 $(function(){
     // search input

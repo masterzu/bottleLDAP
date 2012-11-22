@@ -7,7 +7,7 @@ $(function() {
 
     function ajax_button_graph(pie, span, url){
         span.addClass('ui-autocomplete-loading').html('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
-        pie.hide('slow');
+        pie.hide();
         $.ajax({
             url: url,
             type: "GET",
@@ -28,10 +28,12 @@ $(function() {
                         logins.push(login);
                         sizes.push(parseInt(size, 10));
                         };
-                    // Must be BEFORE Raphael - draw
-                    pie.show('slow');
+                    // Must draw be BEFORE Raphael - draw
+                    $('#pieblack').show();
+                    pie.show();
                     // (re)plot pie
                     Raphael("pie", 400, 400).pieChart(200, 200, 133, sizes, logins, title);
+                    pie.center();
                 } else {
                     span.text('Pas de quota');
                 }
@@ -42,8 +44,12 @@ $(function() {
                 },
             });
     };
-    $('button#issue').click(function() { ajax_button_span_url($(this), $(this).next(), '/api/server/{{name}}/issue') });
-    $('button#uname').click(function() { ajax_button_span_url($(this), $(this).next(), '/api/server/{{name}}/uname') });
+    $('button#issue').click(function() { 
+        ajax_button_span_url($(this), $(this).next(), '/api/server/{{name}}/issue');
+    });
+    $('button#uname').click(function() { 
+        ajax_button_span_url($(this), $(this).next(), '/api/server/{{name}}/uname');
+    });
     $('button#all').click(function() { 
         ajax_button_span_url($(this), $('span#issue'), '/api/server/{{name}}/issue');
         ajax_button_span_url($(this), $('span#uname'), '/api/server/{{name}}/uname');
@@ -85,7 +91,9 @@ $(function() {
     %end
 </ul>
 
-    <div id="pie"></div>
+    <div id="pieblack">
+        <div id="pie"></div>
+    </div>
 <h3>actions ssh</h3> 
     <ul>
         <li>
