@@ -33,6 +33,7 @@ import paramiko
 
 __author__ = 'P. Cao Huu Thien'
 __version__ = 'devel'
+__license__ = 'GPL'
 
 """
 History
@@ -1219,7 +1220,6 @@ def load_config(filename):
             resu = True
         else:
             _debug('    section syntax ERROR: skip')
-            print _colors.WARNING + "section [%s] not loaded" % sec + _colors.NOCOLOR
             resu = False
 
         return resu
@@ -1276,8 +1276,7 @@ def load_config(filename):
 
 
     if sec_errors != 0:
-        usage()
-        print _colors.WARNING + 'Configuration file "%s" loaded but skip %d section(s)' % (filename, sec_errors) + _colors.NOCOLOR
+        print 'Configuration file "%s" loaded ' % filename + _colors.WARNING + 'but skip %d section(s)' % sec_errors + _colors.NOCOLOR
     else:
         print _colors.OKGREEN + 'Configuration file "%s" loaded' % filename + _colors.NOCOLOR
 
@@ -1292,150 +1291,6 @@ def load_config(filename):
         print _colors.FAIL + 'Configuration syntax error:' + _colors.NOCOLOR + 'on file ' + filename
         sys.exit(1)
 
-
-
-def nfs_load_config(filename):
-    """
-    Load the file and set the GLOBAL VAR main_nfs_servers
-    """
-    global main_nfs_servers, main_nfs_servers_name
-
-    _debug('Loading NFS configuration file "'+filename+'" ...')
-
-    config = ConfigParser.RawConfigParser()
-    config_attrs = {
-        'name': '<server name>', 
-        'host': '<server URL>', 
-        'home_perm' : '<absolute path to permanents home>',
-        'home_doct' : '<absolute path to doctorants home>',
-        'home_temp' : '<absolute path to temporaires home>'
-    }
-
-    def usage():
-        print
-        print '#The syntax for the configuration file is:'
-        print '[' + _colors.OKGREEN + '<server_id>' + _colors.NOCOLOR + ']'
-
-        def t(name, text):
-            print name + ' = ' + _colors.OKGREEN + text + _colors.NOCOLOR
-    
-        _keys_sorted = config_attrs.keys()
-        _keys_sorted.sort()
-
-        for k in _keys_sorted:
-            t(k,config_attrs[k])
-
-    config.read(filename)
-
-    if not os.path.isfile(filename):
-        print _colors.FAIL + 'Configuration File "%s" does not exists' % filename + _colors.NOCOLOR
-        usage()
-        sys.exit(1)
-
-    sections = config.sections()
-    if len(sections) == 0:
-        print _colors.FAIL + 'no section in file \'%s\'' % os.path.abspath(filename) + _colors.NOCOLOR
-        usage()
-        sys.exit(1)
-    
-    for sec in sections:
-        if not sec: continue
-        _debug('... section ['+sec+'] ... ')
-        _dict = dict(config.items(sec))
-        for k in config_attrs.keys():
-            if k not in _dict:
-                print _colors.FAIL + 'Configuration File "%s" missing %s' % (filename, k) + _colors.NOCOLOR
-                usage()
-                sys.exit(1)
-        _debug('    section syntax OK')
-        
-        main_nfs_servers.append(_dict)
-        
-    main_nfs_servers_name = [se['name'] for se in main_nfs_servers]
-    _debug('main_nfs_servers:',main_nfs_servers)
-
-
-
-
-
-def ldap_load_config(filename):
-    """
-    Load the file and set the GLOBAL VAR main_ldap_servers
-    """
-    global main_ldap_servers, main_ldap_servers_name
-
-    _debug('Loading LDAP configuration file "'+filename+'" ...')
-
-    config = ConfigParser.RawConfigParser()
-    config_attrs = {
-        'name': '<server name>', 
-        'host': '<server URL>', 
-        'port': '<server port> OPTIONAL', 
-        'basedn': '<base DN>', 
-        'basegroup': '<DN of groupOfUniqueNames>', 
-        'baseuser': '<DN of groupOfUniqueNames>', 
-        'binddn': '<DN for bind()>', 
-        'bindpwd': '<password for bind()>'}
-
-    def usage():
-        print
-        print '#The syntax for the configuration file is:'
-        print '[' + _colors.OKGREEN + '<server_id>' + _colors.NOCOLOR + ']'
-
-        def t(name, text):
-            print name + ' = ' + _colors.OKGREEN + text + _colors.NOCOLOR
-    
-        _keys_sorted = config_attrs.keys()
-        _keys_sorted.sort()
-
-        for k in _keys_sorted:
-            t(k,config_attrs[k])
-
-    config.read(filename)
-
-    if not os.path.isfile(filename):
-        print _colors.FAIL + 'Configuration File "%s" does not exists' % filename + _colors.NOCOLOR
-        usage()
-        sys.exit(1)
-
-    sections = config.sections()
-    if len(sections) == 0:
-        print _colors.FAIL + 'no section in file \'%s\'' % os.path.abspath(filename) + _colors.NOCOLOR
-        usage()
-        sys.exit(1)
-   
-    sec_errors = 0
-    for sec in sections:
-        if not sec: 
-            continue
-        _debug('... section ['+sec+']')
-        _dict = dict(config.items(sec))
-        if 'port' not in _dict or not _dict['port']: _dict['port'] = 389
-        sec_err = 0
-        for k in config_attrs.keys():
-            if k not in _dict or not _dict[k]:
-                print _colors.WARNING + 'Configuration File "%s":' % filename + _colors.NOCOLOR + ' missing "%s=" on section [%s]' % (k, sec) 
-                sec_errors += 1
-                sec_err += 1
-        if sec_err == 0:
-            _debug('    section syntax OK')
-            main_ldap_servers.append(_dict)
-        else:
-            _debug('    section syntax ERROR: skip')
-            print _colors.WARNING + "section [%s] not loaded" % sec + _colors.NOCOLOR
-
-    if sec_errors != 0:
-        usage()
-    else:
-        print _colors.OKGREEN + 'Configuration file "%s" loaded' % filename + _colors.NOCOLOR
-
-        
-    main_ldap_servers_name = [se['name'] for se in main_ldap_servers]
-    #_debug('main_ldap_servers:',main_ldap_servers)
-
-    if len(main_ldap_servers_name) == 0:
-        print _colors.FAIL + 'Configuration syntax error:' + _colors.NOCOLOR + 'on file ' + filename
-        sys.exit(1)
 
 def ldap_initialize(bind=False):
     """
