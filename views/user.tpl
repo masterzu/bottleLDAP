@@ -287,6 +287,10 @@ $(function() {
             <dd class="warning">pas d'email définit !</dd>
         %end
 
+            <dt title="uid">login</dt>
+            <dd>{{uid}}</dd>
+            
+
         %if 'description' in u:
             <dt title="description">description</dt>
             <dd><span name="description">{{u['description'][0]}}</span></dd>
