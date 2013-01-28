@@ -349,6 +349,23 @@ $(function() {
             %end
             <dd><a href="/user/{{stu['uid'][0]}}">{{stu['cn'][0]}}</a> {{desc}}</dd>
         %end
+
+        %if len(assistants) > 1:
+            <dt>{{len(assistants)}} assistants</dt>
+        %else:
+            %if len(assistants) == 1:
+            <dt>assistant</dt>
+            %end
+        %end
+        %for ass in assistants:
+            %if 'description' in ass:
+                %desc = ass['description'][0]
+            %else:
+                %desc = ''
+            %end
+            <dd><a href="/user/{{ass['uid'][0]}}">{{ass['cn'][0]}}</a> {{desc}}</dd>
+        %end
+
         </dl>
     </div><!-- onglet page -->
 
