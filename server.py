@@ -78,7 +78,7 @@ main_news = (
         u"BUGFIX: vérification du login unique lors de la création un compte"]
     ),
     ('11', '22 Oct 2012', [ 'Modification phase 6', 
-        'passage a bottle 0.11.x', 
+        'passage a bottle 0.11.3', 
         'gestion multi-serveur NFS/LDAP (ldap_servers.ini, nfs_servers.ini)',
         'tableau de bord des serveurs LDAP/NFS (graphes des quotas pour serveurs NFS, version des distrib et noyau linux)',
         'DEVEL: utilisation du Google Python Style Guide avec pychecker',
@@ -87,6 +87,7 @@ main_news = (
     ('12', '15 Fev 2013', [ 'Modification phase 7', 
         'Création des logs, stoqués dans une base mongoDB',
         'Ajout des logs dans "/user/<>" "/group/<>" et "/logs"',
+        'passage a bottle 0.11.3', 
         ]
     ),
 )
@@ -2555,7 +2556,7 @@ if __name__ == '__main__':
         main_mongodb['db'] = 'bottleldap-dev'
 
     else:
-        port = 8888
+        port = 8080
         reloader = False
 
         # production database
