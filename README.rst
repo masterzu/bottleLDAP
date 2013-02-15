@@ -4,11 +4,11 @@ bottleLDAP
 
 :Author: Patrick Cao Huu Thien
 :Date: 29 juin 2011
-:Revision: 1
+:Version: 12
 
 :abstract: 
 
-    Ce document présente le site web bottleLDAP
+    Ce document présente le projet **bottleLDAP**
 
 .. #################################
    definition des roles persos
@@ -18,17 +18,22 @@ bottleLDAP
    :format: html
 
 .. #################################
-   table des matieres 
+   table des matières 
    (ne pas oublier l'espace final)
 .. contents:: Le Sommaire
 
 Présentation générale
 =====================
 
-Ce site a un double objectif: Faire de moi un ubergeek en `Python <http://www.python.org>`_, `CSS` et autre webdesign. 
-Et en plus,, accessoirement, pouvoir administrer le serveur LDAP de l'Institut.
+Ce projet a un double objectif.
+**Cuisiner** un site web minimal et **minimaliste** (*sans apache ou autre Guerrier du web*) en `Python <http://www.python.org>`_, `CSS <http://www.w3.org/Style/CSS/Overview.fr.html>`_ `JQuery <http://jquery.com/>`_ et autre ingrédients en *webdesign*. 
+Un soupçon de `mongoDB <http://www.mongodb.org/>`_ à été récemment ajouté, juste pour le goût.
+
+Et en plus, accessoirement, pouvoir **administrer** le serveur `LDAP <http://www.openldap.org/>`_ de l'Institut ``;-P``.
 
 Ce site est donc programmé entièrement en Python, avec l'aide de la micro web-framework `bottlepy <http://bottlepy.org/>`_ et de la librairie `python-ldap <http://www.python-ldap.org/>`_
+
+
 
 
 
@@ -37,9 +42,11 @@ Démarrage du serveur
 
 Pour démarrer le serveur, il faut :
 
-#. créer une fichier `ldap_servers.ini` contenant les informations suivantes::
+* créer un fichier `config.ini` contenant les informations sur :
 
-    [<serveur_id>]
+ * le serveur LDAP::
+
+    [ldap-<serveur_id>]
     name = <server name>
     host = <fqhn>
     port = <optional>
@@ -49,9 +56,25 @@ Pour démarrer le serveur, il faut :
     binddn = <DN to bind>
     bindpwd = <password of %(binddn)s>
 
-#. copier le fichier de clé privée `id_rsa` pour permettre d'avoir un accès ``root`` au serveur NFS
+ * les serveurs NFS::
 
-#. Puis dans une console, taper la commande::
+    [nfs-<serveur_id>]
+    name = <server name>
+    host = <fqhn>
+    home_perm = <absolute path to permanents home>
+    home_doct = <absolute path to doctorants home>
+    home_temp = <absolute path to temporaires home>
+
+ * les administrateurs::
+
+    [admin-<id>]
+    ip = <ip>
+    name = <name>
+
+
+* copier le fichier de clé privée `id_rsa` pour permettre d'avoir un accès ``root`` au serveur NFS
+
+* Puis dans une console, taper la commande::
 
     $ python server.py
     Bottle server starting up (using WSGIRefServer())...
