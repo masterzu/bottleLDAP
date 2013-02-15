@@ -23,6 +23,7 @@ import json
 import ConfigParser
 import pprint
 import textwrap
+import datetime
 
 ### external libraries
 import bottle
@@ -30,6 +31,7 @@ import ldap
 import ldap.filter
 import ldap.dn
 import paramiko
+import pymongo
 
 __author__ = 'P. Cao Huu Thien'
 __version__ = 'devel'
@@ -48,6 +50,8 @@ main_news = (
         "importation des utilisateurs depuis LDAP upmc.fr",
         "outils de gestion des utilsateurs: envoi d'email a tous les stagiaires/permanents/permanents ayant un stagiaires-doctorants ...",
         "outils de diagnostic: liste des utilisateurs sans email; stagiaires/phds sans directeur ...",
+        "integration de l'overlay ppolicy",
+        'test matisse',
         ]),
     ('1', '1 Jan 1970',   [ u'(Très vieille) version initiale :)' ]), 
     ('2', '12 Mars 2012', [ u'Passage à la version 0.10.9 de bottlepy' ]),
@@ -80,10 +84,9 @@ main_news = (
         'DEVEL: utilisation du Google Python Style Guide avec pychecker',
         ]
     ),
-    ('devel', 'Nov 2012', [ 'Modification phase 7', 
-        "integration de l'overlay ppolicy"
-        'test matisse',
-        'création des logs, stoqués dans mongoDB'
+    ('12', '15 Fev 2013', [ 'Modification phase 7', 
+        'Création des logs, stoqués dans une base mongoDB',
+        'Ajout des logs dans "/user/<>" "/group/<>" et "/logs"',
         ]
     ),
 )
@@ -131,20 +134,29 @@ main_ldap_servers_name = []
 main_nfs_servers = []
 main_nfs_servers_name = []
 
-main_admins = []
 
 # mongoDB database
 #+ fields:
 #+  hostname (default localhosr)
 #+  port (default 27017)
-#+  db (default bottleldap)
-mongodb = {
+#+  db (default "bottleldap" in lowcase)
+main_mongodb = {
     'hostname': 'localhost',
     'port': 27017,
     'db': 'bottleldap'
 }
 
+### fake ACL system
+# admin read from config.ini
+acl_admins = []
 
+# known roles
+acl_roles = [
+    ('admin', 'Administrateur'), 
+    ('editor', 'Éditeur'), 
+    ('user', 'Utilisateur authentifié'),
+    ('no', 'Utilisateur non authentifié')
+]
 
 #----------------------------------------------------------
 # Exceptions 
@@ -152,7 +164,9 @@ mongodb = {
 
 class ERROR(Exception):
     """
-    base exception class for this project
+    base exception class for this project.
+
+    have a optional string in init.
     """
     def __init__(self, msg=None):
         if msg is None:
@@ -192,10 +206,11 @@ class POSIX(ERROR):
     pass
 
 class POSIX_UID_FULL(POSIX):
-    "Used in _ldap_new_posixAccount"
+    """Used in _ldap_new_posixAccount"""
     pass
 
 class SSH_ERROR(ERROR):
+    """general error in SSH ops"""
     def __init__(self, msg=None):
         if (msg is None):
             ERROR.__init__(self,'SSH error')
@@ -219,7 +234,18 @@ class EXEC_NOTALLOW(ERROR):
         ERROR.__init__(self, 'EXEC not allow: '+msg)
 
 class MONGODB_ERROR(ERROR):
-    pass
+    """general error in mongoDB ops"""
+    def __init__(self, msg):
+        ERROR.__init__(self, 'MONGODB error: '+msg)
+
+class ACL_ERROR(ERROR):
+    """general error in ACL system"""
+    def __init__(self, msg):
+        ERROR.__init__(self, 'ACL error: '+msg)
+
+class ACL_NOTALLOW(ACL_ERROR):
+    def __init__(self, msg='ACL error : access not allow'):
+        ACL_ERROR.__init__(self, msg)
 
 
 #----------------------------------------------------------
@@ -272,6 +298,7 @@ def _debug_route():
     if len(bottle.request.params) > 0:
         _debug("    ... with %s" % repr(bottle.request.params.items()))
 
+
 def _nav():
     """
     Calculate the current nav object depending on request.path 
@@ -300,12 +327,19 @@ def _json_result(**kargs):
     """
     temp = dict(success=True)
     temp.update(kargs.items())
-    _debug('_json_result=', temp)
+    #_debug('_json_result=', temp)
     return temp
 
 def _modules_version(mod):
     try:
-        print _colors.HEADER + '[module] ' + _colors.OKBLUE + mod.__name__ + ' ' + _colors.OKGREEN + mod.__version__ + _colors.NOCOLOR
+        version = mod.__version__
+    except:
+        try:
+            version = mod.version
+        except:
+            version = 'n/a'
+    try:
+        print _colors.HEADER + '[module] ' + _colors.OKBLUE + mod.__name__ + ' ' + _colors.OKGREEN + version + _colors.NOCOLOR
     except:
         pass
 
@@ -340,21 +374,27 @@ def _ldap_initialize(kargs):
     """
     initialize the globale VAR main_ldap_server 
 
-    return the filehandle of current LDAP server
+    Args:
+        - kargs : dict to the LDAP server = {host:, port:}
+
+    Returns:
+        return the filehandle of current LDAP server
         or None on error
     """
     global main_ldap_server
 
+    url = _ldap_uri(kargs)
+
     if 'file' in main_ldap_server:
-        _debug('LDAP', 'connexion to %s ... already connected.' % _ldap_uri(kargs))
+        _debug('LDAP', 'connexion to %s ... already connected.' % url)
         return main_ldap_server['file']
 
     try:
-        l = ldap.initialize(_ldap_uri(kargs))
+        l = ldap.initialize(url)
     except:
-        _debug('LDAP', 'connexion to %s ... FAILED' % _ldap_uri(kargs))
+        _debug('LDAP', 'connexion to %s ... FAILED' % url)
         return None
-    _debug('LDAP', 'connexion to %s ... DONE' % _ldap_uri(kargs))
+    _debug('LDAP', 'connexion to %s ... DONE' % url)
 
     # construct the main connection object
     main_ldap_server = kargs
@@ -364,10 +404,15 @@ def _ldap_initialize(kargs):
 
 def _ldap_filter_base(list_filters):
     """
-    convert list of <filter> to string (<f1>)(<f2>)...
-    or <f> if singleton
+    Args: 
+        - list of ldap-search filters
 
-    Dont use ldap.filter.filter_format HERE
+    Returns:
+        - string of filters like "(filter1)(filter2)"
+          of "filter" if singleton
+
+    Warning:
+        Dont use ldap.filter.filter_format HERE
     """
     _filter = ''
     for f in list_filters:
@@ -381,6 +426,12 @@ def _ldap_filter_base(list_filters):
 
 
 def _ldap_build_ldapfilter_and(list_filters):
+    """
+    Args:
+        - list of filters
+    Returns:
+        LDAP filter AND form of arguments = "(&(f1)(f2)(f3))"
+    """
     if list_filters is None:
         #_debug('_ldap_build_ldapfilter_and(None)')
         return ''
@@ -396,6 +447,12 @@ def _ldap_build_ldapfilter_and(list_filters):
     return resu
 
 def _ldap_build_ldapfilter_or(list_filters):
+    """
+    Args:
+        - list of filters
+    Returns:
+        LDAP filter OR form of arguments = "(|(f1)(f2)(f3))"
+    """
     if list_filters is None:
         #_debug('_ldap_build_ldapfilter_or(None)')
         return ''
@@ -471,9 +528,11 @@ def _ldap_modify_attr(dn, attr, val):
         if val:
             list_modify_attrs = [(ldap.MOD_REPLACE, attr, [val])]
             _debug('_ldap_modify_attr/list_modify_attrs',list_modify_attrs)
+            _log_ldap_action(dn, 'userattrmod', {'attr': attr, 'val': val})
         else:
             list_modify_attrs = [(ldap.MOD_DELETE, attr, None)]
             _debug('_ldap_modify_attr/list_modify_attrs',list_modify_attrs)
+            _log_ldap_action(dn, 'userattrdel', {'attr': attr})
 
         # do the job
         objs = main_ldap_server['file'].modify_s(dn, list_modify_attrs)
@@ -604,7 +663,19 @@ def _ldap_useradd(dn, kargs):
     # do the job
     objs = main_ldap_server['file'].add_s(dn, list_modify_attrs)
 
+    _log_ldap_action(dn, 'useradd', kargs)
+
     return objs
+
+#----------------------------------------------------------
+# private json functions
+#
+# Used by @route functions
+# 
+# Returns:
+#   a dict like "{success:<BOOL>, message: <STRING>, <other>}"
+#   function _json_result can help doing so
+#----------------------------------------------------------
 
 def _json_user_getset_manager(uid, vals=None):
     """
@@ -622,6 +693,10 @@ def _json_user_getset_manager(uid, vals=None):
     users = ldap_users(list_filters=['uid=%s' % uid], list_attrs=['manager'])
     _debug('_json_user_getset_manager/users',users)
 
+    # FIXME: handle multiusers
+    user_dn = users[0][0]
+    user_obj = users[0][1]
+
     if vals is None:
         # mode GET
         _debug('_json_user_getset_manager/mode GET')
@@ -635,7 +710,7 @@ def _json_user_getset_manager(uid, vals=None):
         success=True
 
         try:
-            vals = u['manager']
+            vals = user_obj['manager']
         except:
             vals = []
             message = 'manager not found'
@@ -648,19 +723,20 @@ def _json_user_getset_manager(uid, vals=None):
         for dn in vals:
             list_filters.append(ldap.dn.explode_dn(dn)[0])
 
-        users = ldap_users(base=main_users['p']['basedn'],filterstr=_ldap_build_ldapfilter_or(list_filters), list_attrs=['cn'])
-        resu_dn = '; '.join([dn for dn, u in users]) + ' ; '
-        resu_cn = ', '.join([u['cn'][0] for dn, u in users])
-        _debug('_json_user_getset_manager/resu_dn',resu_dn)
-        _debug('_json_user_getset_manager/resu_cn',resu_cn)
+        users = ldap_users(base=main_users['p']['basedn'],
+            filterstr=_ldap_build_ldapfilter_or(list_filters), 
+            list_attrs=['cn'])
+        resu_dn = '; '.join([_dn for _dn, _u in users]) + ' ; '
+        resu_cn = ', '.join([_u['cn'][0] for _dn, _u in users])
 
     else:
         # mode SET
         _debug('_json_user_getset_manager/mode SET')
        
-        dn = users[0][0]
+        #dn = users[0][0]
+        #user = users[0][1]
         try:
-            old_managers_str = users[0][1]['manager']
+            old_managers_str = user_obj['manager']
         except:
             old_managers_str = ''
         _debug('_json_user_getset_manager/old_managers',old_managers_str)
@@ -668,7 +744,7 @@ def _json_user_getset_manager(uid, vals=None):
         managers = _vals.split(';')
         _debug('_json_user_getset_manager/managers',managers)
 
-        # check for managers existance
+        # check for managers existence
         # + and prepare the ldap/modify_s opp
         list_filters = []
         if old_managers_str != '':
@@ -687,8 +763,8 @@ def _json_user_getset_manager(uid, vals=None):
                 return resu
 
             u = ldap_users(base=main_users['p']['basedn'], 
-                filterstr='uid=%s' % _uid,
-                list_attrs=['uid'])
+                    filterstr='uid=%s' % _uid,
+                    list_attrs=['uid'])
             if len(u) != 1:
                 return _json_result(success=False, message='invalid manager (uid=%s)' % _uid)
             else:
@@ -698,22 +774,28 @@ def _json_user_getset_manager(uid, vals=None):
         _debug('_json_user_getset_manager/list_modify_attrs',list_modify_attrs)
 
         # do the modify
-        main_ldap_server['file'].modify_s(dn, list_modify_attrs)
+        main_ldap_server['file'].modify_s(user_dn, list_modify_attrs)
+
+        # log the action
+        _log_ldap_action(user_dn, 'userattrmod', user_obj)
 
         if len(list_filters) > 0:
             # get the dn,cn of managers
-            users = ldap_users(base=main_users['p']['basedn'],filterstr=_ldap_build_ldapfilter_or(list_filters), list_attrs=['cn'])
-            resu_dn = '; '.join([dn for dn, u in users]) + ' ; '
-            resu_cn = ', '.join([u['cn'][0] for dn, u in users])
+            _managers = ldap_users(base=main_users['p']['basedn'],
+                filterstr=_ldap_build_ldapfilter_or(list_filters), 
+                list_attrs=['cn'])
+            resu_dn = '; '.join([_dn for _dn, _u in _managers]) + ' ; '
+            resu_cn = ', '.join([_u['cn'][0] for _dn, _u in _managers])
         else:
             resu_dn = ''
             resu_cn = ''
 
-        _debug('_json_user_getset_manager/resu_dn',resu_dn)
-        _debug('_json_user_getset_manager/resu_cn',resu_cn)
 
                 
     ldap_close()
+
+    _debug('_json_user_getset_manager/resu_dn',resu_dn)
+    _debug('_json_user_getset_manager/resu_cn',resu_cn)
 
     resu = _json_result()
     resu['dn'] = resu_dn
@@ -1129,19 +1211,302 @@ def _mount_point_rel_path(host, user, path):
     else:
         return None
 
-def _mongodb(actor, action, text):
+#----------------------------------------------------------
+# public LOG functions
+#----------------------------------------------------------
+def log_action(actor, action, kargs, allow):
     """
-    Add log to mongoDB
+    The PUBLIC LOG system: who is doing what to something and is it allow
+
     Args:
-        logtext: text to add in DB
+        - the who <string> 
+        - the doing <string>
+        - the something <dict>
+        - is it allow ? (default True) FIXME: use a real ACL system
+
+    Returns:
+        None
+
+    Raises:
+        ACL_NOTALLOW
+    """
+    try:
+        _log_action_mongodb(actor, action, kargs, allow)
+    except MONGODB_ERROR:
+        debug('log_action', 'MongoDB ERROR')
+    finally:
+        return None
+
+def log_query(query, fields=None, **options):
+    """
+    The public LOG system : query the log 
+
+    Args:
+        - dict define the query. Example: {actor: 'me', action: 'alldetele'}
+        - dict define the fields to print. Example: {name: 1, email: 1}
+        - others options from Collection.find (see find parameters)
+
+    Returns:
+        - list of dict
+
+    Raises:
+        MONGODB_ERROR
+    """
+    resu = _log_query_mongodb(query, fields, options)
+    return resu
+
+
+       
+
+#----------------------------------------------------------
+# private LOG functions
+#
+#+ implementation with mongoDB via pymongo
+#----------------------------------------------------------
+
+def _log_action_mongodb(actor, action, kargs, allow):
+    """
+    The LOG system: who is doing what to something and is it allow
+
+    Not suppose to be used directly but by _log_action
+
+    Args:
+        - the who <string> 
+        - the doing <string>
+        - the something <dict>
+        - is it allow ? (default True) FIXME: use a real ACL system
 
     Returns:
         None
 
     Raises:
         MONGODB_ERROR
+        ACL_NOTALLOW
     """
-    pass
+    _debug('_log_action_mongodb(%s, %s, %s, %s)' % (actor, action, kargs, allow))
+
+    if not action or not kargs:
+        _debug('_log_action_mongodb','error: no action or kargs')
+        sys.exit()
+        return None
+
+    try:
+        conn = pymongo.Connection(host=main_mongodb['hostname'], port=main_mongodb['port'])
+    except pymongo.errors.ConnectionFailure, e:
+        # general failed connection
+        _debug('connection error on host: %s at port: %s' % (main_mongodb['hostname'], main_mongodb['port']))
+        raise MONGODB_ERROR()
+    except TypeError, e:
+        # port not an int error
+        raise MONGODB_ERROR()
+
+    try:
+        db = conn[main_mongodb['db']]
+    except pymongo.errors.InvalidName:
+        raise MONGODB_ERROR('invalid db "%s"' % main_mongodb['db'])
+
+    # use "logs" collection
+    coll = db.logs
+    #_debug('_log_action_mongodb/coll',coll)
+
+    data = {
+        'time': datetime.datetime.today(),
+        'actor': actor,
+        'action': action,
+        'object': kargs,
+        'allow': allow,
+    }
+    _debug('_log_action_mongodb/data',data)
+
+    try:
+        coll.insert(data, safe=True)
+    except pymongo.errors.OperationFailure as e:
+        _debug('_log_action_mongodb','Error: Cant performe insert: '+repr(e))
+        raise e
+
+
+def _log_ldap_action(dn, action, kargs):
+    if 'dn' not in kargs:
+        kargs['dn'] = dn
+    else:
+        print "action %s conflict between %s ans %s" % (action, dn, kargs)
+        sys.exit(1)
+
+    if action not in ['useradd', 'userdel', 'userattrmod', 'userattrdel', 'groupaddmember', 'groupdelmember']:
+        print "action %s unknown" % action
+        sys.exit(1)
+
+    user = _acl_user()
+    allow = _acl_isallow(user,action)
+  
+    # log action
+    log_action(user, action, kargs, allow)
+
+        
+def _log_query_mongodb(query, fields, options):
+    """
+    The LOG system : query the logs 
+
+    Not suppose to be used directly but by log_query
+
+    Args:
+        - dict define the query. Example: {actor: 'me', action: 'alldetele'}
+        - dict define the fields to print. Example: {name: 1, email: 1}
+        - others options from Collection.find (see find parameters)
+
+    Returns:
+        - list of dict
+
+    Raises:
+        MONGODB_ERROR
+    """
+    _debug('_log_query_mongodb(%s, %s, %s)' % (query, fields, options))
+
+    if not query: 
+        return []
+
+    try:
+        conn = pymongo.Connection(host=main_mongodb['hostname'], port=main_mongodb['port'])
+    except pymongo.errors.ConnectionFailure, e:
+        # general failed connection
+        _debug('connection error on host: %s at port: %s' % (main_mongodb['hostname'], main_mongodb['port']))
+        raise MONGODB_ERROR('connection error on host: %s at port: %s' % (main_mongodb['hostname'], main_mongodb['port']))
+    except TypeError, e:
+        # port not an int error
+        raise MONGODB_ERROR()
+
+    try:
+        db = conn[main_mongodb['db']]
+    except pymongo.errors.InvalidName:
+        raise MONGODB_ERROR('invalid db "%s"' % main_mongodb['db'])
+
+    # use "logs" collection
+    logs = db.logs
+
+    ### options
+    if 'sort' in options and options['sort']:
+        # must be a list of (key, value)
+        query_sort = options['sort']
+        _debug('_log_query_mongodb/find with sort', query_sort)
+    else:
+        query_sort = None
+
+    try:
+        resu = logs.find(query, fields, sort=query_sort)
+    except TypeError:
+        _debug('_log_query_mongodb/find error', 'type error')
+        raise MONGODB_ERROR('find error query=%s fields=%s opts=%s' % (query, fields, query_opts))
+
+    lresu = []
+    for i in resu:
+        #_debug('_log_query_mongodb/item', i)
+        lresu.append(_log_query_getlog(i))
+
+    return lresu
+
+
+def _log_query_getlog(log):
+    """
+    convert an log object log to tuple
+    
+    Args:
+        - one ojbect log (dict)
+    
+    Returns:
+        tuple of (allow, datetime, actor, action, olink, odesc)
+        or None 
+
+    Raises:
+        None
+    """
+    if 'actor' not in log or 'action' not in log or \
+            'object' not in log or \
+            'allow' not in log or \
+            'time' not in log:
+        return None
+
+    if 'dn' not in log['object']:
+        return None
+
+    actor = log['actor']
+    action = log['action']
+    o = log['object']
+    odn = log['object']['dn']
+    allow = log['allow']
+    time = log['time']
+    # ISO 8601 date time without microsecond
+    datetime = time.replace(microsecond=0).isoformat()
+
+    if action == 'useradd' or action == 'userdel':
+        olink = "/user/"+o['uid'][0]
+        odesc = "compte de %s (login=%s home=%s)" % (o['cn'][0], o['uid'][0], o['homeDirectory'][0])
+    elif action == 'userattrmod':
+        uid = odn.split(',')[0].split('=')[1]
+        olink = "/user/"+uid
+        odesc = "modification du compte %s avec %s=%s" % (uid, o['attr'], o['val'])
+    elif action == 'groupaddmember' or action == 'groupdelmember':
+        group = odn.split(',')[0].split('=')[1]
+        olink = '/group/'+group
+        odesc = "membre=%s" % o['member']
+    else:
+        olink = ''
+        odesc = repr(o)
+
+    # hack to disable the link
+    if action == 'userdel':
+        olink = ''
+
+    _debug('_log_query_getlog',(allow, datetime, actor, action, olink, odesc))
+        
+
+    return (allow, datetime, actor, action, olink, odesc)
+        
+#----------------------------------------------------------
+# private ACL minimal functions
+#----------------------------------------------------------
+
+def _acl_user():
+    """
+    Returns:
+        known user of known ip 
+        or ip
+
+    stupid func : use acl_admins and ip
+
+    # FIXME: use a real ACL mecanism
+    """
+    
+    ip = bottle.request.remote_addr
+    _debug('ip',ip)
+
+    for t in acl_admins:
+        if t['ip'] == ip:
+            return t['name']
+    else:
+        return ip
+
+def _acl_role():
+    ip = bottle.request.remote_addr
+    _debug('ip',ip)
+
+    for t in acl_admins:
+        if t['ip'] == ip:
+            return 'admin'
+    else:
+        return 'no'
+
+def _acl_isadmin():
+    if _acl_role() == 'admin':
+        return True
+    return False
+
+def _acl_isallow(user, action):
+    if _acl_isadmin():
+        return True
+    return False
+        
+
+
 
 
 
@@ -1161,7 +1526,7 @@ def load_config(filename):
     """
     global main_ldap_servers, main_ldap_servers_name
     global main_nfs_servers, main_nfs_servers_name
-    global main_admins
+    global acl_admins
 
     _debug('Loading Global configuration file "'+filename+'" ...')
 
@@ -1248,11 +1613,10 @@ def load_config(filename):
         _debug('... section ['+sec+']',_dict)
         if sec[:5] == 'admin':
             if check_dict(_dict, admin_attrs):
-                main_admins.append(_dict)
+                acl_admins.append(_dict)
             else:
                 print _colors.WARNING + "section [%s] not loaded : No ADMIN section" % sec + _colors.NOCOLOR
                 sec_errors += 1
-            _debug('     section admin found',_dict)
 
         elif sec[:3] == 'nfs':
             if check_dict(_dict, nfs_attrs):
@@ -1281,9 +1645,11 @@ def load_config(filename):
         print _colors.OKGREEN + 'Configuration file "%s" loaded' % filename + _colors.NOCOLOR
 
         
-    _debug('main_admins',main_admins)
+    _debug('acl_admins',acl_admins)
+
     main_ldap_servers_name = [se['name'] for se in main_ldap_servers]
     _debug('main_ldap_servers:',main_ldap_servers)
+
     main_nfs_servers_name = [se['name'] for se in main_nfs_servers]
     _debug('main_nfs_servers:',main_nfs_servers)
 
@@ -1298,6 +1664,8 @@ def ldap_initialize(bind=False):
 
     return ldap object
         or False on error
+
+    FIXME: and a ldap server parameter
     """
     h = _ldap_initialize(main_ldap_servers[0])
     if h is None: return False
@@ -1476,6 +1844,7 @@ def group(group=None):
     _debug_route()
     if group is None:
         return _dict(warn='ERROR: route group(None)', cn='', desc='', members=[])
+
     ldap_initialize()
     grs = ldap_groups(list_filters=['cn=%s' % group], list_attrs=['cn','description','uniqueMember'])
     _debug('groups/grs',grs)
@@ -1496,9 +1865,13 @@ def group(group=None):
         user_uid = ldap.dn.explode_dn(user_dn)[0]
         list_filters.append(user_uid)
     _filter = _ldap_build_ldapfilter_or(list_filters)
-    _members = _ldap_search(main_ldap_server['baseuser'], filterstr=_filter, list_attrs=['cn', 'uid'])
-    members = [ {'uid': o['uid'][0], 'cn': o['cn'][0]} for d,o in _members ]
+    _members = _ldap_search(main_ldap_server['baseuser'], filterstr=_filter, list_attrs=['cn', 'sn', 'uid'])
+
     ldap_close()
+
+    members = [ {'uid': o['uid'][0], 'cn': o['cn'][0], 'sn': o['sn'][0]} for d,o in _members ]
+    # sort by surname
+    members.sort(cmp=lambda x,y: cmp(x['sn'], y['sn']))
     return _dict(cn=obj['cn'][0], desc=desc, members=members)
 
 
@@ -1584,12 +1957,14 @@ def user(uid):
     else:
         warn=None
 
+    # FIXME: handle only the first user
+    user_dn, user_obj = users[0] 
+
     # manager
     # FIXME handle only one manager per user for the first user
     managers = []
-    d, u = users[0]
-    if 'manager' in u:
-        for mandn in u['manager']:
+    if 'manager' in user_obj:
+        for mandn in user_obj['manager']:
             manuid = ldap.dn.explode_dn(mandn, notypes=1)[0]
             man = ldap_users(base=main_users['p']['basedn'], list_filters=['uid=%s' % manuid], list_attrs=['cn', 'uid'])
             if len(man) > 0:
@@ -1600,8 +1975,7 @@ def user(uid):
     # PHDs
     # FIXME: handle only the first user
     phds = []
-    d, u = users[0]
-    studs = ldap_users(base=main_users['d']['basedn'], list_filters=['manager=%s' % d], list_attrs=['cn', 'uid', 'description'])
+    studs = ldap_users(base=main_users['d']['basedn'], list_filters=['manager=%s' % user_dn], list_attrs=['cn', 'uid', 'description'])
     for studn, stu in studs:
         _debug('user/phd',stu)
         phds.append(stu)
@@ -1609,21 +1983,27 @@ def user(uid):
     # students
     # FIXME: handle only the first user
     students = []
-    d, u = users[0]
-    studs = ldap_users(base=main_users['t']['basedn'], list_filters=['manager=%s' % d], list_attrs=['cn', 'uid', 'description'])
+    studs = ldap_users(base=main_users['t']['basedn'], list_filters=['manager=%s' % user_dn], list_attrs=['cn', 'uid', 'description'])
     for studn, stu in studs:
         _debug('user/stu',stu)
         students.append(stu)
 
+    # assistants
+    # FIXME: handle only the first user
+    assistants = []
+    _users = ldap_users(base=main_users['p']['basedn'], list_filters=['manager=%s' % user_dn], list_attrs=['cn', 'uid', 'description'])
+    for _dn, _u in _users:
+        _debug('user/assistant',_u)
+        assistants.append(_u)
+
     # equipe
     # FIXME: handle only the first user
     # FIXME:         and the first team
-    d, u = users[0]
-    teams = _ldap_search(base='ou=equipes,o=ijlrda', filterstr='(&(objectClass=groupOfUniqueNames)(uniqueMember=%s))' % d, list_attrs=['cn','description'])
+    teams = _ldap_search(base='ou=equipes,o=ijlrda', filterstr='(&(objectClass=groupOfUniqueNames)(uniqueMember=%s))' % user_dn, list_attrs=['cn','description'])
     _debug('user/teams',teams)
 
     ldap_close()
-    return _dict(warn=warn, users=users, uid=uid, managers=managers, students=students, phds=phds, teams=teams)
+    return _dict(warn=warn, users=users, uid=uid, managers=managers, students=students, phds=phds, assistants=assistants, teams=teams)
 
 @bottle.route('/news')
 @bottle.route('/news/<ver>')
@@ -1640,8 +2020,15 @@ def about():
     _debug_route()
     return _dict(warn=None, ldap_ver=ldap.__version__, bottle_ver=bottle.__version__)
 
+@bottle.route('/logs')
+@bottle.view('logs')
+def logs():
+    _debug_route()
+    return _dict(warn=None, ldap_ver=ldap.__version__, bottle_ver=bottle.__version__)
+
 #----------------------------------------------------------
 # Routing JSON Functions
+#----------------------------------------------------------
 
 @bottle.route('/api/useradd', method='POST')
 def json_useradd():
@@ -1765,8 +2152,12 @@ def json_useradd():
             objs = main_ldap_server['file'].modify_s(group, list_modify_attrs)
         except ldap.LDAPError,e:
             return _json_result(success=False, message='message du serveur LDAP: '+repr(e))
+        _log_ldap_action(group, 'groupaddmember', { 'member': dn})
             
     ldap_close()
+
+    # FIXME test mode
+    return _json_result(success=True, uid=uid, userPassword=userPassword, message=u':)')
 
     ### NFS operations
     nfs_server_hostname = ''
@@ -1814,17 +2205,18 @@ def json_userdel():
     if len(objs) != 1:
         return _json_result(success=False, message="pas d'utilisateur %s" % uid)
 
-    dn = objs[0][0]
-    _debug('json_userdel/dn',dn)
+    user_dn = objs[0][0]
+    user_obj = objs[0][1]
+    _debug('json_userdel/user_dn',user_dn)
     homeDirectory = objs[0][1]['homeDirectory'][0]
     _debug('json_userdel/homeDirectory',homeDirectory)
 
     groups = _ldap_search(main_ldap_server['basegroup'], 
-        list_filters=['objectClass=groupOfUniqueNames','uniqueMember=%s' % dn], 
+        list_filters=['objectClass=groupOfUniqueNames','uniqueMember=%s' % user_dn], 
         list_attrs=['cn'])
 
     if len(groups) != 0:
-        list_modify_attrs = [(ldap.MOD_DELETE, 'uniqueMember', dn)]
+        list_modify_attrs = [(ldap.MOD_DELETE, 'uniqueMember', user_dn)]
         for dngroup, group in groups:
             cn = group['cn'][0]
             _debug('json_userdel/group', 'removing %s from %s ...' % (uid, cn))
@@ -1832,17 +2224,19 @@ def json_userdel():
                 main_ldap_server['file'].modify_s(dngroup, list_modify_attrs)
             except ldap.LDAPError,e:
                 return _json_result(success=False, message="serveur LDAP message: %s" % str(e))
+            _log_ldap_action(dngroup, 'groupdelmember', {'member': user_dn})
             _debug('json_userdel/group', 'removing %s from %s ... OK' % (uid, cn))
     else:
-        _debug('json_userdel','no group with member '+dn)
+        _debug('json_userdel','no group with member '+user_dn)
             
     # TODO : check if user have students
 
     _debug('json_userdel/user','deleting user %s ...' % uid)
     try:
-        main_ldap_server['file'].delete_s(dn)
+        main_ldap_server['file'].delete_s(user_dn)
     except ldap.LDAPError, e:
         return _json_result(success=False, message='message du serveur LDAP: '+repr(e))
+    _log_ldap_action(user_dn, 'userdel', user_obj)
     _debug('json_userdel/user','deleting user %s ... OK' % uid)
         
     ldap_close()
@@ -1885,8 +2279,10 @@ def json_user_set_attr(uid,attr):
     dn = users[0][0]
 
     try:
+        
         if _ldap_modify_attr(dn, attr, newval) is None:
             raise ldap.LDAPError, "can't change attribut %s" % attr 
+
     except ldap.LDAPError, e:
         ldap_close()
         return _json_result(success=False, message='LDAP ERROR (%s)' % e)
@@ -2000,7 +2396,6 @@ def json_autocomplete_manager():
         users = ldap_users(base=main_users['p']['basedn'], filterstr=_filters)
     except ldap.TIMEOUT:
         users = []
-        pass
         #return _json_result(succes=False, message=u"Réponse du serveur trop longue pour la recherche %s" % term)
     ldap_close()
 
@@ -2068,6 +2463,54 @@ def json_server_nfs_quota_total(server):
     return json_exec_nfs(server,'quota_total')
 
 
+def json_log_query(query, **kargs_json_result):
+    """
+    General json log function
+    """
+    try:
+        logs = [i for i in log_query(query)]
+    except MONGODB_ERROR:
+        return _json_result(success= False, message="logs error")
+
+    _debug('json_log_query/kargs', kargs_json_result)
+    
+    resu = _json_result(logs=logs)
+    resu.update(kargs_json_result.items())
+    _debug('json_log_query/resu', resu)
+    return resu
+
+
+@bottle.route('/api/log/actor/<uid>')
+def json_log_actor(uid):
+    _debug_route()
+    return json_log_query({'actor': uid}, actor=uid)
+
+@bottle.route('/api/log/users')
+def json_log_users():
+    _debug_route()
+    return json_log_query({'object.uid': {'$exists': 1} })
+
+@bottle.route('/api/log/user/<uid>')
+def json_log_user(uid):
+    _debug_route()
+    ### query : object.dn ~= /^uid=<uid>,/ or object.member ~= /^uid=<uid>,/
+    reg = "^uid=%s," % uid
+    q = { '$or': [ {'object.dn': { '$regex': reg} }, {'object.member': { '$regex': reg} } ] }
+    return json_log_query(q, user=uid)
+
+@bottle.route('/api/log/groups')
+def json_log_groups():
+    _debug_route()
+    return json_log_query({'object.member': {'$exists': 1} })
+
+@bottle.route('/api/log/group/<cn>')
+def json_log_group(cn):
+    _debug_route()
+    ### query : object.cn ~= /^cn=<cn>,/
+    reg = "^cn=%s," % cn
+    q = {'object.dn': { '$regex': reg} }
+    return json_log_query(q, cn=cn)
+
 #----------------------------------------------------------
 # MAIN
 
@@ -2078,7 +2521,7 @@ if __name__ == '__main__':
     #----------------------------------------------------------
     bottle.debug(True)
     #----------------------------------------------------------
-    for m in [bottle, ldap, paramiko]:
+    for m in [bottle, ldap, paramiko, pymongo]:
         _modules_version(m)
 
     load_config('config.ini')
@@ -2101,15 +2544,23 @@ if __name__ == '__main__':
         ('',''), 
         ('*', 'site web'), 
         ('/news', 'news') , 
+        ('/logs', 'logs') , 
         ('/about', 'à propos')
         ]
     if bottle.DEBUG:
         port = 8888
         reloader = True
         print _colors.OKBLUE + 'mode DEBUG' + _colors.NOCOLOR
+
+        # dev database
+        main_mongodb['db'] = 'bottleldap-dev'
+
     else:
-        port = 8080
+        port = 8888
         reloader = False
+
+        # production database
+        main_mongodb['db'] = 'bottleldap'
         
     bottle.run(host='0.0.0.0', port=port, reloader=reloader, debug=bottle.DEBUG)
 
