@@ -1,13 +1,13 @@
 %rebase base title="À Propos", nav=nav, warn=warn, author=author, version=version
 <div class="box shadow">
 <h1>À Propos</h1>
-<p>
-    Ce site a un double objectif: Faire de <span id="author">moi</span> un <strong>übergeek</strong> en <em>Python, CSS, JQuery, AJAX</em> et autre webdesign. Et en plus, accessoirement, pouvoir <strong>administrer le(s) serveur(s) LDAP</strong> de l 'Institut.
-</p>
-<p>
-    Ce site est donc programmé entierement en Python, avec l'aide de la micro web-framework <a href="http://bottlepy.org" target="_blanck">bottlepy</a> (version {{bottle_ver}})
-    et de la librairie <a href="http://www.python-ldap.org/"  target="_blanck">python-ldap</a> (version {{ldap_ver}}) pour la partie serveur.
-</p>
+
+<p>Ce projet a un double objectif.
+<strong>Cuisiner</strong> un site web minimal et <strong>minimaliste</strong> (<em>sans apache ou autre Guerrier du web</em>) en <a class="reference external" href="http://www.python.org">Python</a>, <a class="reference external" href="http://www.w3.org/Style/CSS/Overview.fr.html">CSS</a> <a class="reference external" href="http://jquery.com/">JQuery</a> et autre ingrédients en <em>webdesign</em>.
+Un soupçon de <a class="reference external" href="http://www.mongodb.org/">mongoDB</a> à été récemment ajouté, juste pour le goût.</p>
+<p>Et en plus, accessoirement, pouvoir <strong>administrer</strong> le serveur <a class="reference external" href="http://www.openldap.org/">LDAP</a> de l'Institut <tt class="docutils literal"><span class="pre">;-P</span></tt>.</p>
+<p>Ce site est donc programmé entièrement en Python, avec l'aide de la micro web-framework <a class="reference external" href="http://bottlepy.org/">bottlepy</a> (version {{bottle_ver}}) et de la librairie <a class="reference external" href="http://www.python-ldap.org/">python-ldap</a>  (version {{ldap_ver}})</p>
+
 <p>
     Concernant la partie, client, c'est du <a href="http://jquery.com/" target="_blanck">JQuery</a> avec une touche d'<a href="http://fr.wikipedia.org/wiki/Ajax_(informatique)" target="_blanck">AJAX</a>, une larme de <a href="http://raphaeljs.com/" target="_blanck">Raphaël JS</a>.
 </p>
