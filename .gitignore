@@ -2,3 +2,5 @@
 *gz
 *.ini
 *.log
+*.html
+id_rsa
