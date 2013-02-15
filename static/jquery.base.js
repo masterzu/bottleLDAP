@@ -117,6 +117,67 @@ function show_warning(text) {
 };
 
 /**********************************************************
+* when wbutton.click do a ajax the url and send result to wresult
+*
+* used by user.tpl, group.tpl, logs.tpl
+*/
+
+function log_on_click(wbutton, url, wresult){
+
+    // #logs button-users
+    wbutton.click(function(){
+        wresult.empty();
+
+        $.getJSON(url,function(data, textStatus){
+            //for ( var v in data) { alert('data['+v+']='+data[v]); };
+            if (textStatus == 'success' && data['success']) { // ajax OK && data ok
+                var logs = data['logs'];
+                for (k in logs) {
+                    var o = logs[k],
+                        log_allow = o[0],
+                        log_iso8601 = o[1],
+                        log_actor = o[2],
+                        log_action = o[3],
+                        olink = o[4],
+                        odesc = o[5],
+                        log_date = log_iso8601.split('T')[0],
+                        log_time = log_iso8601.split('T')[1];
+
+                    // handle allow/not allow action
+                    if (log_allow) {
+                        log_allowtxt = '';
+                    } else {
+                        log_allowtxt = ' <span class="warn hover" title="action interdite">[TENTATIVE]</span> ';
+                    };
+
+                    // link
+                    if (olink) {
+                        link = ' <a href="'+olink+'">'+odesc+'</a>';
+                    } else {
+                        link = ' <span>'+odesc+'</span>';
+                    };
+                
+                    wresult.append('<div class="log">Le '+log_date+' a '+log_time+''+log_allowtxt
+                        //+' <a href="/actor/'+log_actor+'" title="actor" class="actor">'+log_actor+'</a>'
+                        +' <span title="actor" class="actor help">'+log_actor+'</span>'
+                        +' <span title="action" class="action help">'+log_action+'</span>'+link
+                        +'</div>');
+                };
+                wbutton.text('metre a jour');
+
+                if (logs.length == 0) {
+                    wresult.append('<div>Pas de logs</div>');
+                }
+
+            } else { //ajax error
+                show_warning('AJAX: error: GET '+url+'; '+data['message']);
+            };
+        });
+    });
+};
+
+
+/**********************************************************
  BASE jquery fonction to 
  - research form #input_search
  - link #top to /
