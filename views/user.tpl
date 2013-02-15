@@ -2,12 +2,6 @@
 
 %mandatory_attrs = ['sn','cn','uidNumber','gidNumber', 'homeDirectory']
 %if len(users) > 0:
-<div id="onglets">
-    <ul>
-        <li><a href="#page" class="actif nav">fiche</a></li>
-        <li><a href="#fiche" class="nav">édition</a></li>
-    </ul>
-
 <script type="text/javascript">
 <!-- 
 $(function() {
@@ -78,7 +72,7 @@ $(function() {
             });
             alert('vals='+vals);
             */
-            var url = '/api/user/' + $('#uid').text() + '/attr/' + attr;
+            var url = '/api/user/{{uid}}/attr/' + attr;
 
             // set the new value with ajax
             $.post(url,{'newval': newval},function(data, textStatus){
@@ -113,7 +107,7 @@ $(function() {
         var this_span = $(this).prev().prev();
         var this_input = $(this).prev();
         var this_button = $(this);
-        var url = '/api/user/' + $('#uid').text() + '/attr/' + attr;
+        var url = '/api/user/{{uid}}/attr/' + attr;
 
         // load in span
         $.getJSON(url,function(data, textStatus){
@@ -176,7 +170,7 @@ $(function() {
             };
             //alert('newval='+newval);
             var attr = 'manager';
-            var url = '/api/user/' + $('#uid').text() + '/attr/manager';
+            var url = '/api/user/{{uid}}/attr/manager';
 
             // set the new value with ajax
             $.post(url,{'newval': newval},function(data, textStatus){
@@ -207,7 +201,7 @@ $(function() {
         var this_span = $(this).prev().prev().prev();
         var this_input = $(this).prev().prev();
         var this_button = $(this);
-        var url = '/api/user/' + $('#uid').text() + '/attr/manager';
+        var url = '/api/user/{{uid}}/attr/manager';
 
         // load in span
         $.getJSON(url,function(data, textStatus){
@@ -243,13 +237,12 @@ $(function() {
     $('#delete_yes').click(function(){
         $('#dialog').hide();
         $('#delete').show();
-        var uid = $('#uid').text();
         var url = '/api/userdel';
-        $.post(url,{'uid': uid},function(data, textStatus){
+        $.post(url,{'uid': '{{uid}}'},function(data, textStatus){
             if (textStatus == 'success') { // ajax OK
                 //alert('OK JSON='+data[attr]);
                 if (data['success']) { // operation done
-                    alert('Utilisateur '+uid+' supprimé');
+                    alert('Utilisateur "{{uid}}" supprimé');
                     //alert('Il reste a supprimer le compte sur le serveur NFS (olympe)');
                     location.href='/';
                 } else { // operation failed
@@ -262,15 +255,26 @@ $(function() {
         } ,'json');
 
     });
-})
+
+    // click on load
+    log_on_click($('#addlogd'), '/api/log/user/{{uid}}', $('#logs-texts'));
+});
 // -->
 </script>
+
+<div id="onglets">
+    <ul>
+        <li><a href="#page" class="actif nav">fiche</a></li>
+        <li><a href="#fiche" class="nav">édition</a></li>
+        <li><a href="#logs" class="nav">logs</a></li>
+    </ul>
 
     <div id="page" class="onglet box shadow">
     %dn = users[0][0]
     %u =  users[0][1]
     <!-- ONLY PRINT the first user -->
         <h1><span name="cn" title="cn">{{u['cn'][0]}}</span></h1>
+        <div style="float: left">
         <dl>
             <dt title="givenName">Prénom</dt>
         %if 'givenName' in u:
@@ -287,15 +291,14 @@ $(function() {
             <dd class="warning">pas d'email définit !</dd>
         %end
 
-            <dt title="uid">login</dt>
-            <dd>{{uid}}</dd>
-            
-
-        %if 'description' in u:
             <dt title="description">description</dt>
+        %if 'description' in u:
             <dd><span name="description">{{u['description'][0]}}</span></dd>
+        %else:
+            <dd class="warning">pas définit !</dd>
         %end
 
+            
         %if len(teams) > 1:
             <dt>équipes</dt>
         %else:
@@ -306,7 +309,35 @@ $(function() {
         %for tdn, t in teams:
             <dd><a href="/group/{{t['cn'][0]}}">{{t['description'][0]}}</a></dd>
         %end
+        </dl>
+        </div>
 
+        <div style="float: right">
+        <dl>
+            <dt title="uid">login</dt>
+            <dd><code>{{uid}}</code></dd>
+
+            <dt title="home">home</dt>
+            <dd><code>{{u['homeDirectory'][0]}}</code></dd>
+
+            %home = u['homeDirectory'][0]
+
+            %server = 'inconnu'
+            %if home[:6] == '/home/':
+                %server = 'olympe'
+            %elif home[:9] == '/poisson/':
+                %server = 'poisson'
+            %elif home[:4] == '/lmm':
+                %server = 'euler'
+            %end
+            <dd>(serveur={{server}})</dd>
+
+
+        </dl>
+        </div>
+
+        <div style="clear: both">
+        <dl>
         %if len(managers) > 1:
             <dt title="manager">directeurs</dt>
         %else:
@@ -367,6 +398,7 @@ $(function() {
         %end
 
         </dl>
+        </div>
     </div><!-- onglet page -->
 
     <div id="fiche" class="onglet box shadow">
@@ -465,6 +497,17 @@ $(function() {
 
     </div><!-- onglet fiche -->
 
+    <div id="logs" class="onglet box shadow">
+        <h1 id="heading">fiche LOGS : {{u['cn'][0]}}</h1>
+        <div>Liste anti-chronologique des logs.</div>
+        <button id="addlogd">afficher a jour les logs</button>
+        <div id="logs-texts"> </div>
+        
+    </div><!-- onglet logs -->
+
 </div><!-- onglets -->
+%else:
+<div>Erreur : Il n'existe pas de compte <code>{{uid}}</code>
+</div>
 %end
 

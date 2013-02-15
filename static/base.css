@@ -99,12 +99,15 @@ ul {
 }
 
 li {
-
 }
 
 li a {
     padding:0;
     /*border: */
+}
+code {
+    font-weight: bold;
+    background-color: white;
 }
 dt {
     font-weight: bold;
@@ -129,6 +132,21 @@ button {
     padding: 2px 15px 20px 15px;
     margin-top: 20px;
 }
+.cliquable {
+    cursor:pointer;
+}
+.cliquable:hover {
+    text-decoration:underline;
+}
+.help {
+    cursor:help;
+}
+.hover:hover {
+    background-color: rgba(200,200,200,.5);
+}
+.hide {
+    display: none; 
+}
 .shadow {
     margin: 0px 20px 30px 0px;
     border: 1px #444 solid;
@@ -141,26 +159,22 @@ button {
     height: 3px;
     margin: 0px; padding: 0px; 
 }
-.warning {
-    font: 16px Arial,sans-serif;
-    color: red;
-    background-color: rgba(200,200,200,.5);
-}
-.cliquable {
-    cursor:pointer;
-}
-.cliquable:hover {
-    text-decoration:underline;
-}
-.hide {
-    display: none; 
-}
+
 .term {
     font: bold 10px "VT-100",Terminal,monospace;
     font-stretch: ultra-condensed;
     white-space:pre;
     background-color: white;
     color: green;
+}
+.warning {
+    font: 16px Arial,sans-serif;
+    color: red;
+    background-color: rgba(200,200,200,.5);
+}
+.warn {
+    color: red;
+    background-color: rgba(200,200,200,.5);
 }
 .widget_ok {
     background-color: green;
@@ -494,6 +508,17 @@ button {
      padding-top:15px;
      zoom:1; /* ie */
 }
+
+#onglets .actor {
+    font-weight: bold;
+    color: orange;
+    font-family: monospace;
+}
+#onglets .action {
+    /*text-decoration: underline;*/
+    color: green;
+    font-family: monospace;
+}
 /*
 #onglets dl {
     float : none;
@@ -521,6 +546,22 @@ button {
     float : none;
 }
 */
+#onglets #logs div.log:hover {
+    background-color: rgba(200,200,200,.5);
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, .5);
+    -webkit-box-shadow: 0px 1px 3px rgba(0, 0, 0, .5);
+    -moz-box-shadow: 0px 1px 3px rgba(0, 0, 0, .5);
+}
+#onglets #logs .useradd {
+    margin-bottom: 5px;
+    border-bottom: 2px #444 solid;
+    border-left: 2px #444 solid;
+}
+#onglets #logs .userdel {
+    margin-top: 5px;
+    border-top: 2px #444 solid;
+    border-left: 2px #444 solid;
+}
 /**********************************************************
  boring (c) stuffs
 */
