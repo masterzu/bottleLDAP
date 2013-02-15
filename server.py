@@ -1233,7 +1233,7 @@ def log_action(actor, action, kargs, allow):
     try:
         _log_action_mongodb(actor, action, kargs, allow)
     except MONGODB_ERROR:
-        debug('log_action', 'MongoDB ERROR')
+        _debug('log_action', 'MongoDB ERROR')
     finally:
         return None
 
@@ -1292,13 +1292,12 @@ def _log_action_mongodb(actor, action, kargs, allow):
 
     try:
         conn = pymongo.Connection(host=main_mongodb['hostname'], port=main_mongodb['port'])
-    except pymongo.errors.ConnectionFailure, e:
+    except pymongo.errors.ConnectionFailure as e:
         # general failed connection
-        _debug('connection error on host: %s at port: %s' % (main_mongodb['hostname'], main_mongodb['port']))
-        raise MONGODB_ERROR()
-    except TypeError, e:
+        raise MONGODB_ERROR('connection error on host: %s at port: %s' % (main_mongodb['hostname'], main_mongodb['port']))
+    except TypeError:
         # port not an int error
-        raise MONGODB_ERROR()
+        raise MONGODB_ERROR('Port invalid : %s' % main_mongodb['port'])
 
     try:
         db = conn[main_mongodb['db']]
@@ -1367,13 +1366,13 @@ def _log_query_mongodb(query, fields, options):
 
     try:
         conn = pymongo.Connection(host=main_mongodb['hostname'], port=main_mongodb['port'])
-    except pymongo.errors.ConnectionFailure, e:
+    except pymongo.errors.ConnectionFailure:
         # general failed connection
         _debug('connection error on host: %s at port: %s' % (main_mongodb['hostname'], main_mongodb['port']))
         raise MONGODB_ERROR('connection error on host: %s at port: %s' % (main_mongodb['hostname'], main_mongodb['port']))
-    except TypeError, e:
+    except TypeError:
         # port not an int error
-        raise MONGODB_ERROR()
+        raise MONGODB_ERROR('Port invalid : %s' % main_mongodb['port'])
 
     try:
         db = conn[main_mongodb['db']]
@@ -1395,7 +1394,7 @@ def _log_query_mongodb(query, fields, options):
         resu = logs.find(query, fields, sort=query_sort)
     except TypeError:
         _debug('_log_query_mongodb/find error', 'type error')
-        raise MONGODB_ERROR('find error query=%s fields=%s opts=%s' % (query, fields, query_opts))
+        raise MONGODB_ERROR('find error query=%s fields=%s sort=%s' % (query, fields, query_sort))
 
     lresu = []
     for i in resu:
