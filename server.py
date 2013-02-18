@@ -2484,7 +2484,7 @@ def json_log_actor(uid):
 @bottle.route('/api/log/users')
 def json_log_users():
     _debug_route()
-    return json_log_query({'object.uid': {'$exists': 1} })
+    return json_log_query({'action': {'$regex': '^user'} })
 
 @bottle.route('/api/log/user/<uid>')
 def json_log_user(uid):
@@ -2497,7 +2497,7 @@ def json_log_user(uid):
 @bottle.route('/api/log/groups')
 def json_log_groups():
     _debug_route()
-    return json_log_query({'object.member': {'$exists': 1} })
+    return json_log_query({'action': {'$regex': '^group'} })
 
 @bottle.route('/api/log/group/<cn>')
 def json_log_group(cn):
