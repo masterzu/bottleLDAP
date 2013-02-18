@@ -19,14 +19,14 @@ $(function() {
     </ul>
 
     <div id="users" class="onglet box shadow">
-        <h1 id="heading">Logs Utilisateur</h1>
+        <h1 id="heading">Logs Utilisateurs</h1>
         <div>Liste anti-chronologique des logs utilisateurs.</div>
         <button id="button_users">afficher les logs</button>
         <div id="logs_users"> </div>
     </div><!-- #users -->
 
     <div id="groups" class="onglet box shadow">
-        <h1 id="heading">Logs Groups</h1>
+        <h1 id="heading">Logs Groupes</h1>
         <div>Liste anti-chronologique des logs groupes.</div>
         <button id="button_groups">afficher les logs</button>
         <div id="logs_groups"> </div>
