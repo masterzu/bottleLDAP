@@ -1888,8 +1888,7 @@ def users_search(str_filter):
 
     _list_filters = []
     for st in ['cn', 'sn', 'givenName','uid']:
-        #_list_filters.append('%s=*%s*' % (st, _filter))
-        _list_filters.append('%s~=%s' % (st, _filter))
+        _list_filters.append('%s=*%s*' % (st, _filter))
         
     _filters = _ldap_build_ldapfilter_or(_list_filters)
 
@@ -2155,9 +2154,6 @@ def json_useradd():
         _log_ldap_action(group, 'groupaddmember', { 'member': dn})
             
     ldap_close()
-
-    # FIXME test mode
-    return _json_result(success=True, uid=uid, userPassword=userPassword, message=u':)')
 
     ### NFS operations
     nfs_server_hostname = ''
