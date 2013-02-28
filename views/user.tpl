@@ -330,7 +330,8 @@ $(function() {
             %elif home[:4] == '/lmm':
                 %server = 'euler'
             %end
-            <dd>(serveur={{server}})</dd>
+            <dt>serveur NFS</dt>
+            <dd><a href="/server_nfs/{{server}}">{{server}}</a></dd>
 
 
         </dl>
