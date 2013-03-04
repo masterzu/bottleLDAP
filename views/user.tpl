@@ -161,7 +161,7 @@ $(function() {
             var this_button = $(this).next().next();
             var oldval = this_span.val();
             var newval = $(this).val();
-    
+
             if (newval == oldval) {
                 this_span.show();
                 this_input.hide();
@@ -243,7 +243,6 @@ $(function() {
                 //alert('OK JSON='+data[attr]);
                 if (data['success']) { // operation done
                     alert('Utilisateur "{{uid}}" supprimé');
-                    //alert('Il reste a supprimer le compte sur le serveur NFS (olympe)');
                     location.href='/';
                 } else { // operation failed
                     show_warning(data['message']);
@@ -307,7 +306,7 @@ $(function() {
             %end
         %end
         %for tdn, t in teams:
-            <dd><a href="/group/{{t['cn'][0]}}">{{t['description'][0]}}</a></dd>
+            <dd><a href="/group/{{t['cn'][0]}}">{{t['description'][0]}}</a> ({{t['cn'][0]}})</dd>
         %end
         </dl>
         </div>
