@@ -169,7 +169,7 @@ function log_on_click(wbutton, url, wresult){
                     };
                     section_date = log_section_date;
                 
-                    wresult.append('<div class="log">Le '+log_date+' a '+log_time+''+log_allowtxt
+                    wresult.append('<div class="log">'+log_time+log_allowtxt
                         //+' <a href="/actor/'+log_actor+'" title="actor" class="actor">'+log_actor+'</a>'
                         +' <span title="actor" class="actor help">'+log_actor+'</span>'
                         +' <span title="action" class="action help">'+log_action+'</span>'+link
