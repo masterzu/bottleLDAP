@@ -131,7 +131,9 @@ function log_on_click(wbutton, url, wresult){
         $.getJSON(url,function(data, textStatus){
             //for ( var v in data) { alert('data['+v+']='+data[v]); };
             if (textStatus == 'success' && data['success']) { // ajax OK && data ok
-                var logs = data['logs'];
+                var logs = data['logs'],
+                    section_date = '',
+                    months = ['Jan','Fev','Mars','Avr','Mai','Juin','Juil','Aout','Sept','Oct','Nov','Dec'];
                 for (k in logs) {
                     var o = logs[k],
                         log_allow = o[0],
@@ -141,7 +143,11 @@ function log_on_click(wbutton, url, wresult){
                         olink = o[4],
                         odesc = o[5],
                         log_date = log_iso8601.split('T')[0],
-                        log_time = log_iso8601.split('T')[1];
+                        log_time = log_iso8601.split('T')[1],
+                        log_year = log_date.split('-')[0],
+                        log_month = Number(log_date.split('-')[1])-1,
+                        log_day = log_date.split('-')[2],
+                        log_section_date = log_day+' '+months[log_month]+' '+log_year;
 
                     // handle allow/not allow action
                     if (log_allow) {
@@ -156,6 +162,12 @@ function log_on_click(wbutton, url, wresult){
                     } else {
                         link = ' <span>'+odesc+'</span>';
                     };
+
+                    // section date
+                    if (section_date != log_section_date) {
+                        wresult.append('<div class="sectionlog">'+log_section_date+'</div>');
+                    };
+                    section_date = log_section_date;
                 
                     wresult.append('<div class="log">Le '+log_date+' a '+log_time+''+log_allowtxt
                         //+' <a href="/actor/'+log_actor+'" title="actor" class="actor">'+log_actor+'</a>'
