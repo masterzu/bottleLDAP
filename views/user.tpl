@@ -306,7 +306,7 @@ $(function() {
             %end
         %end
         %for tdn, t in teams:
-            <dd><a href="/group/{{t['cn'][0]}}">{{t['description'][0]}}</a> ({{t['cn'][0]}})</dd>
+            <dd><a href="/group/{{t['cn'][0]}}">{{t['description'][0]}}</a> (<code>{{t['cn'][0]}}</code>)</dd>
         %end
         </dl>
         </div>
