@@ -43,7 +43,7 @@ History
 main_news = ( 
     ('TODO', 'TODO', [
     'FIXME: json_userdel(): check if user have students',
-    'FIXME: supprimer les lettres lI du generateur de mot de pass',
+        'Ajout des logs pour les operations NFS',
         "verification AJAX d'un login",
         "gestion des membres/directeurs",
         "gestion multi-NFS",
@@ -88,6 +88,12 @@ main_news = (
         'Création des logs, stoqués dans une base mongoDB',
         'Ajout des logs dans "/user/<>" "/group/<>" et "/logs"',
         'passage a bottle 0.11.3', 
+        ]
+    ),
+    ('devel', '...', [ 'Modification phase 8', 
+        'def json_useradd: supprimer les lettres "1lIo0O" du generateur de mot de pass',
+        '[BUGFIX] def _json_user_getset_manager: Add attr and val to dict result', 
+        'def _log_query_mongodb: add log sort by time DESC',
         ]
     ),
 )
@@ -778,7 +784,7 @@ def _json_user_getset_manager(uid, vals=None):
         main_ldap_server['file'].modify_s(user_dn, list_modify_attrs)
 
         # log the action
-        _log_ldap_action(user_dn, 'userattrmod', user_obj)
+        _log_ldap_action(user_dn, 'userattrmod', {'attr': 'manager', 'val': vals})
 
         if len(list_filters) > 0:
             # get the dn,cn of managers
@@ -1383,24 +1389,20 @@ def _log_query_mongodb(query, fields, options):
     # use "logs" collection
     logs = db.logs
 
-    ### options
-    if 'sort' in options and options['sort']:
-        # must be a list of (key, value)
-        query_sort = options['sort']
-        _debug('_log_query_mongodb/find with sort', query_sort)
-    else:
-        query_sort = None
-
     try:
-        resu = logs.find(query, fields, sort=query_sort)
+        resu = logs.find(query, fields)
     except TypeError:
         _debug('_log_query_mongodb/find error', 'type error')
         raise MONGODB_ERROR('find error query=%s fields=%s sort=%s' % (query, fields, query_sort))
 
-    lresu = []
-    for i in resu:
-        #_debug('_log_query_mongodb/item', i)
-        lresu.append(_log_query_getlog(i))
+    ### options sort
+    if 'sort' in options and options['sort']:
+        # must be a list of (key, value)
+        query_sort = options['sort']
+        _debug('_log_query_mongodb/find with sort', query_sort)
+        resu = resu.sort(query_sort)
+
+    lresu = [_log_query_getlog(i) for i in resu]
 
     return lresu
 
@@ -2111,7 +2113,7 @@ def json_useradd():
     def passwd(size=8):
         import string
         from random import choice
-        _list = (string.letters + string.digits).translate(None,'1lo0')
+        _list = (string.letters + string.digits).translate(None,'1lIo0O')
         return ''.join([choice(_list) for i in range(size)])
 
     userPassword = passwd()
@@ -2464,7 +2466,8 @@ def json_log_query(query, **kargs_json_result):
     General json log function
     """
     try:
-        logs = [i for i in log_query(query)]
+        # force sort by descending time
+        logs = [i for i in log_query(query, None, sort=[('time',pymongo.DESCENDING)])]
     except MONGODB_ERROR:
         return _json_result(success= False, message="logs error")
 
@@ -2490,6 +2493,7 @@ def json_log_users():
 def json_log_user(uid):
     _debug_route()
     ### query : object.dn ~= /^uid=<uid>,/ or object.member ~= /^uid=<uid>,/
+    # the final comma is important !
     reg = "^uid=%s," % uid
     q = { '$or': [ {'object.dn': { '$regex': reg} }, {'object.member': { '$regex': reg} } ] }
     return json_log_query(q, user=uid)
