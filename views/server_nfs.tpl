@@ -81,7 +81,7 @@ $(function() {
 
 <div class="box shadow">
 <h1>serveur <span id="server" class="nfs">{{name}}</span></h1>
-<h3>Données</h3>
+<h2>Données</h2>
 <ul>
     %for item in ['host', 'home_perm', 'home_doct', 'home_temp']:
         %if item not in server:
@@ -90,11 +90,11 @@ $(function() {
     <li>
         <strong>{{item}}</strong>: {{server[item]}}
         %if item.find('home_') != -1:
-            <button id="check_{{item}}">check</button>
-            <button id="quota_{{item}}">quota</button>
+            <button id="check_{{item}}" title="existence du repertoire">existence ?</button>
+            <button id="quota_{{item}}" title="camembert du Quota">quota</button>
             <span id="{{item}}" class="term"></span>
         %else:
-            <button id="quota_total">quota total</button>
+            <button id="quota_total" title="camembert du Quota Total">quota total</button>
             <span id="quota_total" class="term"></span>
         %end
     </li>
