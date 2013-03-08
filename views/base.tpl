@@ -45,10 +45,9 @@
             %end
         </div><!-- nav -->
         <div id="content">
+            <div id="warning" style="display:none;"></div>
             %if warn:
-                <div id="warning">{{!warn}}</div>
-            %else:
-                <div id="warning" style="display:none;"></div>
+                <script>show_warning('{{!warn}}'); </script>
             %end
             <div id="content-text">
 <!------------------------------ -->

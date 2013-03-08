@@ -1797,7 +1797,9 @@ def server_ldap(server=None):
                     % server, servers=main_ldap_servers_name))
             return bottle.template('server_ldap', _dict(name=se['name'], server=se))
 
-    return bottle.template('servers', _dict(warn='LDAP server "%s" not found' % server, servers=main_ldap_servers_name))
+    return bottle.template('servers', _dict(warn='LDAP server "%s" not found' % server, 
+        ldap_servers=main_ldap_servers_name, 
+        nfs_servers=main_nfs_servers_name))
 
 @bottle.route('/server_nfs/<server>')
 def server_nfs(server=None):

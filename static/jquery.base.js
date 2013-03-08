@@ -232,8 +232,6 @@ $(function(){
  #warning Zone interactions
 */
     //$('#warning').text('DEBUG ZONE').show();
-
-    $('#warning').fadeOut('fast');
     $('#warning').click(function(){
         $(this).hide('slow');
     });
