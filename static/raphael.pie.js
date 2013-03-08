@@ -60,39 +60,48 @@ Raphael.fn.pieChart = function (cx, cy, r, values, labels, quotas, graces, title
                     ? '-' + [bcolor, bcolor_comp, bcolor, bcolor_comp, bcolor, bcolor_comp, bcolor, bcolor_comp, bcolor, bcolor_comp, bcolor].join('-')
                     : "-" + bcolor + "-" + color,
                 user_anim = quotas[j]
-                    ? {transform: "s3", fill: "#f00", stroke: "#000"}
-                    : {transform: "s2", fill: "#fff", stroke: "#000"},
+                    ? {transform: "s3", fill: "#f00", stroke: "#000", opacity: 1}
+                    : {transform: "s2", fill: "#fff", stroke: "#000", opacity: 1},
                 user_size_text = quotas[j]
                     ? value_human + '(' + graces[j] + ')'
                     : value_human,
                 user_size_anim = quotas[j]
-                    ? {transform: "s3", opacity: 1, fill: "#f00", stroke: "#000"}
-                    : {transform: "s2", opacity: 1, fill: "#fff", stroke: "#000"},
+                    ? {transform: "s3", opacity: 1, fill: "#f00", stroke: "#000", opacity: 1}
+                    : {transform: "s2", opacity: 1, fill: "#fff", stroke: "#000", opacity: 1},
                 p = sector(cx, cy, r, angle, angle + angleplus, 
                     {fill: (angle+angleplus/2) + sector_fillcolor, stroke: "#fff", "stroke-width": 3}).attr('cursor', 'pointer'),
-                user = paper.text(cx - user_dx, cy - user_dy, labels[j]).attr({fill: "#000", stroke: "none", "font-size": 13}),
-                user_size = paper.text(cx, cy, user_size_text).attr({fill: "#000", stroke: "none", opacity: 0, "font-size": 15});
+                user = paper.text(cx - user_dx, cy - user_dy, labels[j]).attr({fill: "#000", stroke: "none", "font-size": 13, opacity: 0}).hide(),
+                user_size = paper.text(cx, cy, user_size_text).attr({fill: "#000", stroke: "none", "font-size": 15, opacity: 0}).hide();
                 //#center# user_size = paper.text(cx, cy, value_human).attr({fill: "#000", stroke: "none", opacity: 0, "font-size": 15});
                 //#under text# user_size = paper.text(cx - user_dx, cy - user_dy + 2*delta , value_human).attr({fill: "#000", stroke: "none", opacity: 0, "font-size": 15});
                 //#inner circle# user_size = paper.text(cx + (r + delta * 2 ) * Math.cos(-popangle * rad), cy + (r + delta * 2) * Math.sin(-popangle * rad), value_human).attr(user_size_attr);
 
             p.mouseover(function () {
                 p.stop().animate({transform: "s1.1 1.1 " + cx + " " + cy}, ms, "elastic");
-                user.stop().animate(user_anim, ms/4, ">").toFront();
-                user_size.stop().animate(user_size_anim, ms/4, ">").toFront();
+                user.show().stop().animate(user_anim, ms/4, ">").toFront();
+                user_size.show().stop().animate(user_size_anim, ms/4, ">").toFront();
             }).mouseout(function () {
+                var visible = angleplus > 10 ? true : false;
                 p.stop().animate({transform: ""}, ms, "elastic");
-                user.stop().animate({transform: "", stroke: "none", fill: "#000"}, ms, "bounce");
-                user_size.stop().animate({transform: "", opacity: 0, stroke: "none", fill: "#000"}, ms);
+                user.show().stop();
+                if (visible) {
+                    user.animate({transform: "", stroke: "none", fill: "#000"}, ms, "bounce");
+                } else {
+                    user.animate({transform: "", stroke: "none", fill: "#000", opacity: 0}, ms, "bounce");
+                }
+                user_size.show().stop().animate({transform: "", opacity: 0, stroke: "none", fill: "#000"}, ms);
             }).click(function(){
                 var url = '/user/'+login;
                 $(location).attr('href', url);
                 
             });
-            angle += angleplus;
+            if (angleplus > 10) {
+                user.attr({opacity: 1}).show();
+            }
             chart.push(p);
             chart.push(user);
             chart.push(user_size);
+            angle += angleplus;
             start += .1;
         },
         thetitle,
@@ -104,7 +113,7 @@ Raphael.fn.pieChart = function (cx, cy, r, values, labels, quotas, graces, title
     }
     // calculate thetitle w/ total
     thetitle = paper.text(15, 15, title).attr({fill: "#000", stroke: "none", "font-size": 25, 'text-anchor': 'start'});
-    thesize = paper.text(15, 40, "(total du Top: "+kilobytesToSize(total)+")").attr({fill: "#000", stroke: "none", "font-size": 15, 'text-anchor': 'start'});
+    thesize = paper.text(15, 40, "(total du Top: "+kilobytesToSize(total,2)+")").attr({fill: "#000", stroke: "none", "font-size": 15, 'text-anchor': 'start'});
     chart.push(thetitle);
 
     // plot pies
