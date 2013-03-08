@@ -19,29 +19,39 @@ $(function() {
                 if (response['success']) {
                     //alert(response['message']);
                     var logins = [],
-                        sizes = []
+                        sizes = [],
+                        quotas = [],
+                        graces = [],
                         title = response['message'][0];
                     // /!\ the first element of response[message] is the title: do not include to the dirty hack loop
                     for( var i = 1, ii = response['message'].length; i < ii; i++) {
                         var login = response['message'][i][0],
-                            size = response['message'][i][1];
+                            size = response['message'][i][1],
+                            quota = response['message'][i][2],
+                            grace = response['message'][i][3];
                         logins.push(login);
                         sizes.push(parseInt(size, 10));
+                        quotas.push(quota);
+                        graces.push(grace);
                         };
                     // Must draw be BEFORE Raphael - draw
                     $('#pieblack').show();
                     pie.show();
                     // (re)plot pie
-                    Raphael("pie", 400, 400).pieChart(200, 200, 133, sizes, logins, title);
+                    Raphael("pie", 400, 400).pieChart(200, 200, 133, sizes, logins, quotas, graces, title);
                     pie.center();
                 } else {
                     span.text('Pas de quota');
                 }
                 },
+            timeout: 2000,
             error: function(xhr, textStatus, error){
                 span.removeClass('ui-autocomplete-loading').text('');
-                show_warning('Server error: '+error);
-                },
+                if (textStatus=='timeout') {
+                    show_warning('Serveur trop lent. Peut etre inaccessible ?');
+                } else {
+                    show_warning('Server error: '+error);
+                }},
             });
     };
     $('button#issue').click(function() { 

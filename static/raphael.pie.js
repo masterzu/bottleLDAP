@@ -1,4 +1,4 @@
-Raphael.fn.pieChart = function (cx, cy, r, values, labels, title) {
+Raphael.fn.pieChart = function (cx, cy, r, values, labels, quotas, graces, title) {
     var paper = this,
         rad = Math.PI / 180,
         chart = this.set();
@@ -47,26 +47,43 @@ Raphael.fn.pieChart = function (cx, cy, r, values, labels, title) {
                 login = labels[j],
                 angleplus = 360 * value / total,
                 popangle = angle + (angleplus / 2),
-                color = Raphael.hsb(start, .75, 1),
                 ms = 500,
                 delta = 20,
-                user_dx = - (r - delta) * Math.cos(-popangle * rad),
-                user_dy = - (r - delta) * Math.sin(-popangle * rad),
+                user_dx = - r * 1.1 * Math.cos(-popangle * rad),
+                user_dy = - r * 1.1 * Math.sin(-popangle * rad),
+                color = Raphael.hsb(start, .5, 1),
+                // h' = h + 180deg (ou + .5) ; s' = (v.s)/(v.(s-1)+1) ; v' = v.(s-1)+1
+                // http://fr.wikipedia.org/wiki/Teinte_Saturation_Valeur#Couleurs_compl.C3.A9mentaires
                 bcolor = Raphael.hsb(start, 1, 1),
+                bcolor_comp = Raphael.hsb(start+.5, 1, 1),
+                sector_fillcolor = quotas[j] 
+                    ? '-' + [bcolor, bcolor_comp, bcolor, bcolor_comp, bcolor, bcolor_comp, bcolor, bcolor_comp, bcolor, bcolor_comp, bcolor].join('-')
+                    : "-" + bcolor + "-" + color,
+                user_anim = quotas[j]
+                    ? {transform: "s3", fill: "#f00", stroke: "#000"}
+                    : {transform: "s2", fill: "#fff", stroke: "#000"},
+                user_size_text = quotas[j]
+                    ? value_human + '(' + graces[j] + ')'
+                    : value_human,
+                user_size_anim = quotas[j]
+                    ? {transform: "s3", opacity: 1, fill: "#f00", stroke: "#000"}
+                    : {transform: "s2", opacity: 1, fill: "#fff", stroke: "#000"},
                 p = sector(cx, cy, r, angle, angle + angleplus, 
-                    {fill: "90-" + bcolor + "-" + color, stroke: "#fff", "stroke-width": 3}).attr('cursor', 'pointer'),
+                    {fill: (angle+angleplus/2) + sector_fillcolor, stroke: "#fff", "stroke-width": 3}).attr('cursor', 'pointer'),
                 user = paper.text(cx - user_dx, cy - user_dy, labels[j]).attr({fill: "#000", stroke: "none", "font-size": 13}),
-                user_size = paper.text(cx + (r + delta * 2 ) * Math.cos(-popangle * rad), cy + (r + delta * 2) * Math.sin(-popangle * rad), value_human).attr({fill: bcolor, stroke: "none", opacity: 0, "font-size": 15});
+                user_size = paper.text(cx, cy, user_size_text).attr({fill: "#000", stroke: "none", opacity: 0, "font-size": 15});
+                //#center# user_size = paper.text(cx, cy, value_human).attr({fill: "#000", stroke: "none", opacity: 0, "font-size": 15});
+                //#under text# user_size = paper.text(cx - user_dx, cy - user_dy + 2*delta , value_human).attr({fill: "#000", stroke: "none", opacity: 0, "font-size": 15});
+                //#inner circle# user_size = paper.text(cx + (r + delta * 2 ) * Math.cos(-popangle * rad), cy + (r + delta * 2) * Math.sin(-popangle * rad), value_human).attr(user_size_attr);
 
             p.mouseover(function () {
                 p.stop().animate({transform: "s1.1 1.1 " + cx + " " + cy}, ms, "elastic");
-                //user.stop().animate({transform: "t"+user_dx+","+user_dy+"s2"}, ms/4, ">").toFront();
-                user.stop().animate({transform: "s2"}, ms/4, ">").toFront();
-                user_size.stop().animate({opacity: 1, "font-size": 20}, ms/4, ">");
+                user.stop().animate(user_anim, ms/4, ">").toFront();
+                user_size.stop().animate(user_size_anim, ms/4, ">").toFront();
             }).mouseout(function () {
                 p.stop().animate({transform: ""}, ms, "elastic");
-                user.stop().animate({transform: ""}, ms, "bounce");
-                user_size.stop().animate({opacity: 0, "font-size": 15}, ms);
+                user.stop().animate({transform: "", stroke: "none", fill: "#000"}, ms, "bounce");
+                user_size.stop().animate({transform: "", opacity: 0, stroke: "none", fill: "#000"}, ms);
             }).click(function(){
                 var url = '/user/'+login;
                 $(location).attr('href', url);
@@ -78,17 +95,19 @@ Raphael.fn.pieChart = function (cx, cy, r, values, labels, title) {
             chart.push(user_size);
             start += .1;
         },
-        thetitle = paper.text(15, 15, title).attr({fill: "#000", stroke: "none", "font-size": 25, 'text-anchor': 'start'}),
-        thetitle_w = thetitle.getBBox()['width'],
-        thetitle_h = thetitle.getBBox()['height'];
+        thetitle,
+        thesize;
 
-    // place the title
-    //thetitle.transform('t'+X+',0');
-    chart.push(thetitle);
-
+    // calculate total files
     for (var i = 0, ii = values.length; i < ii; i++) {
         total += values[i];
     }
+    // calculate thetitle w/ total
+    thetitle = paper.text(15, 15, title).attr({fill: "#000", stroke: "none", "font-size": 25, 'text-anchor': 'start'});
+    thesize = paper.text(15, 40, "(total du Top: "+kilobytesToSize(total)+")").attr({fill: "#000", stroke: "none", "font-size": 15, 'text-anchor': 'start'});
+    chart.push(thetitle);
+
+    // plot pies
     for (i = 0; i < ii; i++) {
         process(i);
     }

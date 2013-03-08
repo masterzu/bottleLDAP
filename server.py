@@ -871,10 +871,10 @@ def json_exec_nfs(server, cmd):
         'check_home_doct': 'ls -ld %s',
         'check_home_temp': 'ls -ld %s',
         'nfsstat': 'nfsstat -3sn head -n +1',
-        'quota_home_perm': 'repquota -u %s | awk \'{if (NF==8 && $1!="***" && $1!="Block") print}\'|sort -k3 -nr|head -10',
-        'quota_home_doct': 'repquota -u %s | awk \'{if (NF==8 && $1!="***" && $1!="Block") print}\'|sort -k3 -nr|head -10',
-        'quota_home_temp': 'repquota -u %s | awk \'{if (NF==8 && $1!="***" && $1!="Block") print}\'|sort -k3 -nr|head -10',
-        'quota_total': 'repquota -ua | awk \'{if (NF==8 && $1!="***" && $1!="Block") print}\'|sort -k3 -nr|head -30',
+        'quota_home_perm': 'repquota -u %s | awk \'{if ($2=="--" || $2=="+-" || $2=="++") print}\'|sort -k3 -nr|head -10',
+        'quota_home_doct': 'repquota -u %s | awk \'{if ($2=="--" || $2=="+-" || $2=="++") print}\'|sort -k3 -nr|head -10',
+        'quota_home_temp': 'repquota -u %s | awk \'{if ($2=="--" || $2=="+-" || $2=="++") print}\'|sort -k3 -nr|head -10',
+        'quota_total': 'repquota -ua | awk \'{if ($2=="--" || $2=="+-" || $2=="++") print}\'|sort -k3 -nr',
     }
 
     host = ''
@@ -899,7 +899,7 @@ def json_exec_nfs(server, cmd):
     ### pre-action cmd
     if cmd.find('check') != -1:
         _path = nfs_server[cmd[6:]].rstrip('/')
-        _debug('json_exec_nfs/_path',_path)
+        #_debug('json_exec_nfs/_path',_path)
         real_cmd = ssh_kcmds[cmd] % _path
 
     elif cmd == 'quota_total':
@@ -908,7 +908,7 @@ def json_exec_nfs(server, cmd):
     elif cmd.find('quota') != -1:
         _path = nfs_server[cmd[6:]].rstrip('/')
         _path_save = _path
-        _debug('json_exec_nfs/_path',_path)
+        #_debug('json_exec_nfs/_path',_path)
         # calculate mount point related to _path
         try:
             _path = _mount_point_rel_path(host,user,_path)
@@ -921,6 +921,11 @@ def json_exec_nfs(server, cmd):
     elif cmd == 'nfsstat':
         real_cmd = ssh_kcmds[cmd]
 
+    else:
+        return _json_result(success=False, message='Commande "%s" inconnue' % cmd)
+        
+
+    ### real cmd
     _debug('json_exec_nfs/real_cmd',real_cmd)
 
     try: 
@@ -933,37 +938,22 @@ def json_exec_nfs(server, cmd):
     ### post-action cmd
     if cmd.find('check') != -1:
         message = 'OK'
-    elif cmd == 'quota_total':
-        sizes = {}
-        for line in output:
-            (login, mode, size, rest) = line.split(None, 3)
-            if login == 'root': continue
-            if login in sizes:
-                sizes[login] += int(size)
-            else:
-                sizes[login] = int(size)
-        # sort the dict related to value
-        sorted_sizes = sorted(sizes.iteritems(), key=lambda (k,v): v, reverse=True)
-        _debug('json_exec_nfs/sorted_sizes', sorted_sizes)
-        _debug('json_exec_nfs/len(sorted_sizes)', len(sorted_sizes))
-        # get only login > 10 Go
-        limit = 10 * 1024 * 1024
-        sorted_sizes_10G = filter(lambda (k,v): v > limit, sorted_sizes )
-        if len(sorted_sizes_10G) > 1:
-            message = ['Top 30 users > 10Go %s' % server]
-            message += sorted_sizes_10G
+
+    elif cmd.find('quota_') != -1:
+        if cmd == 'quota_total':
+            message = ['All users (%s)' % server]
         else:
-            message = ['Top 30 users %s' % server]
-            message += sorted_sizes
-                
-    elif cmd.find('quota') != -1:
-        #_debug('ouput',output)
-        message = ['Top 10 users %s:%s' % (server, _path)]
+            message = ['Top 10 users %s:%s' % (server, _path)]
         for line in output:
-            (login, mode, size, rest) = line.split(None, 3)
+            (login, mode, size, softsize, hardsize, grace, rest) = line.split(None, 6)
             if login == 'root': continue
-            #_debug('line: ',login+'|'+size)
-            message.append((login, size))
+            if mode=='+-' or mode=='++':
+                quota = True
+            else:
+                quota = False
+                grace = ''
+            message.append((login, int(size), quota, grace))
+
     else:
         message = output
 
