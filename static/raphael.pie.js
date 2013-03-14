@@ -10,33 +10,6 @@ Raphael.fn.pieChart = function (cx, cy, r, values, labels, quotas, graces, title
         return paper.path(["M", cx, cy, "L", x1, y1, "A", r, r, 0, +(endAngle - startAngle > 180), 0, x2, y2, "z"]).attr(params);
     }
 
-    // http://codeaid.net/javascript/convert-size-in-bytes-to-human-readable-format-(javascript)
-    function kilobytesToSize(kilobytes, precision) {  
-        var kilobyte = 1,
-            megabyte = kilobyte * 1024,
-            gigabyte = megabyte * 1024,
-            terabyte = gigabyte * 1024;
-       
-        if ((kilobytes >= 0) && (kilobytes < kilobyte)) {
-            return kilobytes + ' o';
-     
-        } else if ((kilobytes >= kilobyte) && (kilobytes < megabyte)) {
-            return (kilobytes / kilobyte).toFixed(precision) + ' Ko';
-     
-        } else if ((kilobytes >= megabyte) && (kilobytes < gigabyte)) {
-            return (kilobytes / megabyte).toFixed(precision) + ' Mo';
-     
-        } else if ((kilobytes >= gigabyte) && (kilobytes < terabyte)) {
-            return (kilobytes / gigabyte).toFixed(precision) + ' Go';
-     
-        } else if (kilobytes >= terabyte) {
-            return (kilobytes / terabyte).toFixed(precision) + ' To';
-     
-        } else {
-            return kilobytes + ' Ko';
-
-        }
-    };
 
     var angle = 0,
         total = 0,
