@@ -90,10 +90,14 @@ main_news = (
         'passage a bottle 0.11.3', 
         ]
     ),
-    ('devel', '...', [ 'Modification phase 8', 
+    ('13', '13 mars 2013', [ 'Modification phase 8', 
         'def json_useradd: supprimer les lettres "1lIo0O" du generateur de mot de pass',
         '[BUGFIX] def _json_user_getset_manager: Add attr and val to dict result', 
         'def _log_query_mongodb: add log sort by time DESC',
+        ]
+    ),
+    ('devel', '...', [ 'Modification phase 9', 
+        ''
         ]
     ),
 )
@@ -674,6 +678,31 @@ def _ldap_useradd(dn, kargs):
 
     return objs
 
+def _ldap_homeDirectory_server(path):
+    """
+    get the server related to the homeDirectory
+
+    Args:
+        the homeDirectory
+
+    Returns:
+        the server name
+
+    Raises:
+        None
+    """
+
+    if path[:5] == '/home':
+        return 'olympe'
+    elif path[:8] == '/poisson':
+        return 'poisson'
+    elif path[:4] == '/lmm':
+        return 'euler'
+    else:
+        return None
+        
+
+
 #----------------------------------------------------------
 # private json functions
 #
@@ -911,7 +940,7 @@ def json_exec_nfs(server, cmd):
         #_debug('json_exec_nfs/_path',_path)
         # calculate mount point related to _path
         try:
-            _path = _mount_point_rel_path(host,user,_path)
+            _path = _mount_point_rel_path(host, _path)
         except (SSH_EXEC_ERROR, SSH_AUTH_ERROR, SSH_EXEC_ERROR, SSH_ERROR) as e:
             return _json_result(success=False, message=e.msg)
         if _path is None:
@@ -964,6 +993,18 @@ def json_exec_nfs(server, cmd):
 def _ssh_exec(host, user, list_cmds):
     """
     High Level exec list of command with ssh
+
+    Args: 
+        host, user: the parameters user@host for ssh
+        list_cmds: list of commands to execute to the server
+    
+    Returns: 
+        a list of string (stdout) commands result
+    
+    Raises:
+        ERROR(msg) when host or user not valid
+        SSH_AUTH_ERROR when paramiko.BadHostKeyException, paramiko.AuthenticationException
+        SSH_EXEC_ERROR(msg) when ssh.exec_command return a none empty stderr stream
     """
     _debug('_ssh_exec(%s, %s, %s)' % (host, user, list_cmds))
     return _ssh_exec_paramiko(host, user, list_cmds)
@@ -1161,7 +1202,7 @@ def _ssh_setquota(host,login,path,soft=0,hard=0):
     if not host or not login or not path:
         return False
 
-    mount = _mount_point_rel_path(host,user,path)
+    mount = _mount_point_rel_path(host, path)
 
     cmd = 'setquota -u ' + login + ' %d %d 0 0 %s' % (soft, hard, mount) 
     _debug('_ssh_setquota(%s, %s, %s, %d, %d)' % (host, login, mount, soft, hard), 'cmd=%s' % cmd)
@@ -1174,11 +1215,12 @@ def _ssh_setquota(host,login,path,soft=0,hard=0):
     return True
 
 
-def _mount_point_rel_path(host, user, path):
+def _mount_point_rel_path(host, path):
     """
     calculate mount point related to path
 
     Args: 
+        host: the machine
         path: the beginning of the search walk
 
     Returns:
@@ -1188,7 +1230,7 @@ def _mount_point_rel_path(host, user, path):
     Raises:
         SEE _ssh_exec
     """
-    mounts = _ssh_exec(host, user, ["cat /proc/mounts |awk '{print $2}'|sort -ur"])
+    mounts = _ssh_exec(host, 'root', ["cat /proc/mounts |awk '{print $2}'|sort -ur"])
     resu = path
     ok = False
 
@@ -2236,6 +2278,82 @@ def json_userdel():
     
 
     return _json_result(success=True)
+
+@bottle.route('/api/user/<uid>/home')
+def json_user_home(uid):
+    """
+    Check home state
+
+    Returns:
+        json dict of {
+            server: string,       # the NFS server
+            dir: string,          # the real path of HOME, with symlink followed
+            rights: string,       # POSIX rights, like 'drwxr-xr-x'
+            owner: string:string, # user:group
+            quotas: (size, soft quota size, hard quota size, grace size)
+        }
+
+    """
+    _debug_route()
+
+    ### dir
+
+    ldap_initialize()
+    users = ldap_users(list_filters=['uid=%s' % uid], list_attrs=['homeDirectory'])
+    _debug('json_user_home/users',users)
+    ldap_close()
+
+    try:
+        path = users[0][1]['homeDirectory'][0]
+    except:
+        return _json_result(success=False, message='utilisateur "%s" introuvable' % uid)
+    _debug('json_user_home/path', path)
+
+    # NFS server
+    server = _ldap_homeDirectory_server(path)
+    _debug('json_user_home/server', server)
+
+    if not server:
+        return _json_result(success=False, message='serveur NFS introuvable')
+
+    ### direxists && POSIX rights
+    real_path = path
+    rights = ''
+    owner = ''
+    lastmodification = ''
+    direxists = False
+    try:
+        output = _ssh_exec(server, 'root', ['stat --format="%%N %%A %%U:%%G %%y" %s' % path])
+        _debug('output', output)
+        t = output[0].split()
+        real_path = t[0].strip('`').rstrip("'")
+        rights = t[1]
+        owner = t[2]
+        lastmodification = t[3]
+        direxists = True
+    except SSH_EXEC_ERROR as e:
+        pass
+
+    ### quota
+    quota = (0,0,0,'')
+    try:
+        mount_point = _mount_point_rel_path(server, path)
+    except (SSH_EXEC_ERROR, SSH_AUTH_ERROR, SSH_EXEC_ERROR, SSH_ERROR) as e:
+        return _json_result(success=False, message=e.msg)
+    try:
+        output = _ssh_exec(server, 'root', ['LANG=C repquota -u %s | grep %s' % (mount_point, uid)])
+    except:
+        output = ''
+
+    if output:
+        t = output[0].split()
+        if t[1] == '--':
+            grace = ''
+        else:
+            grace = t[5]
+        quota = (int(t[2]), int(t[3]), int(t[4]), grace)
+
+    return _json_result(success=True, dir=real_path, dirdate=lastmodification, rights=rights, owner=owner, quota=quota, server=server)
 
 @bottle.route('/api/user/<uid>/attr/<attr>', method='POST')
 def json_user_set_attr(uid,attr):

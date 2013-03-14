@@ -35,6 +35,90 @@ $(function() {
         return autocomplete_split(term).pop();
     };
 
+    // #page span#home
+    function get_home(button, url, span) {
+        span.addClass('ui-autocomplete-loading').html('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
+
+        // do the ajax job with a timeout
+        $.ajax({
+            url: url,
+            type: "GET",
+            dataType: "json",
+            timeout: 1500,
+            success: function(response) {
+                span.removeClass('ui-autocomplete-loading').text('');
+                if (response['success']) {
+                    button.hide();
+                    var attrs = new Array('server', 'quota', 'dirdate', 'owner', 'rights');
+                    for (var k in attrs) {
+                        var key = attrs[k],
+                            val = response[key];
+                        span.before('<dt>'+key+'</dt>');
+                        switch(key) {
+                        
+                        case 'server':
+                            span.before('<dd><a href="/server_nfs/'+val+'">'+val+'</a></dd>');
+                            break;
+
+                        case 'quota':
+                            var size = val[0],
+                                soft = val[1],
+                                hard = val[2],
+                                grace = val[3],
+                                text = '',
+                                okcolor = 'green',
+                                softcolor = 'orange',
+                                hardcolor = 'red',
+                                sizecolor, 
+                                sizeprec = 0,
+                                softprec = 0,
+                                hardprec = 0;
+                            if (size < soft || ( soft == 0 && hard == 0)) {
+                                sizecolor = okcolor;
+                            } else { 
+                                if (soft <= size && size < hard) {
+                                    sizecolor = softcolor;
+                                    sizeprec = 2;
+                                    softprec = 2;
+                                } else {
+                                    sizecolor = hardcolor;
+                                    sizeprec = 2;
+                                    hardprec = 2;
+                                }
+                            }
+                            text = 'size=<span title="'+size+' ko" style="color:'+sizecolor+';">'+kilobytesToSize(size, sizeprec)+'</span>, ';
+                            text += 'soft=<span title="'+soft+' ko" style="color:'+softcolor+';">'+kilobytesToSize(soft, softprec)+'</span>, ';
+                            text += 'hard=<span title="'+hard+' ko" style="color:'+hardcolor+';">'+kilobytesToSize(hard, hardprec)+'</span>, ';
+                            if (grace)
+                                text += 'grace='+grace
+                            else
+                                text += 'grace=<span style="font-style:italic;">N/A</span>';
+                            span.before('<dd>'+text+'</dd>');
+                            break;
+
+                        default:
+                            span.before('<dd><code>'+val+'</code></dd>');
+                        }
+
+                    }
+                } else {
+                    show_warning(response['message'])
+                }
+            },
+            error: function(xhr, textStatus, error) {
+                span.removeClass('ui-autocomplete-loading').text('');
+                if (textStatus == "timeout")
+                    show_warning('Serveur Timeout ... Réessayez si vous osez :)')
+                else 
+                    show_warning('Erreur de serveur: '+error+' ('+textStatus+')');
+            }
+        });
+    };
+    $('button[name=home]','#page').click(function(){
+        get_home($(this), '/api/user/{{uid}}/home', $('span[name=home]', '#page'));
+
+    });
+
 
     //  general #fields span
     $('#fields span').click(function () {
@@ -316,22 +400,10 @@ $(function() {
             <dt title="uid">login</dt>
             <dd><code>{{uid}}</code></dd>
 
-            <dt title="home">home</dt>
+            <dt title="home">$HOME</dt>
             <dd><code>{{u['homeDirectory'][0]}}</code></dd>
-
-            %home = u['homeDirectory'][0]
-
-            %server = 'inconnu'
-            %if home[:6] == '/home/':
-                %server = 'olympe'
-            %elif home[:9] == '/poisson/':
-                %server = 'poisson'
-            %elif home[:4] == '/lmm':
-                %server = 'euler'
-            %end
-            <dt>serveur NFS</dt>
-            <dd><a href="/server_nfs/{{server}}">{{server}}</a></dd>
-
+            <button name="home">+ infos</button>
+            <span name="home"></span>
 
         </dl>
         </div>
