@@ -1506,7 +1506,7 @@ def _log_query_mongodb(query, fields, options):
         resu = logs.find(query, fields)
     except TypeError:
         _debug('_log_query_mongodb/find error', 'type error')
-        raise MONGODB_ERROR('find error query=%s fields=%s sort=%s' % (query, fields, query_sort))
+        raise MONGODB_ERROR('find error query=%s fields=%s' % (query, fields))
 
     ### options sort
     if 'sort' in options and options['sort']:
