@@ -14,6 +14,32 @@ To launch the server just type:
 
 ### code checked with Google Python Style Guide
 ### http://google-styleguide.googlecode.com/svn/trunk/pyguide.html
+
+Doctest global variables
+>>> isinstance(main_news,tuple)
+True
+
+>>> isinstance(main_users,dict)
+True
+
+>>> l=main_users.keys()
+>>> l.sort()
+>>> l
+['*', 'd', 'p', 't']
+
+>>> isinstance(main_ldap_server,dict)
+True
+
+>>> isinstance(main_ldap_servers,list)
+True
+
+>>> isinstance(main_ldap_servers,list)
+True
+
+>>> l=main_mongodb.keys()
+>>> l.sort()
+>>> l
+['db', 'hostname', 'port']
 """
 
 ### standard libraries
@@ -21,7 +47,6 @@ import os, os.path
 import sys
 import json
 import ConfigParser
-import pprint
 import textwrap
 import datetime
 
@@ -36,6 +61,7 @@ import pymongo
 __author__ = 'P. Cao Huu Thien'
 __version__ = 'devel'
 __license__ = 'GPL'
+
 
 """
 History
@@ -104,6 +130,27 @@ main_news = (
 
 
 
+main_nav = [ 
+    ('/', 'accueil'), 
+    ('*', 'serveurs'), 
+    ('/servers', 'tableau de bord'), 
+    (None, 'master ldap'), 
+    ('',''), 
+    ('*', 'personnels'),
+    ('_SEARCH_','rechercher...'),
+    ('/users/p',None),
+    ('/users/d',None),
+    ('/users/t',None),
+    ('',''), 
+    ('*', 'structure'),
+    ('/groups',u'les équipes'),
+    ('/users','les utilisateurs'),
+    ('',''), 
+    ('*', 'site web'), 
+    ('/news', 'news'), 
+    ('/logs', 'logs'), 
+    ('/about', u'à propos'),
+]
 
 main_users = {
     '*': {
@@ -284,6 +331,7 @@ class _colors:
         self.NOCOLOR = ''
 
 def _debug(title, text=None):
+    import pprint
     if not bottle.DEBUG:
         return
     pp = pprint.PrettyPrinter(indent=7).pprint
@@ -313,6 +361,9 @@ def _debug_route():
 def _nav():
     """
     Calculate the current nav object depending on request.path 
+
+    >>> _nav()
+    [('', 'accueil'), ('*', 'serveurs'), ('/servers', 'tableau de bord'), (None, 'master ldap'), ('', ''), ('*', 'personnels'), ('_SEARCH_', 'rechercher...'), ('/users/p', None), ('/users/d', None), ('/users/t', None), ('', ''), ('*', 'structure'), ('/groups', u'les \\xe9quipes'), ('/users', 'les utilisateurs'), ('', ''), ('*', 'site web'), ('/news', 'news'), ('/logs', 'logs'), ('/about', u'\\xe0 propos')]
     """
     nav = []
     for (l, n) in main_nav:
@@ -356,8 +407,21 @@ def _modules_version(mod):
 
 #----------------------------------------------------------
 # HTML functions
-
 def _html_escape(text):
+    """
+    protect some character (& " ' < >) and transform it the the HTML entity
+
+    >>> _html_escape()
+    Traceback (most recent call last):
+    ...
+    TypeError: _html_escape() takes exactly 1 argument (0 given)
+    >>> _html_escape('')
+    ''
+    >>> _html_escape('qwe')
+    'qwe'
+    >>> _html_escape('qwe<big>')
+    'qwe&lt;big&gt;'
+    """
     escape_table = {
         "&": "&amp;",
         '"': "&quot;",
@@ -375,6 +439,23 @@ def _html_escape(text):
 #----------------------------------------------------------
 
 def _ldap_uri(kargs):
+    """
+    Calculate URI from dict
+
+    Args:
+        dict {host: <host>, name: <name> OPTIONAL port: <port>}
+    Returns:
+        string
+
+    >>> _ldap_uri({}) is None
+    True
+    >>> _ldap_uri({'host':'home'}) is None
+    True
+    >>> _ldap_uri({'host':'home', 'name':'prout'})
+    'ldap://home:389'
+    >>> _ldap_uri({'host':'home', 'name':'prout', 'port':1234})
+    'ldap://home:1234'
+    """
     if 'host' not in kargs or 'name' not in kargs:
         return None
     if 'port' not in kargs:
@@ -2010,26 +2091,29 @@ def user(uid):
     # PHDs
     # FIXME: handle only the first user
     phds = []
-    studs = ldap_users(base=main_users['d']['basedn'], list_filters=['manager=%s' % user_dn], list_attrs=['cn', 'uid', 'description'])
-    for studn, stu in studs:
-        _debug('user/phd',stu)
-        phds.append(stu)
+    studs = ldap_users(base=main_users['d']['basedn'], list_filters=['manager=%s' % user_dn], list_attrs=['cn', 'uid', 'description', 'mail'])
+    phds = [stu for studn, stu in studs]
+#    for studn, stu in studs:
+#        _debug('user/phd',stu)
+#        phds.append(stu)
 
     # students
     # FIXME: handle only the first user
     students = []
-    studs = ldap_users(base=main_users['t']['basedn'], list_filters=['manager=%s' % user_dn], list_attrs=['cn', 'uid', 'description'])
-    for studn, stu in studs:
-        _debug('user/stu',stu)
-        students.append(stu)
+    studs = ldap_users(base=main_users['t']['basedn'], list_filters=['manager=%s' % user_dn], list_attrs=['cn', 'uid', 'description', 'mail'])
+    students = [stu for studn, stu in studs]
+#    for studn, stu in studs:
+#        _debug('user/stu',stu)
+#        students.append(stu)
 
     # assistants
     # FIXME: handle only the first user
     assistants = []
-    _users = ldap_users(base=main_users['p']['basedn'], list_filters=['manager=%s' % user_dn], list_attrs=['cn', 'uid', 'description'])
-    for _dn, _u in _users:
-        _debug('user/assistant',_u)
-        assistants.append(_u)
+    studs = ldap_users(base=main_users['p']['basedn'], list_filters=['manager=%s' % user_dn], list_attrs=['cn', 'uid', 'description', 'mail'])
+    assistants = [stu for studn, stu in studs]
+#    for _dn, _u in _users:
+#        _debug('user/assistant',_u)
+#        assistants.append(_u)
 
     # equipe
     # FIXME: handle only the first user
@@ -2636,27 +2720,12 @@ if __name__ == '__main__':
 
     load_config('config.ini')
 
-    main_nav = [ 
-        ('/', 'accueil'), 
-        ('*', 'serveurs'), 
-        ('/servers', 'tableau de bord'), 
-        ('/server_ldap/'+main_ldap_servers_name[0], 'master ldap'), 
-        ('',''), 
-        ('*', 'personnels'),
-        ('_SEARCH_','rechercher...'),
-        ('/users/p',main_users['p']['name']),
-        ('/users/d',main_users['d']['name']),
-        ('/users/t',main_users['t']['name']),
-        ('',''), 
-        ('*', 'structure'),
-        ('/groups','les équipes'),
-        ('/users','les utilisateurs'),
-        ('',''), 
-        ('*', 'site web'), 
-        ('/news', 'news') , 
-        ('/logs', 'logs') , 
-        ('/about', 'à propos')
-        ]
+    # add some links
+    main_nav[3] = ('/server_ldap/'+main_ldap_servers_name[0], 'master ldap')
+    main_nav[7] = ('/users/p',main_users['p']['name'])
+    main_nav[8] = ('/users/d',main_users['d']['name'])
+    main_nav[9] = ('/users/t',main_users['t']['name'])
+
     if bottle.DEBUG:
         port = 8888
         reloader = True

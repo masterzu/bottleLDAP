@@ -428,13 +428,20 @@ $(function() {
             <dt>doctorant</dt>
             %end
         %end
-        %for phd in phds:
-            %if 'description' in phd:
-                %desc = phd['description'][0]
+        %for stu in phds:
+            %if 'description' in stu:
+                %desc = stu['description'][0]
             %else:
                 %desc = ''
             %end
-            <dd><a href="/user/{{phd['uid'][0]}}">{{phd['cn'][0]}}</a> {{desc}}</dd>
+            %if 'mail' in stu:
+                %email = '(' + stu['mail'][0] + ')'
+                %emailink = 'mailto:' + email
+            %else:
+                %email = "(pas d'email)"
+                %emailink = ''
+            %end
+            <dd><a href="/user/{{stu['uid'][0]}}">{{stu['cn'][0]}}</a> {{desc}} <a href="{{emailink}}" class="email">{{email}}</a></dd>
         %end
 
         %if len(students) > 1:
@@ -450,7 +457,14 @@ $(function() {
             %else:
                 %desc = ''
             %end
-            <dd><a href="/user/{{stu['uid'][0]}}">{{stu['cn'][0]}}</a> {{desc}}</dd>
+            %if 'mail' in stu:
+                %email = '(' + stu['mail'][0] + ')'
+                %emailink = 'mailto:' + email
+            %else:
+                %email = "(pas d'email)"
+                %emailink = ''
+            %end
+            <dd><a href="/user/{{stu['uid'][0]}}">{{stu['cn'][0]}}</a> {{desc}} <a href="{{emailink}}" class="email">{{email}}</a></dd>
         %end
 
         %if len(assistants) > 1:
@@ -460,13 +474,20 @@ $(function() {
             <dt>assistant</dt>
             %end
         %end
-        %for ass in assistants:
-            %if 'description' in ass:
-                %desc = ass['description'][0]
+        %for stu in assistants:
+            %if 'description' in stu:
+                %desc = stu['description'][0]
             %else:
                 %desc = ''
             %end
-            <dd><a href="/user/{{ass['uid'][0]}}">{{ass['cn'][0]}}</a> {{desc}}</dd>
+            %if 'mail' in stu:
+                %email = '(' + stu['mail'][0] + ')'
+                %emailink = 'mailto:' + email
+            %else:
+                %email = "(pas d'email)"
+                %emailink = ''
+            %end
+            <dd><a href="/user/{{stu['uid'][0]}}">{{stu['cn'][0]}}</a> {{desc}} <a href="{{emailink}}" class="email">{{email}}</a></dd>
         %end
 
         </dl>
