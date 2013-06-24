@@ -1,7 +1,9 @@
 /**********************************************************
   PCHT basic CSS stylesheet
 
-  VERSION 1
+  VERSION 2
+
+  use twitter bootstrap
 */
 
 /**********************************************************
@@ -48,34 +50,32 @@
 /**********************************************************
  HTML tags
  */
-html { 
-    margin: 0px; padding: 0px; background-color: white; 
-}
 body { 
-    margin: 0; padding: 0px; background-color: #f7f7f7; 
+    background-color: #f7f7f7; 
     font-family: 'Droid Sans', 'Trebuchet MS', sans-serif; 
     text-shadow: 0px 1px 1px white;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    margin: 0px; padding: 10px; 
-    /* font-family: GraublauWebRegular, Helvetica, 'Liberation Sans', Arial, sans-serif; */
-    font-family: 'Concert One', sans-serif; 
     text-shadow: 0px 0px 3px rgba(0, 0, 0, .31), 0px 1px 1px white, 1px 1px 1px rgba(0, 0, 0, .31);
 }
 
 h1 {
-    font 24px/20px 'Concert One',sans-serif; 
-    padding:0; margin:0;
-    text-transform:capitalize;
-    /*
-    text-align: center;
-    */
-
+    font: 40px/60px 'Fredericka the Great',serif;
+    color: rgba(25,25,255,.5);
 }
+h1, h2 {
+    text-align: center;
+}
+h2, h3, h4, h5, h6 {
+    color: #333;
+}
+
 p {
+    /* 
+    font-family: 'Droid Sans', 'Trebuchet MS', sans-serif; 
     margin: 0px; padding: 10px; 
-    /* font-family: 'Droid Sans', 'Trebuchet MS', sans-serif; */
+    */
 }
 a {
     color: rgba(25,25,255,.75);
@@ -129,8 +129,6 @@ button {
  classes 
  */
 .box {
-    padding: 2px 15px 20px 15px;
-    margin-top: 20px;
 }
 .cliquable {
     cursor:pointer;
@@ -148,12 +146,14 @@ button {
     display: none; 
 }
 .shadow {
-    margin: 0px 20px 30px 0px;
-    border: 1px #444 solid;
+    margin: 20px 20px 30px 0px;
+    padding: 10px;
     background-color: rgba(255,255,255,.6);
-    box-shadow: 0px 1px 3px rgba(0, 0, 0, .5);
-    -webkit-box-shadow: 0px 1px 3px rgba(0, 0, 0, .5);
-    -moz-box-shadow: 0px 1px 3px rgba(0, 0, 0, .5);
+    box-shadow: -1px 2px 3px rgba(0, 0, 0, .5);
+    -webkit-box-shadow: -1px 2px 3px rgba(0, 0, 0, .5);
+    -moz-box-shadow: -1px 2px 3px rgba(0, 0, 0, .5);
+    /*
+    */
 }
 .separator {
     border-bottom: 2px solid #F0F0F0;
@@ -164,7 +164,7 @@ button {
 .term {
     font: bold 10px "VT-100",Terminal,monospace;
     font-stretch: ultra-condensed;
-    white-space:pre;
+    /* white-space:pre; */
     background-color: white;
     color: green;
 }
@@ -183,21 +183,16 @@ button {
 .widget_notok {
     background-color: red;
 }
-.server {
-    float: left;
-}
-.noserver {
-    clear: left;
-}
+/* .server { */
+/*     float: left; */
+/* } */
+/* .noserver { */
+/*     clear: left; */
+/* } */
 .nfs {
     border-radius: 2em 1em;
     -webkit-border-radius: 2em 1em;
     -moz-border-radius: 2em 1em;
-    /*
-    border-radius: 2em 1em / 0.5em 3em;
-    -webkit-border-radius: 2em 1em / 0.5em 3em;
-    -moz-border-radius: 2em 1em / 0.5em 3em;
-    */
     color: #0a0;
 }
 .ldap {
@@ -213,13 +208,11 @@ button {
     -moz-box-shadow: 0px 1px 3px rgba(0, 0, 0, .5);
 }
 .sectionlog {
-    /* like #nav */
     margin: 0px; padding: 10px; 
     font: 16px/10px Helvetica, 'Liberation Sans', Arial, sans-serif;
     font-variant: small-caps;
     font-weight: bold;
     color: rgba(0,0,0,.75);
-    /* background-color: rgba(200,200,200,.5);*/
 }
 
 
@@ -227,76 +220,60 @@ button {
 /**********************************************************
  title 
  */
-#top-container {
-    width: 100%;height: 80px;
+#top {
+    /*
     background-image: url(black.png);
+    */
     background: #444;
+    padding: 5px 0 10px;
 }
+#top-container {
+}
+/*
 #top-center {
     width: 1000px;
     margin: 0px auto;
-}
-#top {
-    /*border: 1px red solid;*/
-    width: 212px;height:60px;
-    float:left;
-    background-image: url(/static/logo.png);
-    background-repeat: no-repeat;
-    color: #0a0;
-}
-.ldap {
-    color: #a00;
-}
-
-
-
-/**********************************************************
- title 
- */
-#top-container {
-    width: 100%;height: 80px;
-    background-image: url(black.png);
-    background: #444;
-}
-#top-center {
-    width: 1000px;
-    margin: 0px auto;
-}
-#top {
-    /*border: 1px red solid;*/
-    width: 212px;height:60px;
-    float:left;
-    background-image: url(/static/logo.png);
-    background-repeat: no-repeat;
-    background-position: bottom left;
-    margin: 10px 20px 0; padding: 0;
+}*/
+#top-logo {
     cursor:pointer;
+    background: url(/static/logo.png) no-repeat left top;
+    height:60px;
 }
+
+
+
 #top-content {
-    /*font: 40px/60px GraublauWebRegular, Helvetica, 'Liberation Sans', Arial, sans-serif;*/
-    font: 40px/60px 'Fredericka the Great',serif;
+    /* font: 40px small-caps 'Concert One',sans-serif; */ 
+    font: 40px 'GraublauWebRegular',sans-serif; 
     text-shadow: 0px 0px 3px rgba(0, 0, 0, .31), 0px 1px 1px white, 1px 1px 1px rgba(0, 0, 0, .31);
     color: rgba(25,25,255,.5);
     
 }
+
 /**********************************************************
  content 
  */
 #content-container {
+/*
     width: 1000px;
     margin: 0px auto;
+*/
     background-image: url(/static/WIP.png);
     background-repeat: repeat-y;
 }
 #content-center {
+    /*
     margin: 0;padding: 0 20px;
+    */
 }
 #warning-empty {
+/*
     margin: 0 0 20px 0;
+*/
 }
 #warning {
-    padding: 10px;
     /*
+    padding: 10px;
     margin: 0 0 0 192px;
     margin: 0 0 20px 0;
     */
@@ -321,40 +298,28 @@ button {
 /**********************************************************
  navigation bar
  */
-.nav {
-    font: 16px/10px Helvetica, 'Liberation Sans', Arial, sans-serif;
-    font-variant: small-caps;
-    font-weight: bold;
+
+/* bootstrap modifs */
+.nav a {
+    margin-bottom:0;
+}
+.nav-tabs > .active > a{
+    border-bottom:1px solid #FFF;
 }
 #nav { 
-    width:160px;float:left;
     font: 16px/10px Helvetica, 'Liberation Sans', Arial, sans-serif;
     font-variant: small-caps;
-    border-left: 2px solid #F0F0F0;
     margin-top:20px;
     /*
-    margin: 0 0 10px; padding: 10px 0 0;
-    border-bottom: 2px solid #F0F0F0;
-    background-color: #eee;
-    font: 10px/16px 'lucida grande', tahoma, verdana, arial, sans-serif;
-    color: #555;
+    border-left: 2px solid #F0F0F0;
     */
 }
 #nav a {
     text-decoration: none;
-    margin: 0; padding: 0; 
 }
-#nav ul {
-    margin: 0; padding: 0; 
-}
-#nav li {
-    margin: 0; 
-    list-style-type:none;
-}
-#nav li a {
+#nav > li a {
     display:block;
     color: rgba(25,25,255,.5);
-    padding:5px 10px 5px 10px;
 }
 #nav li a:hover {
     color: rgba(255,255,255,1);
@@ -364,49 +329,26 @@ button {
     color: rgba(0,0,0,.75);
     background-color: rgba(200,200,200,.5);
     font-weight: bold;
-    padding:5px 10px 5px 10px;
 
 }
 #nav li.nav-title {
     border-top: 2px solid #F0F0F0;
     color: rgba(0,0,0,.5);
     font-weight: bold;
-    padding:5px 10px 5px 0px;
 }
 
-/*
-#nav ul, #nav ol {
-    list-style: none;
-}
-#nav li { 
-    display: inline;
-    float: left; 
-}
-#nav li + li:before { content:" | ";}
-*/
 /**********************************************************
  The place to BE 
 */
 #content {
-    width:768px;float:left;
-    /*margin-top: 20px;*/
-    font: 13px/22px 'Droid Sans', 'Trebuchet MS', sans-serif; 
+    font: 13px 'Droid Sans', 'Trebuchet MS', sans-serif; 
     text-shadow: none;
 }
 
 #content-text {
-    margin-top: 10px;
 }
 
-#content h1 {
-    /*color: #444;*/
-    background-color: rgba(200,200,200,.5);
-    position: relative;
-    top: -7px; 
-    margin:0; padding:3px 10px;
-}
 #content h1, #content h2, #content h3 {
-    clear: left;
 }
 
 #content div#fiche th {
@@ -416,6 +358,7 @@ button {
 #content div#fiche input {
     font-family: monospace;
 }
+/*
 #content ul {
     margin: 0; padding: 0; 
     list-style-type:none;
@@ -431,14 +374,15 @@ button {
     text-decoration: underline;
     margin: 0; padding: 0; 
 }
+*/
 #content a.server {
     text-decoration:none;
     display:block;
     /*
     color: rgba(25,25,255,.5);
+    margin: 5px; padding:5px;
     */
     background-color: rgba(255,255,2555,.5);
-    margin: 5px; padding:5px;
     font-variant:small-caps;
     font-size:larger;
     border: 3px outset #aaa;
@@ -467,14 +411,16 @@ button {
 } 
 
 #content th.header { 
-    background-image: url(/static/arrowud.gif);     
     cursor: pointer; 
     font-weight: bold; 
+    background-image: url(/static/arrowud.gif);     
     background-repeat: no-repeat; 
     background-position: center left; 
-    padding-left: 20px; 
     border-right: 1px solid #dad9c7; 
+    /*
+    padding-left: 20px; 
     margin-left: -1px; 
+    */
 }
 
 /**********************************************************
@@ -482,72 +428,14 @@ button {
  http://babylon-design.com/apprendre-et-comprendre-jquery-2-3/
 */
 #onglets ul {
-     /*float:left;*/
-     margin:0;
-     padding:0
+    margin-top: 20px;
+    margin-bottom: 0;
 }
-#onglets li {
-    float:left;
-    margin-bottom:-1px;
-    padding: 0;
-    list-style-type:none;
-
-}
-#onglets li a {
-    text-decoration:none;
-    display: block;
-    padding: 5px;
-
-    background-color: #eee;
-    border:1px solid #000;
-    
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-    -webkit-border-top-left-radius: 10px;
-    -webkit-border-top-right-radius: 10px;
-    -moz-border-radius-topleft: 10px;
-    -moz-border-radius-topright: 10px;
-}
-#onglets li a.actif {
-    border-bottom-color:#FFF;
-    background-color: #FFF;
-}
-#onglets li a:hover {
-    background-color: rgba(25,25,255,.5);
-    text-decoration:none;
-    color: rgba(255,255,255,1);
-    padding: 5px;
-}
-#onglets .onglet {
-     border-top:1px solid #000;
-     clear:both;
-     padding-top:15px;
-     zoom:1; /* ie */
-}
-
-#onglets .actor {
-    font-weight: bold;
-    color: orange;
-    font-family: monospace;
-}
-#onglets .action {
-    /*text-decoration: underline;*/
-    color: green;
-    font-family: monospace;
+#onglets ul > li {
+    margin-bottom: 0;
+    line-height: auto;
 }
 /*
-#onglets dl {
-    float : none;
-}
-#onglets dt {
-    margin-right: 5px;
-    float: left;
-}
-#onglets dd {
-    float: left;
-    padding: 0 5px; 
-    margin: 0;
-}
 #onglets dt:after {
     content: ':';
 }
@@ -560,6 +448,14 @@ button {
 #onglets dd + dt {
     clear: left;
     float : none;
+}
+*/
+#onglets .onglet {
+    margin-top: 0;
+}
+/*
+#onglets > .nav-tabs > li.active {
+    border-bottom: 2px solid #FFF;
 }
 */
 #onglets #logs .useradd {

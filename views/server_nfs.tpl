@@ -54,13 +54,16 @@ $(function() {
                 }},
             });
     };
-    $('button#issue').click(function() { 
-        ajax_button_span_url($(this), $(this).next(), '/api/server/{{name}}/issue');
+    $('a#issue').click(function() { 
+        ajax_button_span_url($(this), $('span#issue'), '/api/server/{{name}}/issue');
     });
-    $('button#uname').click(function() { 
-        ajax_button_span_url($(this), $(this).next(), '/api/server/{{name}}/uname');
+    $('a#uname').click(function() { 
+        ajax_button_span_url($(this), $('span#uname'), '/api/server/{{name}}/uname');
     });
     $('button#all').click(function() { 
+        %for c in ['home_perm', 'home_doct', 'home_temp']:
+            ajax_button_span_url($('button#check_{{c}}'), null, '/api/server_nfs/{{name}}/check_{{c}}');
+        %end
         ajax_button_span_url($(this), $('span#issue'), '/api/server/{{name}}/issue');
         ajax_button_span_url($(this), $('span#uname'), '/api/server/{{name}}/uname');
     });
@@ -80,43 +83,55 @@ $(function() {
 </script>
 
 <div class="box shadow">
-<h1>serveur <span id="server" class="nfs">{{name}}</span></h1>
+<h1>serveur NFS <span id="server" class="nfs">{{name}}</span></h1>
 <h2>Données</h2>
-<ul>
+<dl class="dl-horizontal">
     %for item in ['host', 'home_perm', 'home_doct', 'home_temp']:
         %if item not in server:
             %continue
         %end
-    <li>
-        <strong>{{item}}</strong>: {{server[item]}}
+        <dt>{{item}}</dt>
+        <dd>{{server[item]}}</dd>
+        <dd>
         %if item.find('home_') != -1:
-            <button id="check_{{item}}" title="existence du repertoire">existence ?</button>
-            <button id="quota_{{item}}" title="camembert du Quota">quota</button>
+            <button id="check_{{item}}" title="existence du repertoire" class="btn btn-mini">?</button>
+            <button id="quota_{{item}}" title="camembert du Quota" class="btn btn-mini">quota</button>
             <span id="{{item}}" class="term"></span>
         %else:
-            <button id="quota_total" title="camembert du Quota Total">quota total</button>
+            <button id="quota_total" title="camembert du Quota Total" class="btn btn-mini">quota total</button>
             <span id="quota_total" class="term"></span>
         %end
-    </li>
+        </dd>
+
+    <!-- <li> -->
+    <!--     <strong>{{item}}</strong>: {{server[item]}} -->
+    <!--     %if item.find('home_') != -1: -->
+    <!--         <button id="check_{{item}}" title="existence du repertoire" class="btn btn-mini">?</button> -->
+    <!--         <button id="quota_{{item}}" title="camembert du Quota" class="btn btn-mini">quota</button> -->
+    <!--         <span id="{{item}}" class="term"></span> -->
+    <!--     %else: -->
+    <!--         <button id="quota_total" title="camembert du Quota Total" class="btn btn-mini">quota total</button> -->
+    <!--         <span id="quota_total" class="term"></span> -->
+    <!--     %end -->
+    <!-- </li> -->
     %end
-</ul>
+</dl>
 
     <div id="pieblack">
         <div id="pie"></div>
     </div>
-<h3>actions ssh</h3> 
-    <ul>
-        <li>
-            <button id="issue" name="issue">issue</button>
-            <span id="issue" class="term">&nbsp;</span>
-        </li>
-        <li>
-            <button id="uname" name="uname">uname</button>
-            <span id="uname" class="term">&nbsp;</span>
-        </li>
-        <hr/>
-        <button id="all">toutes</button>
-    </ul>
+<h3>Actions</h3> 
+<p>Informations diverses</p>
+    <dl class="dl-horizontal">
+        <dt> <a id="issue" class="btn btn-mini">issue</a> </dt>
+        <dd> <span id="issue" class="term">&nbsp;</span> </dd>
+
+        <dt> <a id="uname" class="btn btn-mini">uname</a> </dt>
+        <dd> <span id="uname" class="term">&nbsp;</span> </dd>
+    </dl>
+    <dl class="dl-horizontal">
+        <dt> <button id="all" class="btn btn-mini">toutes</button> </dt>
+    </dl>
 
 
 

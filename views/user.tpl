@@ -345,9 +345,10 @@ $(function() {
 // -->
 </script>
 
+<!--div id="onglets"-->
 <div id="onglets">
-    <ul>
-        <li><a href="#page" class="actif nav">fiche</a></li>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#page" class="actif nav">fiche</a></li>
         <li><a href="#fiche" class="nav">édition</a></li>
         <li><a href="#logs" class="nav">logs</a></li>
     </ul>

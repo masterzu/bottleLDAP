@@ -99,6 +99,9 @@ function ajax_button_span_url(button, span, url){
     //hide warning
     show_warning();
 
+    // put btn-inverse
+    button.addClass('btn-inverse');
+
     //alert('serveur {{name}} with url:'+url);
     if (this_span != null) this_span.addClass('ui-autocomplete-loading').html('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
 
@@ -107,22 +110,24 @@ function ajax_button_span_url(button, span, url){
         url: url,
         type: "GET",
         dataType: "json",
-        timeout: 1500,
+        timeout: 2000,
         success: function(response) {
+            button.removeClass('btn-inverse');
             if (this_span != null) this_span.removeClass('ui-autocomplete-loading').text('');
             if (response['success']) {
                 if (this_span != null)
                     this_span.text(response['message'])
                 else
-                    this_button.addClass('widget_ok').removeClass('widget_notok');
+                    this_button.addClass('btn-success').removeClass('btn-danger');
             } else {
                 if (this_span != null)
                     show_warning(response['message'])
                 else
-                    this_button.addClass('widget_notok').removeClass('widget_ok');
+                    this_button.addClass('btn-success').removeClass('btn-danger');
             }
         },
         error: function(xhr, textStatus, error) {
+            button.removeClass('btn-inverse');
             this_span.removeClass('ui-autocomplete-loading').text('');
             if (textStatus == "timeout")
                 show_warning('Serveur Timeout ... Réessayez si vous osez :)')
@@ -203,8 +208,8 @@ function log_on_click(wbutton, url, wresult){
                 
                     wresult.append('<div class="log">'+log_time+log_allowtxt
                         //+' <a href="/actor/'+log_actor+'" title="actor" class="actor">'+log_actor+'</a>'
-                        +' <span title="actor" class="actor help">'+log_actor+'</span>'
-                        +' <span title="action" class="action help">'+log_action+'</span>'+link
+                        +' <span title="actor" class="label label-info help">'+log_actor+'</span>'
+                        +' <span title="action" class="label label-success help">'+log_action+'</span>'+link
                         +'</div>');
                 };
                 wbutton.text('metre a jour');
@@ -250,7 +255,7 @@ $(function(){
     });
 
     // #top link
-    $("#top").click(function(){
+    $("#top-logo").click(function(){
         window.location='/';
     });
 
@@ -278,12 +283,12 @@ $(function(){
     $("#onglets .onglet").not(":first").hide();
 
     // #onglets.click
-    $("#onglets ul a").click(function() {
+    $("a","#onglets ul.nav").click(function() {
         $("#onglets .onglet").hide();
         $(this.hash).show();
         this.blur();
-        $("#onglets li a").removeClass("actif");
-        $(this).addClass("actif");
+        $("#onglets ul.nav li").removeClass("active");
+        $(this).parent('li').addClass("active");
         return false;
     });
 

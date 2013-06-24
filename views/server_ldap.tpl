@@ -5,9 +5,9 @@
 
 $(function() {
 
-    $('button#issue').click(function() { ajax_button_span_url($(this), $(this).next(), '/api/server/{{name}}/issue') });
-    $('button#uname').click(function() { ajax_button_span_url($(this), $(this).next(), '/api/server/{{name}}/uname') });
-    $('button#all').click(function() { 
+    $('a#issue').click(function() { ajax_button_span_url($(this), $('span#issue'), '/api/server/{{name}}/issue') });
+    $('a#uname').click(function() { ajax_button_span_url($(this), $('span#uname'), '/api/server/{{name}}/uname') });
+    $('#all').click(function() { 
         ajax_button_span_url($(this), $('span#issue'), '/api/server/{{name}}/issue');
         ajax_button_span_url($(this), $('span#uname'), '/api/server/{{name}}/uname');
     });
@@ -17,31 +17,30 @@ $(function() {
 </script>
 
 <div class="box shadow">
-<h1>serveur <span id="server" class="ldap">{{name}}</span></h1>
+<h1>serveur LDAP <span id="server" class="ldap">{{name}}</span></h1>
 <h3>Données</h3>
-<ul>
+<p>Données de connexion au serveur:</p>
+<dl class="dl-horizontal">
     %for item in ['host', 'port', 'basedn', 'baseuser', 'basegroup']:
         %if item not in server:
             %continue
         %end
-    <li>
-        <strong>{{item}}</strong>: {{server[item]}}
-    </li>
+        <dt>{{item}}</dt>
+        <dd>{{server[item]}}</dd>
     %end
-</ul>
+</dl>
 
-<h3>actions ssh</h3> 
-    <ul>
-        <li>
-            <button id="issue" name="issue">issue</button>
-            <span id="issue" class="term">&nbsp;</span>
-        </li>
-        <li>
-            <button id="uname" name="uname">uname</button>
-            <span id="uname" class="term">&nbsp;</span>
-        </li>
-        <hr/>
-        <button id="all">toutes</button>
-    <ul>
+<h3>Actions</h3> 
+<p>Informations diverses</p>
+    <dl class="dl-horizontal">
+        <dt> <a id="issue" class="btn btn-mini">issue</a> </dt>
+        <dd> <span id="issue" class="term">&nbsp;</span> </dd>
+
+        <dt> <a id="uname" class="btn btn-mini">uname</a> </dt>
+        <dd> <span id="uname" class="term">&nbsp;</span> </dd>
+    </dl>
+    <dl class="dl-horizontal">
+        <dt> <button id="all" class="btn btn-mini">toutes</button> </dt>
+    </dl>
 </div><!-- box shadow -->
 
