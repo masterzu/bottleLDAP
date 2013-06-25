@@ -31,7 +31,7 @@
     <div id="content-center" class="row">
         <div id="nav" class="box span3">
             %if nav is not None:
-            <ul class="unstyled">
+            <ul class="unstyled nav-border">
                 %for (l, n) in nav:
                     %if l == '*' and n:
                 <li class="nav-title">{{n}}</li>

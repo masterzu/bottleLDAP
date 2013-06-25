@@ -306,6 +306,12 @@ button {
 .nav-tabs > .active > a{
     border-bottom:1px solid #FFF;
 }
+.nav-border {
+	/* border-left: 2px solid #f0f0f0; */
+    padding-left: 7px;
+	border-right: 2px solid #f0f0f0;
+    padding-right: 5px;
+}
 #nav { 
     font: 16px/10px Helvetica, 'Liberation Sans', Arial, sans-serif;
     font-variant: small-caps;

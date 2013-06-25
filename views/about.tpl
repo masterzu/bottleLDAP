@@ -9,7 +9,7 @@ Un soupçon de <a class="reference external" href="http://www.mongodb.org/">mong
 <p>Ce site est donc programmé entièrement en Python, avec l'aide de la micro web-framework <a class="reference external" href="http://bottlepy.org/">bottlepy</a> (version {{bottle_ver}}) et de la librairie <a class="reference external" href="http://www.python-ldap.org/">python-ldap</a>  (version {{ldap_ver}})</p>
 
 <p>
-    Concernant la partie, client, c'est du <a href="http://jquery.com/" target="_blanck">JQuery</a> avec une touche d'<a href="http://fr.wikipedia.org/wiki/Ajax_(informatique)" target="_blanck">AJAX</a>, une larme de <a href="http://raphaeljs.com/" target="_blanck">Raphaël JS</a>.
+    Concernant la partie, client, c'est du <a href="http://jquery.com/" target="_blanck">JQuery</a> avec une touche d'<a href="http://fr.wikipedia.org/wiki/Ajax_(informatique)" target="_blanck">AJAX</a>, une larme de <a href="http://raphaeljs.com/" target="_blanck">Raphaël JS</a> le tout saupoudré de <a href="http://twitter.github.io/" target="_blank">bootstrap</a>.
 </p>
 </div>
 

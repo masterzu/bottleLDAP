@@ -2556,6 +2556,54 @@ def json_groups():
 
     return resu
 
+@bottle.route('/api/group/<group>/members')
+def json_group_members(group):
+    """
+    Get list of a group members
+    """
+    _debug_route()
+    ldap_initialize()
+    groups = ldap_groups(list_filters=['cn=%s' % group], list_attrs=['uniqueMember'])
+
+    if groups is None:
+        ldap_close()
+        return _json_result(success=False, message='no group found')
+    if len(groups) != 1:
+        ldap_close()
+        return _json_result(success=False, message='multiple group "%s"' % group)
+
+    # _list = []
+    (dn,obj) = groups[0]
+    # for user_dn in obj['uniqueMember']:
+    #     user_uid = ldap.dn.explode_dn(user_dn)[0]
+    #     _d = {'cn': g['cn'][0], 'description': g['description'][0], 'dn': dn}
+    #     _list.append(_d)
+    list_filters=[]
+    for user_dn in obj['uniqueMember']:
+        user_uid = ldap.dn.explode_dn(user_dn)[0]
+        list_filters.append(user_uid)
+    _filter = _ldap_build_ldapfilter_or(list_filters)
+    _members = _ldap_search(main_ldap_server['baseuser'], filterstr=_filter, list_attrs=['cn', 'sn', 'uid'])
+
+    ldap_close()
+
+    members = [ {'uid': o['uid'][0], 'cn': o['cn'][0], 'sn': o['sn'][0]} for d,o in _members ]
+    nmembers = len(members)
+    if nmembers == 1:
+       message = 'un membre'
+    elif nmembers == 0:
+        message = 'pas de membre'
+    else: 
+        message = '%d membres' % nmembers 
+
+
+
+    resu = _json_result(succes=True, members=members, message=message)
+
+    return resu
+
+
+
 @bottle.route('/api/autocomplete_manager')
 def json_autocomplete_manager():
     """
