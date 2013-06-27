@@ -1,6 +1,7 @@
 %rebase base title="Utilisateur : %s" % uid, nav=nav, warn=warn, author=author, version=version
 
-%mandatory_attrs = ['sn','cn','uidNumber','gidNumber', 'homeDirectory']
+%mandatory_ldap = ['sn','cn','uidNumber','gidNumber', 'homeDirectory']
+%mandatory_nfs = ['homeDirectory', 'uidNumber', 'gidNumber', 'loginShell', 'userPassword']
 %if len(users) > 0:
 <script type="text/javascript">
 <!-- 
@@ -348,7 +349,7 @@ $(function() {
 <!--div id="onglets"-->
 <div id="onglets">
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#page" class="actif nav">fiche</a></li>
+        <li class="active"><a href="#page" class="nav">fiche</a></li>
         <li><a href="#fiche" class="nav">édition</a></li>
         <li><a href="#logs" class="nav">logs</a></li>
     </ul>
@@ -359,160 +360,152 @@ $(function() {
     <!-- ONLY PRINT the first user -->
         <h1><span name="cn" title="cn">{{u['cn'][0]}}</span></h1>
         <div style="float: left">
-        <dl>
-            <dt title="givenName">Prénom</dt>
-        %if 'givenName' in u:
-            <dd><span name="givenName">{{u['givenName'][0]}}</span></dd>
-        %else:
-            <dd class="warning">pas de prénom définit !</dd>
-        %end
-            <dt title="sn">Nom de famille</dt>
-            <dd><span name="sn">{{u['sn'][0]}}</span></dd>
-            <dt title="mail">email</dt>
-        %if 'mail' in u:
-            <dd><a name="mail" class="email" href="mailto:{{u['mail'][0]}}">{{u['mail'][0]}}</a></dd>
-        %else:
-            <dd class="warning">pas d'email définit !</dd>
-        %end
-
-            <dt title="description">description</dt>
-        %if 'description' in u:
-            <dd><span name="description">{{u['description'][0]}}</span></dd>
-        %else:
-            <dd class="warning">pas définit !</dd>
-        %end
-
-            
-        %if len(teams) > 1:
-            <dt>équipes</dt>
-        %else:
-            %if len(teams) == 1:
-            <dt>équipe</dt>
+            <dl class="dl-horizontal">
+                <dt title="givenName">Prénom</dt>
+            %if 'givenName' in u:
+                <dd><span name="givenName">{{u['givenName'][0]}}</span></dd>
+            %else:
+                <dd class="warning">pas de prénom définit !</dd>
             %end
-        %end
-        %for tdn, t in teams:
-            <dd><a href="/group/{{t['cn'][0]}}">{{t['description'][0]}}</a> (<code>{{t['cn'][0]}}</code>)</dd>
-        %end
-        </dl>
+                <dt title="sn">Nom de famille</dt>
+                <dd><span name="sn">{{u['sn'][0]}}</span></dd>
+                <dt title="mail">email</dt>
+            %if 'mail' in u:
+                <dd><a name="mail" class="email" href="mailto:{{u['mail'][0]}}">{{u['mail'][0]}}</a></dd>
+            %else:
+                <dd class="warning">pas d'email définit !</dd>
+            %end
+
+                <dt title="description">description</dt>
+            %if 'description' in u:
+                <dd><span name="description">{{u['description'][0]}}</span></dd>
+            %else:
+                <dd class="warning">pas définit !</dd>
+            %end
+
+                
+            %if len(teams) > 1:
+                <dt>équipes</dt>
+            %else:
+                %if len(teams) == 1:
+                <dt>équipe</dt>
+                %end
+            %end
+            %for tdn, t in teams:
+                <dd><a href="/group/{{t['cn'][0]}}">{{t['description'][0]}}</a> (<code>{{t['cn'][0]}}</code>)</dd>
+            %end
+            </dl>
         </div>
 
         <div style="float: right">
-        <dl>
-            <dt title="uid">login</dt>
-            <dd><code>{{uid}}</code></dd>
+            <dl class="dl-horizontal">
+                <dt title="uid">login</dt>
+                <dd><code>{{uid}}</code></dd>
 
-            <dt title="home">$HOME</dt>
-            <dd><code>{{u['homeDirectory'][0]}}</code></dd>
-            <button name="home">+ infos</button>
-            <span name="home"></span>
+                <dt title="home">$HOME</dt>
+                <dd><code>{{u['homeDirectory'][0]}}</code></dd>
+                <dt><button name="home">+ infos</button></dt>
+                <span name="home"></span>
 
-        </dl>
+            </dl>
         </div>
 
         <div style="clear: both">
-        <dl>
-        %if len(managers) > 1:
-            <dt title="manager">directeurs</dt>
-        %else:
-            %if len(managers) == 1:
-            <dt title="manager">directeur</dt>
+            <dl class="dl-horizontal">
+            %if len(managers) > 1:
+                <dt title="manager">directeurs</dt>
+            %elif len(managers) == 1:
+                <dt title="manager">directeur</dt>
             %end
-        %end
-        %for mandn, man in managers:
-            <dd><a href="/user/{{man['uid'][0]}}">{{man['cn'][0]}}</a></dd>
-        %end
+            %for mandn, man in managers:
+                <dd><a href="/user/{{man['uid'][0]}}">{{man['cn'][0]}}</a></dd>
+            %end
 
-        %if len(phds) > 1:
-            <dt>{{len(phds)}} doctorants</dt>
-        %else:
-            %if len(phds) == 1:
-            <dt>doctorant</dt>
+            %if len(assistants) > 1:
+                <dt>{{len(assistants)}} assistant(e)s</dt>
+            %elif len(assistants) == 1:
+                <dt>assistant(e)</dt>
             %end
-        %end
-        %for stu in phds:
-            %if 'description' in stu:
-                %desc = stu['description'][0]
-            %else:
-                %desc = ''
+            %for stu in assistants:
+                %if 'description' in stu:
+                    %desc = stu['description'][0]
+                %else:
+                    %desc = ''
+                %end
+                %if 'mail' in stu:
+                    %email = '(' + stu['mail'][0] + ')'
+                    %emailink = 'mailto:' + email
+                %else:
+                    %email = "(pas d'email)"
+                    %emailink = ''
+                %end
+                <dd><a href="/user/{{stu['uid'][0]}}">{{stu['cn'][0]}}</a> {{desc}} <a href="{{emailink}}" class="email">{{email}}</a></dd>
             %end
-            %if 'mail' in stu:
-                %email = '(' + stu['mail'][0] + ')'
-                %emailink = 'mailto:' + email
-            %else:
-                %email = "(pas d'email)"
-                %emailink = ''
-            %end
-            <dd><a href="/user/{{stu['uid'][0]}}">{{stu['cn'][0]}}</a> {{desc}} <a href="{{emailink}}" class="email">{{email}}</a></dd>
-        %end
+            </dl>
 
-        %if len(students) > 1:
-            <dt>{{len(students)}} étudiants</dt>
-        %else:
-            %if len(students) == 1:
-            <dt>étudiant</dt>
+            <dl class="dl-horizontal">
+            %if len(phds) > 1:
+                <dt>{{len(phds)}} doctorant(e)s</dt>
+            %elif len(phds) == 1:
+                <dt>doctorant(e)</dt>
             %end
-        %end
-        %for stu in students:
-            %if 'description' in stu:
-                %desc = stu['description'][0]
-            %else:
-                %desc = ''
+            %for stu in phds:
+                %if 'description' in stu:
+                    %desc = stu['description'][0]
+                %else:
+                    %desc = ''
+                %end
+                %if 'mail' in stu:
+                    %email = '(' + stu['mail'][0] + ')'
+                    %emailink = 'mailto:' + email
+                %else:
+                    %email = "(pas d'email)"
+                    %emailink = ''
+                %end
+                <dd><a href="/user/{{stu['uid'][0]}}">{{stu['cn'][0]}}</a> {{desc}} <a href="{{emailink}}" class="email">{{email}}</a></dd>
             %end
-            %if 'mail' in stu:
-                %email = '(' + stu['mail'][0] + ')'
-                %emailink = 'mailto:' + email
-            %else:
-                %email = "(pas d'email)"
-                %emailink = ''
-            %end
-            <dd><a href="/user/{{stu['uid'][0]}}">{{stu['cn'][0]}}</a> {{desc}} <a href="{{emailink}}" class="email">{{email}}</a></dd>
-        %end
 
-        %if len(assistants) > 1:
-            <dt>{{len(assistants)}} assistants</dt>
-        %else:
-            %if len(assistants) == 1:
-            <dt>assistant</dt>
+            %if len(students) > 1:
+                <dt>{{len(students)}} étudiant(e)s</dt>
+            %elif len(students) == 1:
+                <dt>étudiant(e)</dt>
             %end
-        %end
-        %for stu in assistants:
-            %if 'description' in stu:
-                %desc = stu['description'][0]
-            %else:
-                %desc = ''
+            %for stu in students:
+                %if 'description' in stu:
+                    %desc = stu['description'][0]
+                %else:
+                    %desc = ''
+                %end
+                %if 'mail' in stu:
+                    %email = '(' + stu['mail'][0] + ')'
+                    %emailink = 'mailto:' + email
+                %else:
+                    %email = "(pas d'email)"
+                    %emailink = ''
+                %end
+                <dd><a href="/user/{{stu['uid'][0]}}">{{stu['cn'][0]}}</a> {{desc}} <a href="{{emailink}}" class="email">{{email}}</a></dd>
             %end
-            %if 'mail' in stu:
-                %email = '(' + stu['mail'][0] + ')'
-                %emailink = 'mailto:' + email
-            %else:
-                %email = "(pas d'email)"
-                %emailink = ''
-            %end
-            <dd><a href="/user/{{stu['uid'][0]}}">{{stu['cn'][0]}}</a> {{desc}} <a href="{{emailink}}" class="email">{{email}}</a></dd>
-        %end
-
-        </dl>
+            </dl>
         </div>
     </div><!-- onglet page -->
 
     <div id="fiche" class="onglet box shadow">
-        <h1>fiche LDAP : {{u['cn'][0]}}</h1>
-        <button id="delete">supprimer la fiche</button>
-        <div id="dialog" class="hide">Ètes vous sure ? <button id="delete_yes">oui</button><button id="delete_no">non</button></div>
-        <h2>champs fixes</h2>
-        <table>
-            <tr>
-                <th>dn</th>
-                <td>{{dn}}</td>
-            </tr>
-            <tr>
-                <th>uid</th>
-                <td id="uid">{{uid}}</td>
-            </tr>
-        </table>
+        <h1>{{u['cn'][0]}}<br/><small>fiche LDAP</small></h1>
+        <button class="btn btn-small" id="delete">supprimer la fiche</button>
+        <div id="dialog" class="hide">
+            Ètes vous sure ? <button id="delete_yes">oui</button>
+            <button id="delete_no">non</button>
+        </div>
+        <h3>champs fixes</h3>
+        <dl class="dl-horizontal">
+            <dt>dn</dt>
+            <dd>{{dn}}</dd>
+            <dt>uid</dt>
+            <dd id="uid">{{uid}}</dd>
+        </dl>
 
-        <h2>champs modifiables</h2>
-        <table id="fields">
+        <h3>champs modifiables</h3>
+        <dl id="fields" class="dl-horizontal">
         %for f in ['givenName','sn','cn','description','mail','uidNumber','gidNumber','homeDirectory','loginShell','userPassword']:
             %if f in u:
                 %span_val = u[f][0]
@@ -522,77 +515,69 @@ $(function() {
                 %span_val = 'vide'
                 %input_val = ''
                 %cls = 'warning cliquable'
+                %end
+
+                <dt>{{f}}
+            %if f in mandatory_ldap: 
+            	<sup title="champs obligatoire LDAP" class="help ldap">&#x238b;</sup>
             %end
-            <tr>
-                <th>
-                    %if f in mandatory_attrs: 
-                    <span title="champs obligatoire LDAP" style="cursor:help; color:red;">{{f}}*</span>
-                    %else:
-                    {{f}}
-                    %end
-                </th>
-                <td>
+            %if f in mandatory_nfs: 
+            	<sup title="champs obligatoire NFS/shell" class="help nfs">&#x2318;</sup>
+            %end
+                </dt>
+                <dd>
                     <span   name="{{f}}" class="{{cls}}">{{span_val}}</span>
                     <input  name="{{f}}" type="text"   value="{{input_val}}" style="display:none;">
                     <button name="{{f}}" type="button" value="reset"         style="display:none;">reset</button>
-                </td>
-            </tr>
+                </dd>
         %end
-        </table>
-        <table id="fields_special">
-        <h2>champs spéciaux</h2>
+    </dl>
+    <!-- <p><small><sup class="ldap">&#x238b;</sup>: champs obligatoires pour le serveur <span class="ldap">LDAP</span> | <sup class="nfs">&#x2318;</sup>: champs obligatoires pour les serveurs <span class="nfs">NFS/shell</span></small></p> -->
+
+
+
+        <dl id="fields_special" class="dl-horizontal">
+        <h3>champs spéciaux</h3>
             %if len(managers) > 0:
-                %managers_cn = ', '.join([man['cn'][0] for mandn, man in managers ])
+                %managers_cn = ', '.join([ man['cn'][0] for mandn, man in managers ])
                 %cls = 'cliquable'
-                %managers_dn = ' ; '.join([mandn for mandn, man in managers ])
+                %managers_dn = ' ; '.join([ mandn for mandn, man in managers ])
                 %managers_dn += ' ; '
             %else:
                 %managers_cn = 'vide' 
                 %cls = 'cliquable warning'
                 %managers_dn = ''
             %end
-            <tr>
-                <th name="manager">manager</th>
-                <td> 
+                <dt name="manager">manager</dt>
+                <dd> 
                     <span     name="manager" class="{{cls}}">{{managers_cn}}</span>
                     <input    name="manager" type="text"   value="{{managers_dn}}" style="display:none">
                     <button   name="manager" type="button" value="reset"           style="display:none">reset</button>
-                </td>
-            </tr>
-        </table>
+                </dd>
+        </dl>
         
         %if len(teams) > 0 or len(phds) > 0 or len(students) > 0: 
-        <h2>champs externes</h2>
-        <table>
+        <h3>champs externes</h3>
+        <dl class="dl-horizontal">
             %for tdn, t in teams:
-            <tr>
-                <th>
-                    équipe
-                </th>
-                <td>
-                    <a href="/group/{{t['cn'][0]}}">{{t['description'][0]}}</a>
-                </td>
-            </tr>
+                <dt>équipe</dt>
+                <dd><a href="/group/{{t['cn'][0]}}">{{t['description'][0]}}</a></dd>
             %end
             %for phd in phds:
-            <tr>
-                <th>doctorant</th> 
-                <td>{{phd['cn'][0]}}</td>
-            </tr>
+                <dt>doctorant</dt> 
+                <dd>{{phd['cn'][0]}}</dd>
             %end
             %for stu in students:
-            <tr>
-                <th>étudiant</th> 
-                <td>{{stu['cn'][0]}}</td>
-            </tr>
+                <dt>étudiant</dt> 
+                <dd>{{stu['cn'][0]}}</dd>
             %end
-        </table>
+        </dl>
         %end
 
     </div><!-- onglet fiche -->
 
     <div id="logs" class="onglet box shadow">
-        <h1 id="heading">fiche LOGS : {{u['cn'][0]}}</h1>
+        <h1>{{u['cn'][0]}}<br /><small>LOGS</small></h1>
         <div>Liste anti-chronologique des logs.</div>
         <button id="addlogd">afficher a jour les logs</button>
         <div id="logs-texts"> </div>
@@ -601,7 +586,6 @@ $(function() {
 
 </div><!-- onglets -->
 %else:
-<div>Erreur : Il n'existe pas de compte <code>{{uid}}</code>
-</div>
+<div>Erreur : Il n'existe pas de compte <code>{{uid}}</code>.</div>
 %end
 

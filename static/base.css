@@ -168,6 +168,31 @@ button {
     background-color: white;
     color: green;
 }
+.toggle,
+.toggle-all {
+    /* class for users list toggle visibility in page /group/xx */
+    font-family: mono;
+}
+.toggle-item {
+    /* class for users list toggle visibility in page /group/xx */
+    border: 1px solid #999;
+    background-color: #DDD;
+    margin-left: 5px ;
+    padding:0;
+    display: none;
+}
+.toggle-item dl {
+    padding: 0;
+    margin: 0;
+}
+/* change left align in .toggle-item */
+.toggle-item .dl-horizontal dt {
+    width: 90px;
+}
+.toggle-item .dl-horizontal dd {
+    margin-left: 100px;
+}
+
 .warning {
     font: 16px Arial,sans-serif;
     color: red;
@@ -193,13 +218,13 @@ button {
     border-radius: 2em 1em;
     -webkit-border-radius: 2em 1em;
     -moz-border-radius: 2em 1em;
-    color: #0a0;
+    color: #f40;
 }
 .ldap {
     border-radius: 1em 2em;
     -webkit-border-radius: 1em 2em;
     -moz-border-radius: 1em 2em;
-    color: #a00;
+    color: #808;
 }
 .log:hover {
     background-color: rgba(200,200,200,.5);
@@ -260,6 +285,8 @@ button {
 */
     background-image: url(/static/WIP.png);
     background-repeat: repeat-y;
+    background-position: top center;
+    background-color: #fff;
 }
 #content-center {
     /*

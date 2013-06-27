@@ -282,6 +282,9 @@ $(function(){
     // #onglets - display the first .onglet
     $("#onglets .onglet").not(":first").hide();
 
+    // activate the first tab with class=active
+    $('li:first', "#onglets ul.nav").addClass('active');
+
     // #onglets.click
     $("a","#onglets ul.nav").click(function() {
         $("#onglets .onglet").hide();
