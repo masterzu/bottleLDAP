@@ -143,8 +143,8 @@ main_nav = [
     ('/users/t',None),
     ('',''), 
     ('*', 'structure'),
-    ('/groups',u'les équipes'),
-    ('/users','les utilisateurs'),
+    ('/groups',u'équipes'),
+    ('/users','utilisateurs'),
     ('',''), 
     ('*', 'site web'), 
     ('/news', 'news'), 
@@ -154,7 +154,7 @@ main_nav = [
 
 main_users = {
     '*': {
-        'name': 'personnes',
+        'name': 'utilisateurs',
         'basedn': 'ou=personnels,o=ijlrda',
     },
     'p': {
