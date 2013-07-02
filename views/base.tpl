@@ -29,7 +29,7 @@
     </div><!-- top -->
     <div id="content-container" class="container">
     <div id="content-center" class="row">
-        <div id="nav" class="box span3">
+        <div id="nav" class="span3">
             %if nav is not None:
             <ul class="nav nav-list">
                 %for (l, n) in nav:

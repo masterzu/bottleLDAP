@@ -130,7 +130,23 @@ button {
 /**********************************************************
  classes 
  */
+
+/* rewrite bootstrap classes */
+.nav {
+    margin-bottom: 0px;
+    /* keep other attrs */
+    margin-left: 0;
+    list-style: none;
+}
 .box {
+    border: 1px solid #444;
+}
+.box > h1 {
+    margin-top:0;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    background: rgba(200,200,200,.5);
+
 }
 .cliquable {
     cursor:pointer;
@@ -282,7 +298,7 @@ ul.news > li:not(:first-child) {
 #top-content {
     /* font: 40px small-caps 'Concert One',sans-serif; */ 
     font: 40px 'GraublauWebRegular',sans-serif; 
-    text-shadow: 0px 0px 3px rgba(0, 0, 0, .31), 0px 1px 1px white, 1px 1px 1px rgba(0, 0, 0, .31);
+    /* text-shadow: 0px 0px 3px rgba(0, 0, 0, .31), 0px 1px 1px white, 1px 1px 1px rgba(0, 0, 0, .31); */
     color: rgba(25,25,255,.5);
     
 }
