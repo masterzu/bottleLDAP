@@ -206,73 +206,52 @@ $(function() {
 <div class="box shadow">
     <h1>{{title}}</h1>
 
-    <button id="add" name="add">ajouter un utilisateur...</button>
+    <p><button id="add" name="add" class="btn">ajouter un utilisateur...</button></p>
     <div id="form" class="box shadow hide">
-        <table cellspacing="1" width="100%">
-        <tbody>
-            <tr>
-                <td colspan="2"><hr/><td>
-            </tr>
-%for id, id_name in attrs:
-            <tr>
-                <th title="champs LDAP: {{id}}">{{id_name}}</th>
-                <!--td style="text-align: right; font-size: smaller;font-family: monospace" title="champs LDAP">({{id}})</td -->
+        <h3>Nouvel Utilisateur</h3>
+        <dl class="dl-horizontal">
+        %for id, id_name in attrs:
+            <dt title="champs LDAP: {{id}}">{{id_name}}</dt>
             %if id == 'description':
-                <td><input type="text" name="{{id}}" size="50"/></td>
+            <dd><input type="text" name="{{id}}" size="50"/></dd>
             %else:
-                <td><input type="text" name="{{id}}"/></td>
+            <dd><input type="text" name="{{id}}"/></dd>
             %end
-            </tr>
-%end
-            <tr id="tr-uid">
-                <td style="text-align: center">login (optionnel)</td>
-                <td><input type="text" name="uid"/></td>
-            </tr>
-            <tr>
-                <th>type d'utilisateur</th>
-                <td>
-                    <select name="usertype" id="select-usertype">
-                    %for type, name in [('p', 'pernament'), ('d', 'doctorant'), ('t', u'étudiant ou invité')]:
+        %end
+            <div id="tr-uid">
+                <dt style="text-align: center">login (optionnel)</dt>
+                <dd><input type="text" name="uid"/></dd>
+            </div>
+            <dt>type d'utilisateur</dt>
+            <dd>
+                <select name="usertype" id="select-usertype">
+                %for type, name in [('p', 'pernament'), ('d', 'doctorant'), ('t', u'étudiant ou invité')]:
                     <option value="{{type}}">{{name}}</option>
+                %end
+                </select>
+            </dd>
+            <div id="tr-group">
+                <dt>équipe</dt>
+                <dd><select name="group" id="select-group"></select></dd>
+            </div>
+            <div id="tr-manager" class="hide">
+                <dt>directeur</dt>
+                <dd><input type="text" name="manager"></dd>
+            </div>
+            <dt>serveur NFS</dt>
+            <dd>
+                <select name="hostname" id="select-hostname">
+                %for nfs in nfs_servers: 
+                <option value="{{nfs}}"
+                    %if nfs == 'poisson':
+                        selected="selected"
                     %end
-                    </select>
-                </td>
-            </tr>
-            <tr id="tr-group">
-                <th>équipe</th>
-                <td><select name="group" id="select-group"></select></td>
-            </tr>
-            <tr id="tr-manager" class="hide">
-                <th>directeur</th>
-                <td>
-                    <input type="text" name="manager">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2"><hr/><td>
-            </tr>
-            <tr>
-                <th>serveur NFS</th>
-                <td>
-                    <select name="hostname" id="select-hostname">
-                    %for nfs in nfs_servers: 
-                    <option value="{{nfs}}"
-                        %if nfs == 'poisson':
-                            selected="selected"
-                        %end
-                    >{{nfs}}</option>
-                    %end
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2"><hr/><td>
-            </tr>
-            <tr>
-                <td colspan="2" style="text-align: center"><button name="ajouter">ajouter</button></td>
-            </tr>
-        </tbody>
-        </table>
+                >{{nfs}}</option>
+                %end
+                </select>
+            </dd>
+            <dd><button name="ajouter" class="btn btn-small">ajouter</button></dd>
+        </dl>
 
     </div><!-- form -->
 
@@ -291,54 +270,40 @@ $(function() {
 });
 </script>
 
-<table class="tablesorter" id="users" cellspacing="1">
-<thead>
-    <tr>
-        <th title="cn">Nom d'usage</th>
-        <th title="givenName">prénom</th>
-        <th title="sn">Nom de famille</th>
-        <th title="mail">email</th>
-        <th title="uid">login</th>
-    </tr>
-</thead>
-<tbody>
-%for dn, u in users:
-    <tr>
-        <td> 
-            <a href="/user/{{u['uid'][0]}}" title="{{dn}}">{{u['cn'][0]}}</a>
-        </td> 
+<table class="tablesorter table table-hover table-condensed" id="users">
+    <thead>
+        <tr>
+            <th title="cn">Nom d'usage</th>
+            <th title="mail">email</th>
+            <th title="uid">login</th>
+        </tr>
+    </thead>
+    <tbody>
+        %for dn, u in users:
+        <tr>
+            <td> 
+                <a href="/user/{{u['uid'][0]}}" title="{{dn}}">{{u['cn'][0]}}</a>
+            </td> 
 
-        <td>
-        %if 'givenName' in u:
-            {{u['givenName'][0]}}
-        %else:
-            <span class="warning">prénom non définit</span>
-        %end
-        </td>
-        <td> 
-            {{u['sn'][0]}}
-        </td> 
-        <td>
-        %if 'mail' in u:
-            <a class="email" href="mailto:{{u['mail'][0]}}">{{u['mail'][0]}}</a>
-        %else:
-            <span class="warning">email non définit</span>
-        %end
-        </td>
-        <td> {{u['uid'][0]}} </td> 
+            <td>
+                %if 'mail' in u:
+                <a class="email" href="mailto:{{u['mail'][0]}}">{{u['mail'][0]}}</a>
+                %else:
+                <span class="warning">email non définit</span>
+                %end
+            </td>
+            <td><code>{{u['uid'][0]}}</code></td> 
 
-    </tr>
-%end
-</tbody>
-<tfoot>
-    <tr>
-        <th title="cn">Nom d'usage</th>
-        <th title="givenName">prénom</th>
-        <th title="sn">Nom de famille</th>
-        <th title="mail">email</th>
-        <th title="uid">login</th>
-    </tr>
-</tfoot>
+        </tr>
+        %end
+    </tbody>
+    <tfoot>
+        <tr>
+            <th title="cn">Nom d'usage</th>
+            <th title="mail">email</th>
+            <th title="uid">login</th>
+        </tr>
+    </tfoot>
 </table>
 </div><!-- box shadow -->
 

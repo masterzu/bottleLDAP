@@ -84,7 +84,7 @@ $(function() {
 
 <div class="box shadow">
 <h1>serveur NFS <span id="server" class="nfs">{{name}}</span></h1>
-<h2>Données</h2>
+<h3>Données</h3>
 <dl class="dl-horizontal">
     %for item in ['host', 'home_perm', 'home_doct', 'home_temp']:
         %if item not in server:

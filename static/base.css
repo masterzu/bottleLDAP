@@ -61,8 +61,10 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 h1 {
-    font: 40px/60px 'Fredericka the Great',serif;
+    /* font: 40px/60px 'Fredericka the Great',serif; */
+    font: 35px 'Fredericka the Great',serif;
     color: rgba(25,25,255,.5);
+    text-transform: capitalize;
 }
 h1, h2 {
     text-align: center;
@@ -144,6 +146,18 @@ button {
 }
 .hide {
     display: none; 
+}
+
+dl.dl-horizontal dt {
+    font-family: GraublauWebRegular;
+    font-stretch: condensed;
+}
+ul.news {
+    margin-left:0;
+    list-style:none;
+}
+ul.news > li:not(:first-child) {
+    list-style:circle inside;
 }
 .shadow {
     margin: 20px 20px 30px 0px;
@@ -324,48 +338,57 @@ button {
  navigation bar
  */
 
-/* bootstrap modifs */
-.nav a {
-    margin-bottom:0;
+/* .nav-tabs > .active > a{ */
+/*     border-bottom:1px solid #FFF; */
+/* } */
+/* .nav-border { */
+/* 	/1* border-left: 2px solid #f0f0f0; *1/ */
+/*     padding-left: 7px; */
+/* 	border-right: 2px solid #f0f0f0; */
+/*     padding-right: 5px; */
+/* } */
+#nav {
+    padding-top: 30px;
 }
-.nav-tabs > .active > a{
-    border-bottom:1px solid #FFF;
-}
-.nav-border {
-	/* border-left: 2px solid #f0f0f0; */
-    padding-left: 7px;
-	border-right: 2px solid #f0f0f0;
-    padding-right: 5px;
-}
-#nav { 
-    font: 16px/10px Helvetica, 'Liberation Sans', Arial, sans-serif;
+#nav li {
+    /* font: 16px/10px Helvetica, 'Liberation Sans', Arial, sans-serif; */
+    font: 16px Helvetica, 'Liberation Sans', Arial, sans-serif;
     font-variant: small-caps;
-    margin-top:20px;
-    /*
-    border-left: 2px solid #F0F0F0;
-    */
+    font-weight: bold;
 }
 #nav a {
     text-decoration: none;
+    /* margin-bottom:0; */
+    /* margin-top:20px; */
+    /* border-left: 2px solid #F0F0F0; */
 }
-#nav > li a {
-    display:block;
+#nav li > a {
+    /* display:block; */
     color: rgba(25,25,255,.5);
+    padding: 0 15px;
 }
 #nav li a:hover {
     color: rgba(255,255,255,1);
     background-color: rgba(25,25,255,.5);
 }
-#nav li.nav-here {
+#nav li.nav-here,
+#nav li.active {
     color: rgba(0,0,0,.75);
     background-color: rgba(200,200,200,.5);
     font-weight: bold;
+    /* copy boostrap background extention */
+    margin: 0 -15px;
+    padding: 0 15px;
 
 }
 #nav li.nav-title {
     border-top: 2px solid #F0F0F0;
     color: rgba(0,0,0,.5);
     font-weight: bold;
+    font-size: 120%;
+    /* copy boostrap backgroud extention */
+    /* margin: 0 -15px 10px; */
+    /* padding: 0 15px; */
 }
 
 /**********************************************************
@@ -376,8 +399,8 @@ button {
     text-shadow: none;
 }
 
-#content-text {
-}
+/* #content-text { */
+/* } */
 
 #content h1, #content h2, #content h3 {
 }
@@ -448,10 +471,8 @@ button {
     background-repeat: no-repeat; 
     background-position: center left; 
     border-right: 1px solid #dad9c7; 
-    /*
     padding-left: 20px; 
     margin-left: -1px; 
-    */
 }
 
 /**********************************************************

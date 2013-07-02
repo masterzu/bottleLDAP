@@ -13,9 +13,9 @@ $(function() {
 </script>
 
 <div id="onglets">
-    <ul>
-    <li><a href="#users" class="actif nav">Utilisateurs</a></li>
-    <li><a href="#groups" class="nav">Groupes</a></li>
+    <ul class="nav nav-tabs">
+        <li><a href="#users" class="nav">Utilisateurs</a></li>
+        <li><a href="#groups" class="nav">Groupes</a></li>
     </ul>
 
     <div id="users" class="onglet box shadow">

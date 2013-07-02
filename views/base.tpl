@@ -31,18 +31,18 @@
     <div id="content-center" class="row">
         <div id="nav" class="box span3">
             %if nav is not None:
-            <ul class="unstyled nav-border">
+            <ul class="nav nav-list">
                 %for (l, n) in nav:
                     %if l == '*' and n:
                 <li class="nav-title">{{n}}</li>
                     %elif l == '_SEARCH_':
                 <li><input class=".span3" placeholder="{{n}}" type="text" name="search" id="input_search"/></li>
                     %elif l and n:
-                <li class="nav-top"><a href="{{l}}">{{n}}</a></li>
+                <li><a href="{{l}}">{{n}}</a></li>
                     %elif n:
-                <li class="nav-here">{{n}}</li>
+                <li class="active">{{n}}</li>
                     %else:
-                <li class="separator">&nbsp;</li>
+                <li class="diviser">&nbsp;</li>
                     %end
                 %end
             </ul>
