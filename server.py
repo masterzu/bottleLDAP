@@ -362,7 +362,7 @@ def _nav():
     Calculate the current nav object depending on request.path 
 
     >>> _nav()
-    [('', 'accueil'), ('*', 'serveurs'), ('/servers', 'tableau de bord'), (None, 'master ldap'), ('', ''), ('*', 'personnels'), ('_SEARCH_', 'rechercher...'), ('/users/p', None), ('/users/d', None), ('/users/t', None), ('', ''), ('*', 'structure'), ('/groups', u'les \\xe9quipes'), ('/users', 'les utilisateurs'), ('', ''), ('*', 'site web'), ('/news', 'news'), ('/logs', 'logs'), ('/about', u'\\xe0 propos')]
+    [('', 'accueil'), ('*', 'serveurs'), ('/servers', 'tableau de bord'), (None, 'master ldap'), ('', ''), ('*', 'personnels'), ('_SEARCH_', 'rechercher...'), ('/users/p', None), ('/users/d', None), ('/users/t', None), ('', ''), ('*', 'structure'), ('/groups', u'\\xe9quipes'), ('/users', 'utilisateurs'), ('', ''), ('*', 'site web'), ('/news', 'news'), ('/logs', 'logs'), ('/about', u'\\xe0 propos')]
     """
     nav = []
     for (l, n) in main_nav:
