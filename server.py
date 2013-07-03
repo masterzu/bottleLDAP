@@ -385,6 +385,13 @@ def _json_result(**kargs):
     """
     Return json with mandatory field:
     * success
+
+    >>> _json_result()
+    {'success': True}
+
+    >>> _json_result(message="prout")
+    {'message': 'prout', 'success': True}
+
     """
     temp = dict(success=True)
     temp.update(kargs.items())
@@ -406,14 +413,12 @@ def _modules_version(mod):
 
 #----------------------------------------------------------
 # HTML functions
-def _html_escape(text):
+def _html_escape(text=''):
     """
     protect some character (& " ' < >) and transform it the the HTML entity
 
     >>> _html_escape()
-    Traceback (most recent call last):
-    ...
-    TypeError: _html_escape() takes exactly 1 argument (0 given)
+    ''
     >>> _html_escape('')
     ''
     >>> _html_escape('qwe')
@@ -445,18 +450,21 @@ def _ldap_uri(kargs):
         dict {host: <host>, name: <name> OPTIONAL port: <port>}
     Returns:
         string
+        or '' on error
 
-    >>> _ldap_uri({}) is None
-    True
-    >>> _ldap_uri({'host':'home'}) is None
-    True
+    >>> _ldap_uri({})
+    ''
+    >>> _ldap_uri({'host':'home'})
+    ''
+    >>> _ldap_uri({'name':'name'})
+    ''
     >>> _ldap_uri({'host':'home', 'name':'prout'})
     'ldap://home:389'
     >>> _ldap_uri({'host':'home', 'name':'prout', 'port':1234})
     'ldap://home:1234'
     """
     if 'host' not in kargs or 'name' not in kargs:
-        return None
+        return ''
     if 'port' not in kargs:
         kargs['port'] = 389
     return "ldap://%s:%s" % (kargs['host'], kargs['port'])
@@ -475,6 +483,10 @@ def _ldap_initialize(kargs):
     global main_ldap_server
 
     url = _ldap_uri(kargs)
+
+    if url == '':
+        return None
+
 
     if 'file' in main_ldap_server:
         #_debug('LDAP', 'connexion to %s ... already connected.' % url)
@@ -504,6 +516,24 @@ def _ldap_filter_base(list_filters):
 
     Warning:
         Dont use ldap.filter.filter_format HERE
+
+    >>> _ldap_filter_base([])
+    ''
+    >>> _ldap_filter_base([''])
+    ''
+    >>> _ldap_filter_base(['cn=*'])
+    '(cn=*)'
+    >>> _ldap_filter_base(['(cn=*)'])
+    '(cn=*)'
+    >>> _ldap_filter_base(['cn=*','sn=*'])
+    '(cn=*)(sn=*)'
+    >>> _ldap_filter_base(['cn=*','','sn=*'])
+    '(cn=*)(sn=*)'
+    >>> _ldap_filter_base(['cn=*','(sn=*)'])
+    '(cn=*)(sn=*)'
+    >>> _ldap_filter_base(['cn=*','sn=*','uid=*'])
+    '(cn=*)(sn=*)(uid=*)'
+
     """
     _filter = ''
     for f in list_filters:
@@ -512,28 +542,44 @@ def _ldap_filter_base(list_filters):
             _filter += f
         else:
             _filter += '('+f+')'
-    #_debug('_ldap_build_ldapfilter_base/filter',_filter)
     return _filter
 
 
-def _ldap_build_ldapfilter_and(list_filters):
+def _ldap_build_ldapfilter_and(list_filters=None):
     """
     Args:
         - list of filters
     Returns:
         LDAP filter AND form of arguments = "(&(f1)(f2)(f3))"
+
+    >>> _ldap_build_ldapfilter_and(None)
+    ''
+    >>> _ldap_build_ldapfilter_and([])
+    ''
+    >>> _ldap_build_ldapfilter_and(['cn='])
+    'cn='
+    >>> _ldap_build_ldapfilter_and(['cn=',''])
+    'cn='
+    >>> _ldap_build_ldapfilter_and(['cn=','sn='])
+    '(&(cn=)(sn=))'
+    >>> _ldap_build_ldapfilter_and(['cn=','(sn=)'])
+    '(&(cn=)(sn=))'
+    >>> _ldap_build_ldapfilter_and(['cn=','sn=','uid='])
+    '(&(cn=)(sn=)(uid=))'
+
     """
     if list_filters is None:
         #_debug('_ldap_build_ldapfilter_and(None)')
         return ''
-    if len(list_filters) == 0:
+    _l = [f for f in list_filters if f]
+    if len(_l) == 0:
         #_debug('_ldap_build_ldapfilter_and([])')
         return ''
-    if len(list_filters) == 1:
+    if len(_l) == 1:
         resu = list_filters[0]
         #_debug('_ldap_build_ldapfilter_and([<singleton>]) = %s' % resu)
         return resu
-    resu = '(&' + _ldap_filter_base(list_filters) + ')'
+    resu = '(&' + _ldap_filter_base(_l) + ')'
     #_debug('_ldap_build_ldapfilter_and', resu)
     return resu
 
@@ -543,18 +589,33 @@ def _ldap_build_ldapfilter_or(list_filters):
         - list of filters
     Returns:
         LDAP filter OR form of arguments = "(|(f1)(f2)(f3))"
+    >>> _ldap_build_ldapfilter_or(None)
+    ''
+    >>> _ldap_build_ldapfilter_or([])
+    ''
+    >>> _ldap_build_ldapfilter_or(['cn='])
+    'cn='
+    >>> _ldap_build_ldapfilter_or(['cn=',''])
+    'cn='
+    >>> _ldap_build_ldapfilter_or(['cn=','sn='])
+    '(|(cn=)(sn=))'
+    >>> _ldap_build_ldapfilter_or(['cn=','(sn=)'])
+    '(|(cn=)(sn=))'
+    >>> _ldap_build_ldapfilter_or(['cn=','sn=','uid='])
+    '(|(cn=)(sn=)(uid=))'
     """
     if list_filters is None:
         #_debug('_ldap_build_ldapfilter_or(None)')
         return ''
-    if len(list_filters) == 0:
+    _l = [f for f in list_filters if f]
+    if len(_l) == 0:
         #_debug('_ldap_build_ldapfilter_or([])')
         return ''
-    if len(list_filters) == 1:
+    if len(_l) == 1:
         resu = list_filters[0]
         #_debug('_ldap_build_ldapfilter_or([<singleton>]) = %s' % resu)
         return resu
-    resu = '(|' + _ldap_filter_base(list_filters) + ')'
+    resu = '(|' + _ldap_filter_base(_l) + ')'
     #_debug('_ldap_build_ldapfilter_or', resu)
     return resu
 
@@ -771,6 +832,31 @@ def _ldap_homeDirectory_server(path):
 
     Raises:
         None
+
+    >>> _ldap_homeDirectory_server('') is None
+    True
+    >>> _ldap_homeDirectory_server('home') is None
+    True
+    >>> _ldap_homeDirectory_server('poisson') is None
+    True
+    >>> _ldap_homeDirectory_server('/oth/er/path') is None
+    True
+    >>> _ldap_homeDirectory_server('/home') 
+    'olympe'
+    >>> _ldap_homeDirectory_server('/homeqwe') 
+    'olympe'
+    >>> _ldap_homeDirectory_server('/poisson') 
+    'poisson'
+    >>> _ldap_homeDirectory_server('/poissonad a') 
+    'poisson'
+    >>> _ldap_homeDirectory_server('/lmm') 
+    'euler'
+    >>> _ldap_homeDirectory_server('/lmm1') 
+    'euler'
+    >>> _ldap_homeDirectory_server('/lmm2') 
+    'euler'
+    >>> _ldap_homeDirectory_server('/lmmqweq') 
+    'euler'
     """
 
     if path[:5] == '/home':
@@ -1626,6 +1712,22 @@ def _log_query_getlog(log):
 
     Raises:
         None
+
+    >>> _log_query_getlog({}) is None
+    True
+    >>> _log_query_getlog({'allow':'', 'datetime':'', 'actor':'', 'action':'', 'object':''}) is None
+    True
+    >>> _log_query_getlog({'allow':'', 'datetime':'', 'actor':'', 'action':'', 'object':{'dn':''}}) is None
+    True
+    >>> _log_query_getlog({'allow':'', 'datetime':'', 'actor':'', 'action':'', 'object':{'dn':''}}) is None
+    True
+
+	# FIXME handle complex Doctests
+    # >>> _d0 = datetime.datetime(2013, 2, 15, 11, 37, 4, 861000)
+    # >>> _d1 = _d0.replace(microsecond=0).isoformat()
+    # >>> _log_query_getlog({'allow':'yes', 'datetime':_d0, 'actor':'me', 'action':'eating', 'object':{'dn':'cn=you'}})
+    # ('yes', _d1, 'me', 'eating', '', '')
+
     """
     if 'actor' not in log or 'action' not in log or \
             'object' not in log or \
@@ -1636,14 +1738,22 @@ def _log_query_getlog(log):
     if 'dn' not in log['object']:
         return None
 
+    _debug('_log_query_getlog/log',log)
+
     actor = log['actor']
     action = log['action']
     o = log['object']
     odn = log['object']['dn']
     allow = log['allow']
     time = log['time']
+    olink = ''
+    odesc = ''
     # ISO 8601 date time without microsecond
     datetime = time.replace(microsecond=0).isoformat()
+    # try:
+    #     datetime = time.replace(microsecond=0).isoformat()
+    # except:
+    #     return None
 
     if action == 'useradd' or action == 'userdel':
         olink = "/user/"+o['uid'][0]
@@ -2824,7 +2934,7 @@ if __name__ == '__main__':
     #----------------------------------------------------------
     # DEBUG MODE/PRODUCTION
     #----------------------------------------------------------
-    # bottle.debug(True)
+    bottle.debug(True)
     #----------------------------------------------------------
     for m in [bottle, ldap, paramiko, pymongo]:
         _modules_version(m)
