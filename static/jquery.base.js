@@ -144,12 +144,12 @@ function ajax_button_span_url(button, span, url){
 
 function show_warning(text) {
     if (text) {
-        $('#warning').show('slow').text(text);
+        $('#warning').text(text).slideDown();
         // close after 20s
         setTimeout("$('#warning').hide('slow')", 20000);
         //alert(text);
     } else {
-        $('#warning').hide('slow');
+        $('#warning').slideUp();
     }
 };
 
@@ -270,7 +270,7 @@ $(function(){
 */
     //$('#warning').text('DEBUG ZONE').show();
     $('#warning').click(function(){
-        $(this).hide('slow');
+        show_warning();
     });
 
 

@@ -327,14 +327,13 @@ ul.news > li:not(:first-child) {
 */
 }
 #warning {
-    /*
     padding: 10px;
-    margin: 0 0 0 192px;
-    margin: 0 0 20px 0;
-    */
-    font: 16px Arial,sans-serif;
-    color: red;
-    background-color: rgba(200,200,200,.5);
+    /* margin: 0 0 0 192px; */
+    /* margin: 0 0 20px 0; */
+    font: 16px Arial,sans-serif bold;
+    text-align: center;
+    color: #444;
+    background-color: rgba(255,0,0,.5);
 
     border: 1px inset #444;
     border-top:0;
