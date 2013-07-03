@@ -1,7 +1,10 @@
 <?xml version="1.0"?>
 <todo version="0.1.20">
-    <note priority="high" time="1368532413">
+    <note priority="high" time="1368532413" done="1372882023">
         FIXME: json_userdel(): check if user have students
+        <comment>
+            done on REL-14.1
+        </comment>
     </note>
     <note priority="medium" time="1368532487">
         add log for quota ops
