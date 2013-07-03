@@ -122,8 +122,7 @@ main_news = (
         'def _log_query_mongodb: add log sort by time DESC',
         ]
     ),
-    ('devel', '...', [ 'Modification phase 9', 
-        ''
+    ('14', '3 juil 2013', [ 'Utilisation de la librairie Boostrap', 
         ]
     ),
 )
@@ -2825,7 +2824,7 @@ if __name__ == '__main__':
     #----------------------------------------------------------
     # DEBUG MODE/PRODUCTION
     #----------------------------------------------------------
-    bottle.debug(True)
+    # bottle.debug(True)
     #----------------------------------------------------------
     for m in [bottle, ldap, paramiko, pymongo]:
         _modules_version(m)
