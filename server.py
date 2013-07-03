@@ -632,7 +632,7 @@ def _ldap_search(base, list_filters=[], list_attrs=None, filterstr=''):
     """
 
     if 'file' not in main_ldap_server or not main_ldap_server['file']:
-        #_debug('CALL _ldap_search', 'base=%s, list_filters=%s, list_attrs=%s, filterstr=%s - None (LDAP not connected?)' % (base, list_filters, list_attrs, filterstr))
+        _debug('CALL _ldap_search', 'base=%s, list_filters=%s, list_attrs=%s, filterstr=%s - None (LDAP not connected?)' % (base, list_filters, list_attrs, filterstr))
         return None
     
 
@@ -640,11 +640,12 @@ def _ldap_search(base, list_filters=[], list_attrs=None, filterstr=''):
         _filter = filterstr
     else:
         _filter = _ldap_build_ldapfilter_and(list_filters)
-    #_debug('_ldap_search/_filter', _filter)
+    # _debug('_ldap_search/_filter', _filter)
 
-    #_debug('CALL _ldap_search', 'base=%s, list_filters=%s, list_attrs=%s, filterstr=%s' % (base, list_filters, list_attrs, filterstr))
+    _debug('CALL _ldap_search', 'base=%s, list_filters=%s, list_attrs=%s, filterstr=%s' % (base, list_filters, list_attrs, filterstr))
     objs = main_ldap_server['file'].search_st(base, ldap.SCOPE_SUBTREE, filterstr=_filter, attrlist=list_attrs, timeout=30)
-    #_debug('RETURN _ldap_search',objs)
+
+    _debug('RETURN _ldap_search',objs)
     return objs
 
 def _ldap_modify_attr(dn, attr, val):
@@ -2483,15 +2484,25 @@ def json_userdel():
     ldap_initialize(True)
 
     objs = _ldap_search(main_users['*']['basedn'], list_filters=['objectClass=person','uid='+uid])
+    if len(objs) == 0:
+        ldap_close()
+        return _json_result(success=False, message="Opération Annulée : pas d'utilisateur %s" % uid)
     if len(objs) != 1:
-        return _json_result(success=False, message="pas d'utilisateur %s" % uid)
+        ldap_close()
+        return _json_result(success=False, message="Opération Annulée : trop d'utilisateurs %s" % uid)
 
     user_dn = objs[0][0]
     user_obj = objs[0][1]
-    #_debug('json_userdel/user_dn',user_dn)
     homeDirectory = objs[0][1]['homeDirectory'][0]
-    #_debug('json_userdel/homeDirectory',homeDirectory)
 
+    # check if user have students
+    assistants = _ldap_search(main_users['*']['basedn'], list_filters=['objectClass=person','manager='+user_dn])
+    if len(assistants) > 0:
+        _debug('json_userdel/assistants','%d found' % len(assistants))
+        ldap_close()
+        return _json_result(success=False, message="Opération Annulée : Etudiants/Assistants de %s trouvé(s)" % uid)
+
+	# handle groups user
     groups = _ldap_search(main_ldap_server['basegroup'], 
         list_filters=['objectClass=groupOfUniqueNames','uniqueMember=%s' % user_dn], 
         list_attrs=['cn'])
@@ -2500,24 +2511,26 @@ def json_userdel():
         list_modify_attrs = [(ldap.MOD_DELETE, 'uniqueMember', user_dn)]
         for dngroup, group in groups:
             cn = group['cn'][0]
-            #_debug('json_userdel/group', 'removing %s from %s ...' % (uid, cn))
+            _debug('json_userdel/group', 'removing %s from %s ...' % (uid, cn))
             try: 
                 main_ldap_server['file'].modify_s(dngroup, list_modify_attrs)
             except ldap.LDAPError,e:
-                return _json_result(success=False, message="serveur LDAP message: %s" % str(e))
+                ldap_close()
+                return _json_result(success=False, message="Erreur serveur LDAP: %s" % str(e))
             _log_ldap_action(dngroup, 'groupdelmember', {'member': user_dn})
-            #_debug('json_userdel/group', 'removing %s from %s ... OK' % (uid, cn))
+            _debug('json_userdel/group', 'removing %s from %s ... OK' % (uid, cn))
     else:
-        #_debug('json_userdel','no group with member '+user_dn)
+        _debug('json_userdel','no group with member '+user_dn)
         pass
             
-    # TODO : check if user have students
+
 
     #_debug('json_userdel/user','deleting user %s ...' % uid)
     try:
         main_ldap_server['file'].delete_s(user_dn)
     except ldap.LDAPError, e:
-        return _json_result(success=False, message='message du serveur LDAP: '+repr(e))
+        ldap_close()
+        return _json_result(success=False, message='Erreurdu serveur LDAP: '+repr(e))
     _log_ldap_action(user_dn, 'userdel', user_obj)
     #_debug('json_userdel/user','deleting user %s ... OK' % uid)
         
@@ -2526,7 +2539,6 @@ def json_userdel():
     ### NFS operations
     _ssh_exec(main_ldap_server['host'],'root',['rm -rf ' + homeDirectory])
     
-
     return _json_result(success=True)
 
 @bottle.route('/api/user/<uid>/home')
