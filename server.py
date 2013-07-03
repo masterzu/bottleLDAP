@@ -2,15 +2,7 @@
 """
 bottleDAP - basic LDAP administration site using bottlepy Web Framework
 
-To download latest 0.10 (stable) version 
-(see https://github.com/masterzu/bottle/tags - my private depot)
-
-# https://github.com/masterzu/bottle/blob/release-0.10/bottle.py
-
-
-To launch the server just type:
-
-# python server.py
+To launch the server just type: see README.rst
 
 ### code checked with Google Python Style Guide
 ### http://google-styleguide.googlecode.com/svn/trunk/pyguide.html
@@ -59,7 +51,7 @@ import paramiko
 import pymongo
 
 __author__ = 'P. Cao Huu Thien'
-__version__ = 'devel'
+__version__ = '14.1'
 __license__ = 'GPL'
 
 
@@ -123,6 +115,7 @@ main_news = (
         ]
     ),
     ('14', '3 juil 2013', [ 'Utilisation de la librairie Boostrap', 
+        '14.1: json_userdel: check for students before deleting'
         ]
     ),
 )
@@ -2946,7 +2939,7 @@ if __name__ == '__main__':
     #----------------------------------------------------------
     # DEBUG MODE/PRODUCTION
     #----------------------------------------------------------
-    bottle.debug(True)
+    # bottle.debug(True)
     #----------------------------------------------------------
     for m in [bottle, ldap, paramiko, pymongo]:
         _modules_version(m)
