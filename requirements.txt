@@ -1,0 +1,4 @@
+bottle
+python-ldap
+paramiko
+pymongo

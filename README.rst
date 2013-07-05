@@ -36,8 +36,10 @@ Ce site est donc entièrement concu en Python, avec l'aide de la micro web-frame
 Concernant la partie, client, c'est du JQuery avec une touche d'AJAX, une larme de `Raphaël JS <http://raphaeljs.com/>`_ le tout saupoudré de `bootstrap <http://twitter.github.io/>`_
 
 
+Installation
+============
 
-
+Voir *INSTALL.rst*
 
 Démarrage du serveur
 ====================
