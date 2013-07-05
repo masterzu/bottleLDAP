@@ -51,7 +51,7 @@ import paramiko
 import pymongo
 
 __author__ = 'P. Cao Huu Thien'
-__version__ = '14.1'
+__version__ = '14.2'
 __license__ = 'GPL'
 
 
@@ -114,8 +114,9 @@ main_news = (
         'def _log_query_mongodb: add log sort by time DESC',
         ]
     ),
-    ('14', '3 juil 2013', [ 'Utilisation de la librairie Boostrap', 
-        '14.1: json_userdel: check for students before deleting'
+    ('14', '5 juil 2013', [ 'Utilisation de la librairie Boostrap', 
+        'HOTFIX 14.1: json_userdel: check for students before deleting',
+        'HOTFIX 14.2: use requirements.txt file'
         ]
     ),
 )
