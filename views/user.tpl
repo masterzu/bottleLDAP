@@ -25,7 +25,7 @@ $(function() {
         if (name == 'mail') {
             var mailto = 'mailto:'+text;
             $("a[name='mail']").attr('href',mailto).text(text);
-        }
+        };
     };
   
     // autocomplete functions to handle multivalue ; separated fields
@@ -134,7 +134,7 @@ $(function() {
 
     // #fields input keypress=<enter> 
     // + empty value >> remove attr
-    $('table#fields input').keypress(function(e) {
+    $('dl#fields input').keypress(function(e) {
         if ((e.which == 13)) {
             var attr = $(this).attr('name');
             var this_span = $(this).prev('span');
@@ -531,7 +531,7 @@ $(function() {
                     <button name="{{f}}" type="button" value="reset"         style="display:none;">reset</button>
                 </dd>
         %end
-    </dl>
+        </dl>
     <!-- <p><small><sup class="ldap">&#x238b;</sup>: champs obligatoires pour le serveur <span class="ldap">LDAP</span> | <sup class="nfs">&#x2318;</sup>: champs obligatoires pour les serveurs <span class="nfs">NFS/shell</span></small></p> -->
 
 
