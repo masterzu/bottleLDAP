@@ -2,7 +2,7 @@
 """
 bottleDAP - basic LDAP administration site using bottlepy Web Framework
 
-To launch the server just type: see README.rst
+### git workflow follow: http://nvie.com/posts/a-successful-git-branching-model/
 
 ### code checked with Google Python Style Guide
 ### http://google-styleguide.googlecode.com/svn/trunk/pyguide.html
@@ -51,7 +51,7 @@ import paramiko
 import pymongo
 
 __author__ = 'P. Cao Huu Thien'
-__version__ = '14.2'
+__version__ = '14.3'
 __license__ = 'GPL'
 
 
@@ -116,7 +116,8 @@ main_news = (
     ),
     ('14', '5 juil 2013', [ 'Utilisation de la librairie Boostrap', 
         'HOTFIX 14.1: json_userdel: check for students before deleting',
-        'HOTFIX 14.2: use requirements.txt file'
+        'HOTFIX 14.2: use requirements.txt file',
+        'HOTFIX 14.3: reactivate key <enter>'
         ]
     ),
 )
@@ -2940,7 +2941,7 @@ if __name__ == '__main__':
     #----------------------------------------------------------
     # DEBUG MODE/PRODUCTION
     #----------------------------------------------------------
-    # bottle.debug(True)
+    bottle.debug(True)
     #----------------------------------------------------------
     for m in [bottle, ldap, paramiko, pymongo]:
         _modules_version(m)
