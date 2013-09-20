@@ -9,8 +9,8 @@ virtualenv
 
 Le plus simple est de lancer le serveur dans un environnement `virtualenv <http://www.virtualenv.org/en/latest/#installation>`_. 
 
-Ce script permet de pouvoir gérer un environnement PYTHON sans interferrer avec le système hôte. 
-L'environement est installer dans le répertoire de votre choix et activé par un simple script (``/path/to/virtualenv/ofmychoice/bin/activate``).
+Ce script permet de pouvoir gérer un environnement PYTHON sans interférer avec le système hôte. 
+L'environnement est installer dans le répertoire de votre choix et activé par un simple script (``/path/to/virtualenv/ofmychoice/bin/activate``).
 
 
 * Installation de **virtualenv**.  
@@ -23,7 +23,7 @@ L'environement est installer dans le répertoire de votre choix et activé par u
     Successfully installed virtualenv
     Cleaning up...
 
-* Créaction de l'environnement::
+* Création de l'environnement::
 
   	$ virtualenv myenv
     Using real prefix '/usr'
@@ -52,7 +52,7 @@ L'installation des modules se fait par un simple::
 Erreurs
 _______
 
-En cas de soucis, par exemple lorsque la compilation de paquets nécessite d'autres fichiers osurces, il faut lire les messages d'erreurs et ajouter les fichiers manquants au systême.
+En cas de soucis, par exemple lorsque la compilation de paquets nécessite d'autres fichiers sources, il faut lire les messages d'erreurs et ajouter les fichiers manquants au système.
 
 Pour **Debian/Ubuntu** la marche a suivre est la suivante:
 

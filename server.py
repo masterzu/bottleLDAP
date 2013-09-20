@@ -2941,7 +2941,7 @@ if __name__ == '__main__':
     #----------------------------------------------------------
     # DEBUG MODE/PRODUCTION
     #----------------------------------------------------------
-    bottle.debug(True)
+    #bottle.debug(True)
     #----------------------------------------------------------
     for m in [bottle, ldap, paramiko, pymongo]:
         _modules_version(m)
