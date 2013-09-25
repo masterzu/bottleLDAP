@@ -1328,7 +1328,6 @@ def _ssh_exec_paramiko (host, user, list_cmds):
 
     return list_out
 
-
 def _ssh_exec_paramiko_extented(host, user, list_cmds):
     """
     execute a list of command with paramiko - step by step
@@ -1560,6 +1559,41 @@ def log_query(query, fields=None, **options):
 #+ implementation with mongoDB via pymongo
 #----------------------------------------------------------
 
+def _mongodb_connect(collection):
+    """
+    Connect to the collection of the current base using main_mongodb 
+    and return it
+
+    Args:
+        collection
+
+    Returns:
+        pymongo.collection object
+
+    Raises:
+        MONGODB_ERROR(text)
+    """
+    try:
+        conn = pymongo.MongoClient(host=main_mongodb['hostname'], port=main_mongodb['port'])
+    except TypeError:
+        # port not an int error
+        raise MONGODB_ERROR('Port invalid (not an int): %s' % main_mongodb['port'])
+    except pymongo.errors.ConnectionFailure:
+        raise MONGODB_ERROR('connection error on host: %s at port: %s' % (main_mongodb['hostname'], main_mongodb['port']))
+
+    try:
+        db = conn[main_mongodb['db']]
+    except pymongo.errors.InvalidName:
+        raise MONGODB_ERROR('invalid db "%s"' % main_mongodb['db'])
+
+    # collection
+    try:
+        coll = db[collection]
+    except pymongo.errors.InvalidName:
+        raise MONGODB_ERROR('invalid collection "%s" on db "%s"' % (collection, main_mongodb['db']))
+
+    return coll
+
 def _log_action_mongodb(actor, action, kargs, allow):
     """
     The LOG system: who is doing what to something and is it allow
@@ -1586,23 +1620,7 @@ def _log_action_mongodb(actor, action, kargs, allow):
         sys.exit()
         return None
 
-    try:
-        conn = pymongo.Connection(host=main_mongodb['hostname'], port=main_mongodb['port'])
-    except pymongo.errors.ConnectionFailure as e:
-        # general failed connection
-        raise MONGODB_ERROR('connection error on host: %s at port: %s' % (main_mongodb['hostname'], main_mongodb['port']))
-    except TypeError:
-        # port not an int error
-        raise MONGODB_ERROR('Port invalid : %s' % main_mongodb['port'])
-
-    try:
-        db = conn[main_mongodb['db']]
-    except pymongo.errors.InvalidName:
-        raise MONGODB_ERROR('invalid db "%s"' % main_mongodb['db'])
-
-    # use "logs" collection
-    coll = db.logs
-    #_debug('_log_action_mongodb/coll',coll)
+    coll = _mongodb_connect('logs')
 
     data = {
         'time': datetime.datetime.today(),
@@ -1655,40 +1673,25 @@ def _log_query_mongodb(query, fields, options):
     Raises:
         MONGODB_ERROR
     """
-    #_debug('_log_query_mongodb(%s, %s, %s)' % (query, fields, options))
+    # _debug('_log_query_mongodb(%s, %s, %s)' % (query, fields, options))
 
     if not query: 
         return []
 
-    try:
-        conn = pymongo.Connection(host=main_mongodb['hostname'], port=main_mongodb['port'])
-    except pymongo.errors.ConnectionFailure:
-        # general failed connection
-        #_debug('connection error on host: %s at port: %s' % (main_mongodb['hostname'], main_mongodb['port']))
-        raise MONGODB_ERROR('connection error on host: %s at port: %s' % (main_mongodb['hostname'], main_mongodb['port']))
-    except TypeError:
-        # port not an int error
-        raise MONGODB_ERROR('Port invalid : %s' % main_mongodb['port'])
-
-    try:
-        db = conn[main_mongodb['db']]
-    except pymongo.errors.InvalidName:
-        raise MONGODB_ERROR('invalid db "%s"' % main_mongodb['db'])
-
-    # use "logs" collection
-    logs = db.logs
+    # the collection
+    logs = _mongodb_connect('logs')
 
     try:
         resu = logs.find(query, fields)
     except TypeError:
-        #_debug('_log_query_mongodb/find error', 'type error')
+        # _debug('_log_query_mongodb/find error', 'type error')
         raise MONGODB_ERROR('find error query=%s fields=%s' % (query, fields))
 
     ### options sort
     if 'sort' in options and options['sort']:
         # must be a list of (key, value)
         query_sort = options['sort']
-        #_debug('_log_query_mongodb/find with sort', query_sort)
+        # _debug('_log_query_mongodb/find with sort', query_sort)
         resu = resu.sort(query_sort)
 
     lresu = [_log_query_getlog(i) for i in resu]
@@ -2599,7 +2602,6 @@ def json_user_home(uid):
     _debug_route()
 
     ### dir
-
     ldap_initialize()
     users = ldap_users(list_filters=['uid=%s' % uid], list_attrs=['homeDirectory'])
     #_debug('json_user_home/users',users)
@@ -2703,7 +2705,6 @@ def json_user_set_attr(uid,attr):
 
     ldap_close()
     return resu
-
 
 
 @bottle.route('/api/user/<uid>/attr/<attr>')
