@@ -70,7 +70,7 @@
         <div class="span12">
         bottleLDAP {{version}} 
         &bull; 
-	    &copy; <span id="author">{{author}}</span>, 2011&ndash;2012 
+	    &copy; <span id="author">{{author}}</span>, 2011&ndash;2013
         &bull; 
         illustré par <a href="http://raphaeljs.com" target="_blanck">Raphaël JS</a>
         &bull; 

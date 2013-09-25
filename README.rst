@@ -48,6 +48,11 @@ Pour démarrer le serveur, il faut :
 
 * créer un fichier `config.ini` contenant les informations sur :
 
+ * l' application::
+    [main]
+    port = <runnig port>
+    debug = False (optional)
+
  * le serveur LDAP::
 
     [ldap-<serveur_id>]
@@ -80,7 +85,7 @@ Pour démarrer le serveur, il faut :
 
 * Puis dans une console, taper la commande::
 
-    $ python server.py
+    $ python server.py config.ini
     Bottle server starting up (using WSGIRefServer())...
     Listening on http://localhost:8080/
     Use Ctrl-C to quit.

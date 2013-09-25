@@ -27,11 +27,6 @@ True
 
 >>> isinstance(main_ldap_servers,list)
 True
-
->>> l=main_mongodb.keys()
->>> l.sort()
->>> l
-['db', 'hostname', 'port']
 """
 
 ### standard libraries
@@ -41,6 +36,8 @@ import json
 import ConfigParser
 import textwrap
 import datetime
+import optparse
+import socket
 
 ### external libraries
 import bottle
@@ -51,7 +48,7 @@ import paramiko
 import pymongo
 
 __author__ = 'P. Cao Huu Thien'
-__version__ = '14.3'
+__version__ = 'devel'
 __license__ = 'GPL'
 
 
@@ -117,7 +114,11 @@ main_news = (
     ('14', '5 juil 2013', [ 'Utilisation de la librairie Boostrap', 
         'HOTFIX 14.1: json_userdel: check for students before deleting',
         'HOTFIX 14.2: use requirements.txt file',
-        'HOTFIX 14.3: reactivate key <enter>'
+        'HOTFIX 14.3: reactivate key <enter> on user page'
+        ]
+    ),
+    ('15', ' 2013', [ 'changement lancement serveur', 
+        'put mongoDB datas in config.ini',
         ]
     ),
 )
@@ -185,6 +186,8 @@ main_ldap_servers_name = []
 
 main_nfs_servers = []
 main_nfs_servers_name = []
+
+main_config = {}
 
 
 # mongoDB database
@@ -1255,9 +1258,7 @@ def _ssh_exec(host, user, list_cmds):
         a list of string (stdout) commands result
     
     Raises:
-        ERROR(msg) when host or user not valid
-        SSH_AUTH_ERROR when paramiko.BadHostKeyException, paramiko.AuthenticationException
-        SSH_EXEC_ERROR(msg) when ssh.exec_command return a none empty stderr stream
+        see _ssh_exec_paramiko
     """
     #_debug('_ssh_exec(%s, %s, %s)' % (host, user, list_cmds))
     return _ssh_exec_paramiko(host, user, list_cmds)
@@ -1343,7 +1344,7 @@ def _ssh_exec_paramiko_extented(host, user, list_cmds):
         #_debug('_ssh_exec_paramiko_extented','module paramiko not found. Return!')
         return None
 
-    paramiko.util.log_to_file('paramiko.log')
+    # paramiko.util.log_to_file('paramiko.log')
 
     ### 1. socket
     try:
@@ -1526,8 +1527,8 @@ def log_action(actor, action, kargs, allow):
     """
     try:
         _log_action_mongodb(actor, action, kargs, allow)
-    except MONGODB_ERROR:
-        #_debug('log_action', 'MongoDB ERROR')
+    except MONGODB_ERROR as e:
+        _debug('log_action', e.msg)
         pass
     finally:
         return None
@@ -1614,9 +1615,9 @@ def _log_action_mongodb(actor, action, kargs, allow):
 
     try:
         coll.insert(data, safe=True)
-    except pymongo.errors.OperationFailure as e:
+    except pymongo.errors.OperationFailure:
         #_debug('_log_action_mongodb','Error: Cant performe insert: '+repr(e))
-        raise e
+        raise MONGODB_ERROR('operation "%s" fail' % data )
 
 
 def _log_ldap_action(dn, action, kargs):
@@ -1734,7 +1735,7 @@ def _log_query_getlog(log):
     if 'dn' not in log['object']:
         return None
 
-    _debug('_log_query_getlog/log',log)
+    # _debug('_log_query_getlog/log',log)
 
     actor = log['actor']
     action = log['action']
@@ -1835,16 +1836,26 @@ def load_config(filename):
         filename: ini file containing all the configuration
 
     Returns:
-        sys.exit() if filename no exists
+        None
+     
+    sys.exit() if filename no exists
 
     """
+    global main_config
     global main_ldap_servers, main_ldap_servers_name
     global main_nfs_servers, main_nfs_servers_name
+    global main_mongodb
     global acl_admins
+    global main_nav
 
     #_debug('Loading Global configuration file "'+filename+'" ...')
 
     config = ConfigParser.RawConfigParser()
+
+# main section
+    main_attrs = {
+        'port': 'running port'
+    }
 
     # section [admin-xxxxx]
     admin_attrs = {
@@ -1873,6 +1884,13 @@ def load_config(filename):
         'home_temp' : '<absolute path to temporaires home>'
     }
 
+    # section [mongodb-xxx]
+    mongodb_attrs = {
+        'db': '<database>',
+        'hostname': '<server hostname>',
+        'port': '<server port>',
+    }
+
     def usage():
         print '#The syntax for the Global Configuration File is:'
 
@@ -1884,33 +1902,32 @@ def load_config(filename):
                 print k + ' = ' + _colors.OKGREEN + d[k] + _colors.NOCOLOR
             print ''
                 
+        d('main', main_attrs)
         d('admin-<id>', admin_attrs)
         d('ldap-<server id>', ldap_attrs)
         d('nfs-<server_id>', nfs_attrs)
+        d('mongodb-<server_id>', mongodb_attrs)
 
     def check_dict(datas, models):
         sec_err = 0
         for k in models.keys():
             if k not in datas or not datas[k]:
-                print _colors.WARNING + 'Configuration File "%s":' % filename + _colors.NOCOLOR + ' missing "%s=" on section [%s]' % (k, sec) 
+                print 'Configuration File ' +_colors.WARNING + filename + _colors.NOCOLOR + ' missing ' + _colors.WARNING + '"%s = "' % k + _colors.NOCOLOR + ' on section ' +_colors.WARNING + '[%s]' % sec + _colors.NOCOLOR
                 sec_err += 1
         if sec_err == 0:
-            #_debug('    section syntax OK')
+            # _debug('    section syntax OK')
             resu = True
         else:
-            #_debug('    section syntax ERROR: skip')
+            # _debug('    section syntax ERROR: skip')
             resu = False
 
         return resu
 
-        
-
-    config.read(filename)
-
-    if not os.path.isfile(filename):
+    if len(config.read(filename)) != 1:
         print _colors.FAIL + 'Configuration File "%s" does not exists' % filename + _colors.NOCOLOR
         usage()
         sys.exit(1)
+
 
     sections = config.sections()
     if len(sections) == 0:
@@ -1924,8 +1941,30 @@ def load_config(filename):
             continue
 
         _dict = dict(config.items(sec))
-        #_debug('... section ['+sec+']',_dict)
-        if sec[:5] == 'admin':
+        # _debug('... section ['+sec+']',_dict)
+        if sec == 'main':
+            if 'debug' not in _dict or not _dict['debug']: 
+                _dict['debug'] = False
+            if 'devel' not in _dict or not _dict['devel']: 
+                _dict['devel'] = False
+            if check_dict(_dict, main_attrs):
+                main_config.update(_dict)
+            else:
+                print _colors.FAIL + "section [%s] not loaded" % sec + _colors.NOCOLOR
+                sys.exit(1)
+        elif sec[:7] == 'mongodb':
+            if 'port' not in _dict or not _dict['port']: 
+                _dict['port'] = 27070
+            else:
+                _dict['port'] = int(_dict['port'])
+            # if 'hostname' not in _dict or not _dict['hostname']: 
+            #     _dict['hostname'] = 'localhost'
+            if check_dict(_dict, mongodb_attrs):
+                main_mongodb = _dict
+            else:
+                print _colors.FAIL + "section [%s] not loaded" % sec + _colors.NOCOLOR
+                sys.exit(1)
+        elif sec[:5] == 'admin':
             if check_dict(_dict, admin_attrs):
                 acl_admins.append(_dict)
             else:
@@ -1956,7 +1995,7 @@ def load_config(filename):
     if sec_errors != 0:
         print 'Configuration file "%s" loaded ' % filename + _colors.WARNING + 'but skip %d section(s)' % sec_errors + _colors.NOCOLOR
     else:
-        print _colors.OKGREEN + 'Configuration file "%s" loaded' % filename + _colors.NOCOLOR
+        print 'Configuration file ' + _colors.OKGREEN + '%s' % filename + _colors.NOCOLOR + ' loaded'
 
         
     #_debug('acl_admins',acl_admins)
@@ -1970,6 +2009,12 @@ def load_config(filename):
     if len(main_ldap_servers_name) == 0:
         print _colors.FAIL + 'Configuration syntax error:' + _colors.NOCOLOR + 'on file ' + filename
         sys.exit(1)
+
+    # add some links
+    main_nav[3] = ('/server_ldap/'+main_ldap_servers_name[0], 'master ldap')
+    main_nav[7] = ('/users/p',main_users['p']['name'])
+    main_nav[8] = ('/users/d',main_users['d']['name'])
+    main_nav[9] = ('/users/t',main_users['t']['name'])
 
 
 def ldap_initialize(bind=False):
@@ -2588,7 +2633,7 @@ def json_user_home(uid):
         owner = t[2]
         lastmodification = t[3]
         direxists = True
-    except SSH_EXEC_ERROR as e:
+    except SSH_EXEC_ERROR:
         pass
 
     ### quota
@@ -2890,14 +2935,15 @@ def json_log_query(query, **kargs_json_result):
     try:
         # force sort by descending time
         logs = [i for i in log_query(query, None, sort=[('time',pymongo.DESCENDING)])]
-    except MONGODB_ERROR:
-        return _json_result(success= False, message="logs error")
+    except MONGODB_ERROR as e:
+        print('MONGODB_ERROR(%s)' % e.msg)
+        return _json_result(success= False, message=e.msg)
 
-    #_debug('json_log_query/kargs', kargs_json_result)
+    # _debug('json_log_query/kargs', kargs_json_result)
     
     resu = _json_result(logs=logs)
     resu.update(kargs_json_result.items())
-    #_debug('json_log_query/resu', resu)
+    # _debug('json_log_query/resu', resu)
     return resu
 
 
@@ -2930,46 +2976,59 @@ def json_log_group(cn):
     _debug_route()
     ### query : object.cn ~= /^cn=<cn>,/
     reg = "^cn=%s," % cn
-    q = {'object.dn': { '$regex': reg} }
+    q = {'object.dn': {'$regex': reg} }
     return json_log_query(q, cn=cn)
 
 #----------------------------------------------------------
 # MAIN
 
 if __name__ == '__main__':
+    # parameters handler
+    usage = "usage: %prog [options] <config ini file>"
+    version = "%%prog %s" % __version__
+    parser = optparse.OptionParser(usage=usage, version=version)
+    parser.add_option("-d", "--devel", help="devel mode : change the server running port and the mongoDB database", action="store_true", dest="devel")
+    parser.add_option("-D", "--debug", help="debug mode", action="store_true", dest="debug")
+    (options, args) = parser.parse_args()
 
-    #----------------------------------------------------------
-    # DEBUG MODE/PRODUCTION
-    #----------------------------------------------------------
-    bottle.debug(True)
-    #----------------------------------------------------------
+    if len(args) != 1:
+        parser.print_help()
+        sys.exit(1)
+
+    # external modules
     for m in [bottle, ldap, paramiko, pymongo]:
         _modules_version(m)
 
-    load_config('config.ini')
+    # configuration file
+    if options.debug:
+        bottle.debug(True)
 
-    # add some links
-    main_nav[3] = ('/server_ldap/'+main_ldap_servers_name[0], 'master ldap')
-    main_nav[7] = ('/users/p',main_users['p']['name'])
-    main_nav[8] = ('/users/d',main_users['d']['name'])
-    main_nav[9] = ('/users/t',main_users['t']['name'])
+    load_config(args[0])
 
-    if bottle.DEBUG:
-        port = 8888
-        reloader = True
-        print _colors.OKBLUE + 'mode DEBUG' + _colors.NOCOLOR
-
-        # dev database
-        main_mongodb['db'] = 'bottleldap-dev'
-
+    if main_config['devel'] or options.devel:
+        bottle.debug(True)
+        main_config['reloader'] = True
     else:
-        port = 8080
-        reloader = False
+        main_config['reloader'] = False
 
-        # production database
-        main_mongodb['db'] = 'bottleldap'
-        
-    bottle.run(host='0.0.0.0', port=port, reloader=reloader, debug=bottle.DEBUG)
+    if main_config['debug']:
+        bottle.debug(True)
+
+    # running server
+    print 'Running server on port ' + _colors.OKGREEN + main_config['port'] + _colors.NOCOLOR ,
+    if main_config['devel']:
+        print 'in mode ' + _colors.WARNING + 'DEVEL' + _colors.NOCOLOR,
+    if options.debug or main_config['debug']:
+        print 'and ' + _colors.WARNING + 'DEBUG' + _colors.NOCOLOR + ' verbosity',
+    print 'using mongoDB on ' + _colors.OKGREEN + main_mongodb['hostname'] + _colors.NOCOLOR + ':' + _colors.OKGREEN + str(main_mongodb['port']) + _colors.NOCOLOR + ' with db ' + _colors.OKGREEN + main_mongodb['db'] + _colors.NOCOLOR,
+    print '...'
+
+    try:
+        bottle.run(host='0.0.0.0', port=main_config['port'], reloader=main_config['reloader'], debug=bottle.DEBUG)
+    except socket.error:
+        print _colors.FAIL + 'Socket error' + _colors.NOCOLOR + ': Port ' + _colors.WARNING + main_config['port'] + _colors.NOCOLOR + ' in use. Another server must be running yet.' 
+        print ''
+        sys.exit(1)
 
 
 # vim:spelllang=en:
