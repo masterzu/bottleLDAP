@@ -10,7 +10,7 @@ def adjust_options(options, args):
 def after_install(options, home_dir):
     subprocess.call([
         os.path.join('bin', 'pip'),
-        'install', '-r', 'requirements.txt'
+        'install', '--upgrade', '-r', 'requirements.txt'
         ])
 """))
 f = open('bootstrap.py', 'w').write(output)

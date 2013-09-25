@@ -9,8 +9,8 @@ virtualenv
 
 Le plus simple est de lancer le serveur dans un environnement `virtualenv <http://www.virtualenv.org/en/latest/#installation>`_. 
 
-Ce script permet de pouvoir gérer un environnement PYTHON sans interferrer avec le système hôte. 
-L'environement est installer dans le répertoire de votre choix et activé par un simple script (``/path/to/virtualenv/ofmychoice/bin/activate``).
+Ce script permet de pouvoir gérer un environnement PYTHON sans interférer avec le système hôte. 
+L'environnement est installer dans le répertoire de votre choix et activé par un simple script (``/path/to/virtualenv/ofmychoice/bin/activate``).
 
 
 * Installation de **virtualenv**.  
@@ -23,7 +23,7 @@ L'environement est installer dans le répertoire de votre choix et activé par u
     Successfully installed virtualenv
     Cleaning up...
 
-* Créaction de l'environnement::
+* Création de l'environnement::
 
   	$ virtualenv myenv
     Using real prefix '/usr'
@@ -52,19 +52,19 @@ L'installation des modules se fait par un simple::
 Erreurs
 _______
 
-En cas de soucis, par exemple lorsque la compilation de paquets nécessite d'autres fichiers osurces, il faut lire les messages d'erreurs et ajouter les fichiers manquants au systême.
+En cas de soucis, par exemple lorsque la compilation de paquets nécessitant d'autres fichiers sources, il faut lire les messages d'erreurs et ajouter les fichiers manquants au système.
 
 Pour **Debian/Ubuntu** la marche a suivre est la suivante:
 
 * lister les fichiers manquant::
 
-  	$ pip install -r requirements.txt |grep -i 'No such file'
+  	$ pip install --upgrade -r requirements.txt |grep -i 'No such file'
     Modules/errors.h:8:18: error: lber.h: No such file or directory
     Modules/errors.h:9:18: error: ldap.h: No such file or directory
     ...
 
 
-* chercher et installer les fichiers::
+* chercher les fichiers::
 
   	$ apt-file search --regexp /lber.h$
     libldap2-dev: /usr/include/lber.h
@@ -73,7 +73,11 @@ Pour **Debian/Ubuntu** la marche a suivre est la suivante:
     libldap2-dev: /usr/include/ldap.h
     libmailutils-dev: /usr/include/mailutils/ldap.h
 
+* et installer les paquets correspondant::
+
     $ sudo apt-get install libldap2-dev
 
-* et finalement relancer l'installation des prérequis.  	
+* et finalement relancer l'installation des prérequis::
+
+  	$ pip install --upgrade -r requirements.txt
 

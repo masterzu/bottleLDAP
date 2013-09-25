@@ -3,8 +3,8 @@ bottleLDAP
 ==========
 
 :Author: Patrick Cao Huu Thien
-:Date: 3 juillet 2013
-:Version: 14
+:Date: dd mmmm 2013
+:Version: devel
 
 :abstract: 
 
