@@ -19,27 +19,35 @@ $(function() {
         $('#form').slideToggle('slow');
     });
     // capitalize the given name && update field cn
-    $("input[name='givenName']").change(function(){
+    $("input[name='givenName']").blur(function(){
         var val = $(this).val().capitalize();
         $(this).val(val);
         $("input[name='cn']").val($("input[name='givenName']").val()+' '+$("input[name='sn']").val());
         var pre = $("input[name='givenName']").val().toLowerCase();
         var nom = $("input[name='sn']").val().toLowerCase();
-        if (pre && nom) $("input[name='mail']").val(pre+'.'+nom+'@upmc.fr');
+        var login = pre + '.' + nom
+        var mail = $("input[name='mail']").val();
+        var heywoodlogin = $("#heywoodlogin").val();
+        if (pre && nom && !mail) $("input[name='mail']").val(login.login() + '@upmc.fr');
+        if (pre && nom && !heywoodlogin) $("#heywoodlogin").val(login.login());
     });
     // upper the familly name (sn) && update field cn
-    $("input[name='sn']").change(function(){
+    $("input[name='sn']").blur(function(){
         var val = $(this).val().toUpperCase();
         $(this).val(val);
         $("input[name='cn']").val($("input[name='givenName']").val()+' '+$("input[name='sn']").val());
         var pre = $("input[name='givenName']").val().toLowerCase();
         var nom = $("input[name='sn']").val().toLowerCase();
-        if (pre && nom) $("input[name='mail']").val(pre+'.'+nom+'@upmc.fr');
+        var login = pre + '.' + nom
+        var mail = $("input[name='mail']").val();
+        var heywoodlogin = $("#heywoodlogin").val();
+        if (pre && nom && !mail) $("input[name='mail']").val(login.login() + '@upmc.fr');
+        if (pre && nom && !heywoodlogin) $("#heywoodlogin").val(login.login());
     });
     // email validation
     // http://www.designchemical.com/blog/index.php/jquery/email-validation-using-jquery/
     $("input[name='mail']").change(function() {
-        var emailre = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
+        var emailre = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,})?$/;
         var email = $(this).val();
         if (!emailre.test(email)) {
             alert('email non valide');
@@ -48,7 +56,22 @@ $(function() {
             //alert('email OK');
             $(this).blur();
         }
+        });
+
+    // checkbox mail
+    $("input#cbcreateemail").change(function(){
+        var checked = $(this).prop('checked');
+        // alert(checked); 
+        if(checked){
+            $("#heywoodlogin").prop({disabled: false});
+            $("#email").prop({disabled: true});
+        } else {
+            $("#email").prop({disabled: false});
+            $("#heywoodlogin").prop({disabled: true});
+        }
     });
+
+
     // populate select #select-group
     $.getJSON('/api/groups',function(data, textStatus){
         if (textStatus == 'success') { // ajax OK
@@ -112,44 +135,72 @@ $(function() {
         var sn = $("input[name='sn']").val();
         var cn = $("input[name='cn']").val();
         var mail = $("input[name='mail']").val();
+        var heywoodlogin = $("#heywoodlogin").val();
+        var cbcreateemail = $('#cbcreateemail').prop('checked');
         var description = $("input[name='description']").val();
         var usertype = $("#select-usertype").val();
         var hostname = $("#select-hostname").val();
         var uid = $("#tr-uid input").val();
 
+        function getmail() {
+            var cb = cbcreateemail;
+            var e1 = heywoodlogin + '@dalembert.upmc.fr';
+            var e2 = mail;
+            if (cb) 
+                return e1
+            else
+                return e2
+        };
+
         if (! givenName) {
             alert('Mettre un prénom');
             $("input[name='givenName']").focus();
             return;
-        } else if (!sn) {
+        } 
+        if (!sn) {
             alert('Mettre un nom de famille');
             $("input[name='sn']").focus();
             return;
-        } else if (!cn) {
+        } 
+        if (!cn) {
             alert("Mettre un nom d'usage");
             $("input[name='cn']").focus();
             return;
-        } else if (!mail) {
-            alert('Mettre un email');
-            $("input[name='mail']").focus();
-            return;
-        } else if (!description) {
+        } 
+        if (!cbcreateemail){
+            if (!mail) {
+                alert('Mettre un email existant');
+                $("input[name='mail']").focus();
+                return;
+            }
+        } else {
+            if (!heywoodlogin) {
+                alert('Mettre un compte a créer');
+                $("#heywoodlogin").focus();
+                return;
+            }
+        } 
+        if (!description) {
             alert('Mettre une description');
             $("input[name='description']").focus();
             return;
         };
         //alert(givenName+'|'+sn+'|'+cn+'|'+mail+'|'+description+'|'+usertype);
 
+        // from here all datas are valid
         var data = {};
         data['givenName'] = givenName;
         data['sn'] = sn;
         data['cn'] = cn;
-        data['mail'] = mail;
+        data['mail'] = getmail();
         data['description'] = description;
         data['usertype'] = usertype;
         data['hostname'] = hostname;
         if (uid) data['uid'] = uid;
-        
+        if (cbcreateemail) {
+            data['createemail'] = 1;
+            data['createemaillogin'] = heywoodlogin;
+        }
 
         if (usertype == 'p') {
             var group = $("#select-group").val();
@@ -182,7 +233,7 @@ $(function() {
                 } else { // operation failed
                     var message = dataout['message'];
                     if (message == 'user_exists'){
-                        $('#tr-uid').show('fast');
+                        // NEEDED? $('#tr-uid').show('fast');
                         show_warning('champs login existe déjà. Choisissez une autre valeur.');
                         $('#tr-uid input').focus();
                     } else {
@@ -211,10 +262,25 @@ $(function() {
         <h3>Nouvel Utilisateur</h3>
         <dl class="dl-horizontal">
         %for id, id_name in attrs:
-            <dt title="champs LDAP: {{id}}">{{id_name}}</dt>
-            %if id == 'description':
-            <dd><input type="text" name="{{id}}" size="50"/></dd>
+            %if id == 'mail':
+            <dt class="help" title="champs LDAP: {{id}}">{{id_name}} existant &hellip;</dt>
+            <dd>
+                <input id="email" type="text" name="{{id}}" placeholder="email@whatever.com"/><br/>
+            </dd>
+            <dt>&hellip; ou
+            </dt>
+            <dd>
+                <label class="checkbox">
+                    créer un compte sur <em>heywood</em>
+                    <input id="cbcreateemail" type="checkbox" value=""> 
+                </label>
+                <span class="input-append">
+                    <input id="heywoodlogin" type="text" placeholder="john.doe" disabled>
+                    <span class="add-on">@dalembert.upmc.fr</span>
+                </span>
+            </dd>
             %else:
+            <dt class="help" title="champs LDAP: {{id}}">{{id_name}}</dt>
             <dd><input type="text" name="{{id}}"/></dd>
             %end
         %end

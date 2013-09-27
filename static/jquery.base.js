@@ -2,6 +2,7 @@
  String extented:
  - capitalize()
  - trim()
+ - ascii()
 */
 
 // http://stackoverflow.com/questions/1026069/capitalize-the-first-letter-of-string-in-javascript
@@ -15,6 +16,14 @@ String.prototype.capitalize = function(){
 String.prototype.trim = function() { 
     return this.replace(/^\s+|\s+$/g, ''); 
 };
+
+// make the string clean for Unix login
+// http://stackoverflow.com/questions/11498229/trim-non-ascii-characters-from-string-returned-by-nodejs-crypto
+// man useradd
+String.prototype.login = function() { 
+    return this.replace(/[^A-Za-z0-9\.\-\_ ]*/g, '').replace(/ +/g, '_').replace(/_+/g, '_').slice(0,31); 
+};
+
 
 
 // http://codeaid.net/javascript/convert-size-in-bytes-to-human-readable-format-(javascript)

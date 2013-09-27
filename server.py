@@ -119,6 +119,7 @@ main_news = (
     ),
     ('15', ' 2013', [ 'changement lancement serveur', 
         'put mongoDB datas in config.ini',
+        'create email account on heywood'
         ]
     ),
 )
@@ -2374,7 +2375,13 @@ def json_useradd():
     'manager'
 
     Optional fields:
-    'uid'
+    'uid', 'createemail'
+
+    Returns: json {
+            'success': bool,
+            'message': string,
+            'dataout': dict
+        }
 
     """
     _debug_route()
@@ -2414,6 +2421,7 @@ def json_useradd():
         if 'manager' not in datas or not datas['manager']:
             return _json_result(success=False, message='missing PHD/student parameter: '+'manager')
 
+    # uid
     ldap_initialize(True)
     if 'uid' in datas and datas['uid']:
         uid = datas['uid']
@@ -2511,6 +2519,16 @@ def json_useradd():
             main_users[usertype]['quotasoft'], 
             main_users[usertype]['quotahard']) :
         return _json_result(success=False, message='erreur de Quota')
+
+    # email account on heywood
+    if 'createemail' in datas and datas['createemail'] and 'createemaillogin' in datas and datas['createemaillogin']:
+        cmd = 'useradd -c "%s" -g 5000 -s /dev/null -m %s' % (ldap_data['cn'], datas['createemaillogin'])
+        _debug('createemail', cmd)
+        try:
+            _ssh_exec('heywood','root',[cmd])
+        except SSH_EXEC_ERROR as e:
+            return _json_result(success=False, message=e.msg)
+
 
             
     return _json_result(success=True, uid=uid, userPassword=userPassword, message=u'répertoire crée, droits changés, quotas appliqués')
