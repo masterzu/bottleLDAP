@@ -117,9 +117,9 @@ main_news = (
         'HOTFIX 14.3: reactivate key <enter> on user page'
         ]
     ),
-    ('15', ' 2013', [ 'changement lancement serveur', 
+    ('15', '30 sept 2013', [ 'Create email account oin heywood',
+        'changement lancement serveur', 
         'put mongoDB datas in config.ini',
-        'create email account on heywood'
         ]
     ),
 )
@@ -1958,7 +1958,7 @@ def load_config(filename):
                 sys.exit(1)
         elif sec[:7] == 'mongodb':
             if 'port' not in _dict or not _dict['port']: 
-                _dict['port'] = 27070
+                _dict['port'] = 27017
             else:
                 _dict['port'] = int(_dict['port'])
             # if 'hostname' not in _dict or not _dict['hostname']: 
