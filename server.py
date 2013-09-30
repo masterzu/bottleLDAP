@@ -48,7 +48,7 @@ import paramiko
 import pymongo
 
 __author__ = 'P. Cao Huu Thien'
-__version__ = 'devel'
+__version__ = '@VERSION@'
 __license__ = 'GPL'
 
 
