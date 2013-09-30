@@ -1,4 +1,4 @@
 bottle
 python-ldap
-paramiko
 pymongo
+# paramiko  FIXME: pip version of paramiko is too slow. use os one.

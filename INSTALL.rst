@@ -52,19 +52,19 @@ L'installation des modules se fait par un simple::
 Erreurs
 _______
 
-En cas de soucis, par exemple lorsque la compilation de paquets nécessite d'autres fichiers sources, il faut lire les messages d'erreurs et ajouter les fichiers manquants au système.
+En cas de soucis, par exemple lorsque la compilation de paquets nécessitant d'autres fichiers sources, il faut lire les messages d'erreurs et ajouter les fichiers manquants au système.
 
 Pour **Debian/Ubuntu** la marche a suivre est la suivante:
 
 * lister les fichiers manquant::
 
-  	$ pip install -r requirements.txt |grep -i 'No such file'
+  	$ pip install --upgrade -r requirements.txt |grep -i 'No such file'
     Modules/errors.h:8:18: error: lber.h: No such file or directory
     Modules/errors.h:9:18: error: ldap.h: No such file or directory
     ...
 
 
-* chercher et installer les fichiers::
+* chercher les fichiers::
 
   	$ apt-file search --regexp /lber.h$
     libldap2-dev: /usr/include/lber.h
@@ -73,7 +73,11 @@ Pour **Debian/Ubuntu** la marche a suivre est la suivante:
     libldap2-dev: /usr/include/ldap.h
     libmailutils-dev: /usr/include/mailutils/ldap.h
 
+* et installer les paquets correspondant::
+
     $ sudo apt-get install libldap2-dev
 
-* et finalement relancer l'installation des prérequis.  	
+* et finalement relancer l'installation des prérequis::
+
+  	$ pip install --upgrade -r requirements.txt
 
