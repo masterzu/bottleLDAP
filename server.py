@@ -829,44 +829,51 @@ def _ldap_homeDirectory_server(path):
 
     Returns:
         the server name
-
-    Raises:
-        None
+        or None if not a valid path
 
     >>> _ldap_homeDirectory_server('') is None
     True
-    >>> _ldap_homeDirectory_server('home') is None
-    True
-    >>> _ldap_homeDirectory_server('poisson') is None
-    True
     >>> _ldap_homeDirectory_server('/oth/er/path') is None
     True
-    >>> _ldap_homeDirectory_server('/home') 
+    >>> _ldap_homeDirectory_server('/home/') is None
+    True
+    >>> _ldap_homeDirectory_server('/homeqwe') is None
+    True
+    >>> _ldap_homeDirectory_server('/poisson/') is None
+    True
+    >>> _ldap_homeDirectory_server('/poissonad a') is None
+    True
+    >>> _ldap_homeDirectory_server('/lmm') is None
+    True
+    >>> _ldap_homeDirectory_server('/lmmqweq') is None
+    True
+    >>> _ldap_homeDirectory_server('/lmm1/') is None
+    True
+    >>> _ldap_homeDirectory_server('/lmm2/') is None
+    True
+    >>> _ldap_homeDirectory_server('/home/a') 
     'olympe'
-    >>> _ldap_homeDirectory_server('/homeqwe') 
+    >>> _ldap_homeDirectory_server('/home/a/path') 
     'olympe'
-    >>> _ldap_homeDirectory_server('/poisson') 
+    >>> _ldap_homeDirectory_server('/poisson/some/path/and/sub path') 
     'poisson'
-    >>> _ldap_homeDirectory_server('/poissonad a') 
+    >>> _ldap_homeDirectory_server('/poisson/a new/path') 
     'poisson'
-    >>> _ldap_homeDirectory_server('/lmm') 
+    >>> _ldap_homeDirectory_server('/lmm1/apath') 
     'euler'
-    >>> _ldap_homeDirectory_server('/lmm1') 
-    'euler'
-    >>> _ldap_homeDirectory_server('/lmm2') 
-    'euler'
-    >>> _ldap_homeDirectory_server('/lmmqweq') 
+    >>> _ldap_homeDirectory_server('/lmm2/again/a/path') 
     'euler'
     """
 
-    if path[:5] == '/home':
+    if path[:6] == '/home/' and path[6:]:
         return 'olympe'
-    elif path[:8] == '/poisson':
+    elif path[:9] == '/poisson/' and path[9:]:
         return 'poisson'
-    elif path[:4] == '/lmm':
+    elif path[:6] == '/lmm1/' and path[6:]:
         return 'euler'
-    else:
-        return None
+    elif path[:6] == '/lmm2/' and path[6:]:
+        return 'euler'
+    return None
 
 def _ldap_group_members(group=None):
     """
