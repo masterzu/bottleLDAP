@@ -11,7 +11,6 @@ except:
 import os
 
 
-times = []
 
 # timeit decorator
 def timeit(method):
@@ -62,31 +61,44 @@ def ssh_connect(ssh, host):
     #         #_debug('_ssh_exec_paramiko','connection to %s with `~/.ssh/id_rsa` ... FAILED' % host)
     #         raise SSH_AUTH_ERROR('Can not connect to host %s. You need to set a public key' % host)
 
-@timeit
 def ssh_commands(ssh, list_cmds):
     ### commands
     list_out = []
+    
+    @timeit
+    def _ssh(cmd):
+        return ssh.exec_command(cmd)
+
     for cmd in list_cmds:
         #_debug('_ssh_exec_paramiko','Try to execute "%s" ...' % cmd)
-        stdin, stdout, stderr = ssh.exec_command(cmd)
+        stdin, stdout, stderr = _ssh(cmd)
+
+        # rstripe \n on stdout
+        out = ''
+        if stdout:
+            for o in stdout.readlines():
+                if o.endswith('\n'):
+                    o = o[:-1]
+                out = out + o
+        else:
+            out = '+rien+'
+
+
         err = stderr.read()
         if err:
             #_debug('_ssh_exec_paramiko/exec cmd(%s)/sdterr' % cmd, err)
-            raise SSH_EXEC_ERROR(err)
+            out += '[err: %s]' % err
         else:
             #_debug('_ssh_exec_paramiko/exec cmd(%s)/sdterr' % cmd, 'OK')
             pass
 
-        # rstripe \n on stdout
-        for o in stdout.readlines():
-            if o.endswith('\n'):
-                o = o[:-1]
-            list_out.append(o)
+        list_out.append((cmd,out))
+
 
     return list_out
 
 
-def print_long():
+def print_long(cmds, times):
     print '-------------------'
     print "Module paramiko %s" % paramiko.__version__
     try:
@@ -100,12 +112,25 @@ def print_long():
     print '-------------------'
     print ''
 
+    print '-- Commands -------' 
+    for c in cmds:
+        print "$ %s\n%s" % c
+        print
+
+    print '-- Times ----------'
     for obj in times:
         print "%s: %.2f" % obj
 
-def print_short():
+    def _p2(acc, v):
+        return acc + v[1]
+
+    print '-- Total = %.2fs' % reduce(_p2, times, 0) 
+
+def print_short(cmds, times):
     def _p(t): 
         return "%.2fs" % t[1]
+    def _p2(acc, v):
+        return acc + v[1]
 
     print "paramiko(%s)" % paramiko.__version__,
     try:
@@ -116,16 +141,21 @@ def print_short():
         print "cryptography(%s)" % cryptography.__version__
     except:
         pass
+    for c  in cmds:
+        print "$ %s: %s" % c
     print
-    print ' '.join(map(_p, times))
+    print ' '.join(map(_p, times)),
+    print '= %.2fs' % reduce(_p2, times, 0) 
+
 
 
 # main 
 
+times = []
 c = ssh_init()
 ssh_connect(c,'olympe')
-ssh_commands(c, ['uname'])
+out = ssh_commands(c, ['uname'])
 c.close()
 
-#print_long()
-print_short()
+#print_long(out, times)
+print_short(out, times)
