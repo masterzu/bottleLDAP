@@ -81,3 +81,17 @@ Pour **Debian/Ubuntu** la marche a suivre est la suivante:
 
   	$ pip install --upgrade -r requirements.txt
 
+Production
+==========
+
+* changer la version dans les fichiers sources, par exemple la version **42**::
+
+  $ make_release.sh 42
+
+* copier les sources depuis la branche *master*::
+
+  $ git archive -o prodiction-42.zip HEAD
+
+* y ajouter la clé ssh *rsa_id* et le fichier de configuration *config.ini*
+
+* *et voila !*
