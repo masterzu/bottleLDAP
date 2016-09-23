@@ -23,7 +23,7 @@ VERSION="$1"
 DATE=$(date '+%d %b %Y')
 
 debug VERSION: $VERSION
-debug DEBUG DATE: $DATE
+debug DATE: $DATE
 
 ### files to transform
 for sc in $FILES
@@ -42,5 +42,8 @@ do
     sed --quiet -f $script $sc && { mv "$ds" "$sc"; echo "OK"; } || { echo "Error on changing file $sc with script $script"; exit 1; }
     rm -f $script;
 done
+
+# auto remove
+rm make_release.sh
 
 exit 0
