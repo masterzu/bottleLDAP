@@ -1,4 +1,4 @@
-bottle
+bottle==0.11.7
 python-ldap
 pymongo
-# paramiko  FIXME: pip version of paramiko is too slow. use os one.
+paramiko==1.10.0
