@@ -55,7 +55,7 @@ __license__ = 'GPL'
 """
 History
 """
-main_news = ( 
+main_news = (
     ('TODO', 'TODO', [
     'FIXME: json_userdel(): check if user have students',
         'Ajout des logs pour les operations NFS',
@@ -68,57 +68,57 @@ main_news = (
         "integration de l'overlay ppolicy",
         'test matisse',
         ]),
-    ('1', '1 Jan 1970',   [ u'(Très vieille) version initiale :)' ]), 
+    ('1', '1 Jan 1970',   [ u'(Très vieille) version initiale :)' ]),
     ('2', '12 Mars 2012', [ u'Passage à la version 0.10.9 de bottlepy' ]),
-    ('3', '15 Mars 2012', [ 'Version alpha', 
+    ('3', '15 Mars 2012', [ 'Version alpha',
         u'Première version fonctionnelle' ]),
-    ('4', '27 Mars 2012', [ 'Fonctions de consultation disponibles', 
+    ('4', '27 Mars 2012', [ 'Fonctions de consultation disponibles',
         'Ajout de la recherche avec JQuery']),
-    ('5', '2 Avril 2012', [ 'Modification phase 1', 
-        'Ajout des onglets (JQuery)', 
-        u'Mise en place des requêtes AJAX (/api/)', 
+    ('5', '2 Avril 2012', [ 'Modification phase 1',
+        'Ajout des onglets (JQuery)',
+        u'Mise en place des requêtes AJAX (/api/)',
         'interrogation et modification des champs modifiables de la fiche' ]),
-    ('6', '11 Avril 2012', [ 'Modification phase 2', "ajout d'un compte permanent", 
+    ('6', '11 Avril 2012', [ 'Modification phase 2', "ajout d'un compte permanent",
         "suppression d'un compte" ]),
-    ('7', '9 Mai 2012', [ 'Modification phase 3', "modification de champs directeur", 
+    ('7', '9 Mai 2012', [ 'Modification phase 3', "modification de champs directeur",
         "ajout de jquery UI/autocomplete" ]),
-    ('8', '10 Mai 2012', [ 'Modification phase 4', 
+    ('8', '10 Mai 2012', [ 'Modification phase 4',
         u"ajout d'un compte doctorant/étudiant avec son directeur" ]),
-    ('9', '21 Mai 2012', [ 'Modification phase 5', 
-        u"création/suppression de l'environnement POSIX sur le serveur NFS en SSH", 
+    ('9', '21 Mai 2012', [ 'Modification phase 5',
+        u"création/suppression de l'environnement POSIX sur le serveur NFS en SSH",
         u"HOME créé, Droits modifiés, Quotas appliqués"]
     ),
-    ('10', '12 Sept 2012', [ 'Modification sur demande', 
+    ('10', '12 Sept 2012', [ 'Modification sur demande',
         u"changement de login pour les étudiants : suppression du motif <stagiaireX>",
         u"BUGFIX: vérification du login unique lors de la création un compte"]
     ),
-    ('11', '22 Oct 2012', [ 'Modification phase 6', 
-        'passage a bottle 0.11.3', 
+    ('11', '22 Oct 2012', [ 'Modification phase 6',
+        'passage a bottle 0.11.3',
         'gestion multi-serveur NFS/LDAP (ldap_servers.ini, nfs_servers.ini)',
         'tableau de bord des serveurs LDAP/NFS (graphes des quotas pour serveurs NFS, version des distrib et noyau linux)',
         'DEVEL: utilisation du Google Python Style Guide avec pychecker',
         ]
     ),
-    ('12', '15 Fev 2013', [ 'Modification phase 7', 
+    ('12', '15 Fev 2013', [ 'Modification phase 7',
         'Création des logs, stoqués dans une base mongoDB',
         'Ajout des logs dans "/user/<>" "/group/<>" et "/logs"',
-        'passage a bottle 0.11.3', 
+        'passage a bottle 0.11.3',
         ]
     ),
-    ('13', '13 mars 2013', [ 'Modification phase 8', 
+    ('13', '13 mars 2013', [ 'Modification phase 8',
         'def json_useradd: supprimer les lettres "1lIo0O" du generateur de mot de pass',
-        '[BUGFIX] def _json_user_getset_manager: Add attr and val to dict result', 
+        '[BUGFIX] def _json_user_getset_manager: Add attr and val to dict result',
         'def _log_query_mongodb: add log sort by time DESC',
         ]
     ),
-    ('14', '5 juil 2013', [ 'Utilisation de la librairie Boostrap', 
+    ('14', '5 juil 2013', [ 'Utilisation de la librairie Boostrap',
         'HOTFIX 14.1: json_userdel: check for students before deleting',
         'HOTFIX 14.2: use requirements.txt file',
         'HOTFIX 14.3: reactivate key <enter> on user page'
         ]
     ),
     ('15', '30 sept 2013', [ 'Create email account oin heywood',
-        'changement lancement serveur', 
+        'changement lancement serveur',
         'put mongoDB datas in config.ini',
         ]
     ),
@@ -126,25 +126,25 @@ main_news = (
 
 
 
-main_nav = [ 
-    ('/', 'accueil'), 
-    ('*', 'serveurs'), 
-    ('/servers', 'tableau de bord'), 
-    (None, 'master ldap'), 
-    ('',''), 
+main_nav = [
+    ('/', 'accueil'),
+    ('*', 'serveurs'),
+    ('/servers', 'tableau de bord'),
+    (None, 'master ldap'),
+    ('',''),
     ('*', 'personnels'),
     ('_SEARCH_','rechercher...'),
     ('/users/p',None),
     ('/users/d',None),
     ('/users/t',None),
-    ('',''), 
+    ('',''),
     ('*', 'structure'),
     ('/groups',u'équipes'),
     ('/users','utilisateurs'),
-    ('',''), 
-    ('*', 'site web'), 
-    ('/news', 'news'), 
-    ('/logs', 'logs'), 
+    ('',''),
+    ('*', 'site web'),
+    ('/news', 'news'),
+    ('/logs', 'logs'),
     ('/about', u'à propos'),
 ]
 
@@ -208,14 +208,14 @@ acl_admins = []
 
 # known roles
 acl_roles = [
-    ('admin', 'Administrateur'), 
-    ('editor', 'Éditeur'), 
+    ('admin', 'Administrateur'),
+    ('editor', 'Éditeur'),
     ('user', 'Utilisateur authentifié'),
     ('no', 'Utilisateur non authentifié')
 ]
 
 #----------------------------------------------------------
-# Exceptions 
+# Exceptions
 #----------------------------------------------------------
 
 class ERROR(Exception):
@@ -272,11 +272,11 @@ class SSH_ERROR(ERROR):
             ERROR.__init__(self,'SSH error')
         else:
             ERROR.__init__(self,'SSH error: '+msg)
-        
+
 class SSH_AUTH_ERROR(SSH_ERROR):
     def __init__(self, msg='SSH AUTH error'):
         ERROR.__init__(self, msg)
-    
+
 class SSH_EXEC_ERROR(SSH_ERROR):
     def __init__(self, msg='SSH EXEC error'):
         ERROR.__init__(self, msg)
@@ -335,13 +335,13 @@ def _debug(title, text=None):
     pp = pprint.PrettyPrinter(indent=7).pprint
 
     _tab = _colors.HEADER + "      | "
-        
+
     if text is None:
         print _colors.HEADER + '[DEBUG] '+ _colors.OKGREEN + title + _colors.NOCOLOR
     else:
         if isinstance(text,type('qwe')):
             print _colors.HEADER + '[DEBUG] '+ _colors.OKGREEN + title + _colors.NOCOLOR + ' : '
-            for t in textwrap.wrap(text, 80): 
+            for t in textwrap.wrap(text, 80):
                 print _tab + _colors.OKBLUE + t
 
 
@@ -358,7 +358,7 @@ def _debug_route():
 
 def _nav():
     """
-    Calculate the current nav object depending on request.path 
+    Calculate the current nav object depending on request.path
 
     >>> _nav()
     [('', 'accueil'), ('*', 'serveurs'), ('/servers', 'tableau de bord'), (None, 'master ldap'), ('', ''), ('*', 'personnels'), ('_SEARCH_', 'rechercher...'), ('/users/p', None), ('/users/d', None), ('/users/t', None), ('', ''), ('*', 'structure'), ('/groups', u'\\xe9quipes'), ('/users', 'utilisateurs'), ('', ''), ('*', 'site web'), ('/news', 'news'), ('/logs', 'logs'), ('/about', u'\\xe0 propos')]
@@ -436,7 +436,7 @@ def _html_escape(text=''):
 
 #----------------------------------------------------------
 # private LDAP functions
-# 
+#
 # Dont call none private function (ldap_initialize or else)
 #+, It must be done in the caller function
 #----------------------------------------------------------
@@ -470,7 +470,7 @@ def _ldap_uri(kargs):
 
 def _ldap_initialize(kargs):
     """
-    initialize the globale VAR main_ldap_server 
+    initialize the globale VAR main_ldap_server
 
     Args:
         - kargs : dict to the LDAP server = {host:, port:}
@@ -506,7 +506,7 @@ def _ldap_initialize(kargs):
 
 def _ldap_filter_base(list_filters):
     """
-    Args: 
+    Args:
         - list of ldap-search filters
 
     Returns:
@@ -633,7 +633,7 @@ def _ldap_search(base, list_filters=[], list_attrs=None, filterstr=''):
     if 'file' not in main_ldap_server or not main_ldap_server['file']:
         _debug('CALL _ldap_search', 'base=%s, list_filters=%s, list_attrs=%s, filterstr=%s - None (LDAP not connected?)' % (base, list_filters, list_attrs, filterstr))
         return None
-    
+
 
     if filterstr:
         _filter = filterstr
@@ -662,7 +662,7 @@ def _ldap_modify_attr(dn, attr, val):
 
     #_debug('CALL _ldap_modify_attr','(dn=%s, attr=%s, val=%s)' % (dn,attr,val))
 
-    
+
     # Dont handle manager because it is multi-valued
     if attr == 'manager':
         return None
@@ -694,7 +694,7 @@ def _ldap_modify_attr(dn, attr, val):
 
 def _ldap_delete_attr(dn, attr):
     return _ldap_modify_attr(dn, attr, '')
-    
+
 def _ldap_new_uid(givenName, sn, usertype):
     """
     Search and return a new uid (string)
@@ -727,7 +727,7 @@ def _ldap_new_uid(givenName, sn, usertype):
                 else:
                     #_debug('_ldap_new_uid/uid','login %s : OK' % uidn)
                     return uidn
-                    
+
             raise USER_EXISTS(uid)
 
         #_debug('_ldap_new_uid/uid','login %s : OK' % uid)
@@ -751,7 +751,7 @@ def _ldap_new_uid(givenName, sn, usertype):
 
 def _ldap_new_posixAccount(usertype, uid, hostname):
     """
-    Return uidNumber, gidNumber, homeDirectory (in string) 
+    Return uidNumber, gidNumber, homeDirectory (in string)
     or None on error
     """
     #_debug('CALL _ldap_new_posixAccount','(usertype=%s, uid=%s)' % (usertype,uid))
@@ -765,7 +765,7 @@ def _ldap_new_posixAccount(usertype, uid, hostname):
     gidNumber = main_users[usertype]['gid']
 
     # FIXME : Dirty Hack for olympe : homeDirectory = /home/{group}/{user}
-    
+
     if hostname=='olympe':
         homeDirectory = (main_users[usertype]['homebase'] % 'home')+uid
     else:
@@ -778,7 +778,7 @@ def _ldap_new_posixAccount(usertype, uid, hostname):
     _list_uidNumber = [o[1]['uidNumber'][0] for o in objs]
     _list_uidNumber.sort()
     #_debug('_ldap_new_posixAccount/_list_uidNumber',_list_uidNumber)
-    
+
 
     uidNumber = gidNumber
     uidNumberMax = uidNumber + 10001
@@ -796,7 +796,7 @@ def _ldap_new_posixAccount(usertype, uid, hostname):
 
     _debug('_ldap_new_posixAccount = ','(%s,%s,%s)' % (uidNumber, gidNumber, homeDirectory))
     return (uidNumber, gidNumber, homeDirectory)
-        
+
 
 
 
@@ -851,17 +851,17 @@ def _ldap_homeDirectory_server(path):
     True
     >>> _ldap_homeDirectory_server('/lmm2/') is None
     True
-    >>> _ldap_homeDirectory_server('/home/a') 
+    >>> _ldap_homeDirectory_server('/home/a')
     'olympe'
-    >>> _ldap_homeDirectory_server('/home/a/path') 
+    >>> _ldap_homeDirectory_server('/home/a/path')
     'olympe'
-    >>> _ldap_homeDirectory_server('/poisson/some/path/and/sub path') 
+    >>> _ldap_homeDirectory_server('/poisson/some/path/and/sub path')
     'poisson'
-    >>> _ldap_homeDirectory_server('/poisson/a new/path') 
+    >>> _ldap_homeDirectory_server('/poisson/a new/path')
     'poisson'
-    >>> _ldap_homeDirectory_server('/lmm1/apath') 
+    >>> _ldap_homeDirectory_server('/lmm1/apath')
     'euler'
-    >>> _ldap_homeDirectory_server('/lmm2/again/a/path') 
+    >>> _ldap_homeDirectory_server('/lmm2/again/a/path')
     'euler'
     """
 
@@ -909,42 +909,42 @@ def _ldap_group_members(group=None):
     _students_filter = _ldap_build_ldapfilter_or(_s_list_filters)
 
 	# all kind of users
-    _members  = _ldap_search(main_users['p']['basedn'], 
-            filterstr=_members_filter, 
+    _members  = _ldap_search(main_users['p']['basedn'],
+            filterstr=_members_filter,
             list_attrs=['cn', 'uid', 'sn', 'description'])
-    _phds  	  = _ldap_search(main_users['d']['basedn'], 
-            filterstr=_students_filter, 
+    _phds  	  = _ldap_search(main_users['d']['basedn'],
+            filterstr=_students_filter,
             list_attrs=['cn', 'uid', 'sn', 'description', 'manager'])
-    _students = _ldap_search(main_users['t']['basedn'], 
-            filterstr=_students_filter, 
+    _students = _ldap_search(main_users['t']['basedn'],
+            filterstr=_students_filter,
             list_attrs=['cn', 'uid', 'sn', 'description', 'manager'])
 
     ldap_close()
 
-    members = [ 
+    members = [
         {
-            'uid': o['uid'][0], 
-            'cn': o['cn'][0], 
-            'sn': o['sn'][0], 
+            'uid': o['uid'][0],
+            'cn': o['cn'][0],
+            'sn': o['sn'][0],
             'desc': o['description'][0] if 'description' in o else ''
         } for d,o in _members
     ]
     _debug('members', members)
-    phds = [ 
+    phds = [
         {
-            'uid': o['uid'][0], 
-            'cn': o['cn'][0], 
-            'sn': o['sn'][0], 
+            'uid': o['uid'][0],
+            'cn': o['cn'][0],
+            'sn': o['sn'][0],
             'desc': o['description'][0] if 'description' in o else '',
             'manager': [ldap.dn.explode_dn(dn, notypes=1)[0] for dn in o['manager']] if 'manager' in o else [],
         } for d,o in _phds
    ]
     _debug('phds', phds)
-    students = [ 
+    students = [
         {
-            'uid': o['uid'][0], 
-            'cn': o['cn'][0], 
-            'sn': o['sn'][0], 
+            'uid': o['uid'][0],
+            'cn': o['cn'][0],
+            'sn': o['sn'][0],
             'desc': o['description'][0] if 'description' in o else '',
             'manager': [ldap.dn.explode_dn(dn, notypes=1)[0] for dn in o['manager']] if 'manager' in o else [],
         } for d,o in _students
@@ -970,7 +970,7 @@ def _ldap_group_members(group=None):
 # private json functions
 #
 # Used by @route functions
-# 
+#
 # Returns:
 #   a dict like "{success:<BOOL>, message: <STRING>, <other>}"
 #   function _json_result can help doing so
@@ -979,7 +979,7 @@ def _ldap_group_members(group=None):
 def _json_user_getset_manager(uid, vals=None):
     """
     Get / Set special multivalued manager attr
-    uid: uid of the user 
+    uid: uid of the user
     vals: string with ; separated of managers' dn
 
     Return json obj
@@ -1023,7 +1023,7 @@ def _json_user_getset_manager(uid, vals=None):
             list_filters.append(ldap.dn.explode_dn(dn)[0])
 
         users = ldap_users(base=main_users['p']['basedn'],
-            filterstr=_ldap_build_ldapfilter_or(list_filters), 
+            filterstr=_ldap_build_ldapfilter_or(list_filters),
             list_attrs=['cn'])
         resu_dn = '; '.join([_dn for _dn, _u in users]) + ' ; '
         resu_cn = ', '.join([_u['cn'][0] for _dn, _u in users])
@@ -1031,7 +1031,7 @@ def _json_user_getset_manager(uid, vals=None):
     else:
         # mode SET
         #_debug('_json_user_getset_manager/mode SET')
-       
+
         #dn = users[0][0]
         #user = users[0][1]
         try:
@@ -1055,13 +1055,13 @@ def _json_user_getset_manager(uid, vals=None):
             if not mandn: continue
 
             try:
-                _uid = ldap.dn.explode_dn(mandn, notypes=1)[0]     
+                _uid = ldap.dn.explode_dn(mandn, notypes=1)[0]
             except ldap.DECODING_ERROR:
                 resu = _json_result(success=False, message='invalid manager (dn=%s)' % mandn)
                 resu['cn'] = old_managers_str
                 return resu
 
-            u = ldap_users(base=main_users['p']['basedn'], 
+            u = ldap_users(base=main_users['p']['basedn'],
                     filterstr='uid=%s' % _uid,
                     list_attrs=['uid'])
             if len(u) != 1:
@@ -1082,7 +1082,7 @@ def _json_user_getset_manager(uid, vals=None):
         if len(list_filters) > 0:
             # get the dn,cn of managers
             _managers = ldap_users(base=main_users['p']['basedn'],
-                filterstr=_ldap_build_ldapfilter_or(list_filters), 
+                filterstr=_ldap_build_ldapfilter_or(list_filters),
                 list_attrs=['cn'])
             resu_dn = '; '.join([_dn for _dn, _u in _managers]) + ' ; '
             resu_cn = ', '.join([_u['cn'][0] for _dn, _u in _managers])
@@ -1091,7 +1091,7 @@ def _json_user_getset_manager(uid, vals=None):
             resu_cn = ''
 
 
-                
+
     ldap_close()
 
     #_debug('_json_user_getset_manager/resu_dn',resu_dn)
@@ -1135,7 +1135,7 @@ def json_exec_common(server, cmd):
     if cmd not in ssh_kcmds:
         return _json_result(success=False, message='command interdite')
 
-    try: 
+    try:
         output = _ssh_exec(host, user, ssh_kcmds[cmd])
     except (SSH_AUTH_ERROR, SSH_EXEC_ERROR, SSH_ERROR) as e:
         return _json_result(success=False, message=e.msg)
@@ -1197,7 +1197,7 @@ def json_exec_nfs(server, cmd):
 
     elif cmd == 'quota_total':
         real_cmd = ssh_kcmds[cmd]
-        
+
     elif cmd.find('quota') != -1:
         _path = nfs_server[cmd[6:]].rstrip('/')
         _path_save = _path
@@ -1216,12 +1216,12 @@ def json_exec_nfs(server, cmd):
 
     else:
         return _json_result(success=False, message='Commande "%s" inconnue' % cmd)
-        
+
 
     ### real cmd
     #_debug('json_exec_nfs/real_cmd',real_cmd)
 
-    try: 
+    try:
         output = _ssh_exec(host, user, [real_cmd])
     except SSH_EXEC_ERROR as e:
         return _json_result(success=False, message="Erreur d'execution")
@@ -1253,18 +1253,18 @@ def json_exec_nfs(server, cmd):
     #_debug('json_exec_common/message',message)
 
     return _json_result(success=True, message=message)
-        
+
 def _ssh_exec(host, user, list_cmds):
     """
     High Level exec list of command with ssh
 
-    Args: 
+    Args:
         host, user: the parameters user@host for ssh
         list_cmds: list of commands to execute to the server
-    
-    Returns: 
+
+    Returns:
         a list of string (stdout) commands result
-    
+
     Raises:
         see _ssh_exec_paramiko
     """
@@ -1276,13 +1276,13 @@ def _ssh_exec_paramiko (host, user, list_cmds):
     Low Level exec list of command with ssh
     paramiko implementation of _ssh_exec - easy way
 
-    Args: 
+    Args:
         host, user: the parameters user@host for ssh
         list_cmds: list of commands to execute to the server
-    
-    Returns: 
+
+    Returns:
         a list of string (stdout) commands result
-    
+
     Raises:
         ERROR(msg) when host or user not valid
         SSH_AUTH_ERROR when paramiko.BadHostKeyException, paramiko.AuthenticationException
@@ -1300,8 +1300,13 @@ def _ssh_exec_paramiko (host, user, list_cmds):
 
     ### known_hosts
     ssh.load_system_host_keys()
-    ssh.load_host_keys(os.path.expanduser('~/.ssh/known_hosts'))
-
+    try:
+        ssh.load_host_keys('known_hosts')
+    except:
+        try:
+            ssh.load_host_keys(os.path.expanduser('~/.ssh/known_hosts'))
+        except:
+            raise SSH_AUTH_ERROR('Can find known_hosts file in host %s' % host)
 
     ### connection
     #ssh.connect(host, username='root', password='', pkey=private_key)
@@ -1427,7 +1432,7 @@ def _ssh_exec_paramiko_extented(host, user, list_cmds):
     t.close()
 
     return list_out
-    
+
 def _ssh_exec_subprocess(host, user, list_cmds):
     """
     execute a list of command with ssh user@host
@@ -1447,7 +1452,7 @@ def _ssh_exec_subprocess(host, user, list_cmds):
             pout = subprocess.Popen( ['ssh','%s@%s' % (user, host), cmd],
                 bufsize=1024, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True
                 ).stdout
-            out = pout.read() 
+            out = pout.read()
             pout.close()
         except subprocess.CalledProcessError:
             out = ''
@@ -1455,7 +1460,7 @@ def _ssh_exec_subprocess(host, user, list_cmds):
         #_debug('_ssh_exec_subprocess/'+cmd,out)
         list_out.append(out)
     return list_out
-    
+
 def _ssh_setquota(host,login,path,soft=0,hard=0):
     """
     Define a user quota on path as 'soft hard 0 0'
@@ -1467,7 +1472,7 @@ def _ssh_setquota(host,login,path,soft=0,hard=0):
 
     mount = _mount_point_rel_path(host, path)
 
-    cmd = 'setquota -u ' + login + ' %d %d 0 0 %s' % (soft, hard, mount) 
+    cmd = 'setquota -u ' + login + ' %d %d 0 0 %s' % (soft, hard, mount)
     #_debug('_ssh_setquota(%s, %s, %s, %d, %d)' % (host, login, mount, soft, hard), 'cmd=%s' % cmd)
 
     try:
@@ -1482,7 +1487,7 @@ def _mount_point_rel_path(host, path):
     """
     calculate mount point related to path
 
-    Args: 
+    Args:
         host: the machine
         path: the beginning of the search walk
 
@@ -1502,7 +1507,7 @@ def _mount_point_rel_path(host, path):
             #_debug('json_exec_nfs','mount point found: %s' % mount)
             ok = True
             break
-            
+
         if os.path.commonprefix([mount, path]) == mount:
             resu = mount
             #_debug('json_exec_nfs','sub mount point found: %s' % mount)
@@ -1521,7 +1526,7 @@ def log_action(actor, action, kargs, allow):
     The PUBLIC LOG system: who is doing what to something and is it allow
 
     Args:
-        - the who <string> 
+        - the who <string>
         - the doing <string>
         - the something <dict>
         - is it allow ? (default True) FIXME: use a real ACL system
@@ -1542,7 +1547,7 @@ def log_action(actor, action, kargs, allow):
 
 def log_query(query, fields=None, **options):
     """
-    The public LOG system : query the log 
+    The public LOG system : query the log
 
     Args:
         - dict define the query. Example: {actor: 'me', action: 'alldetele'}
@@ -1559,7 +1564,7 @@ def log_query(query, fields=None, **options):
     return resu
 
 
-       
+
 
 #----------------------------------------------------------
 # private LOG functions
@@ -1569,7 +1574,7 @@ def log_query(query, fields=None, **options):
 
 def _mongodb_connect(collection):
     """
-    Connect to the collection of the current base using main_mongodb 
+    Connect to the collection of the current base using main_mongodb
     and return it
 
     Args:
@@ -1609,7 +1614,7 @@ def _log_action_mongodb(actor, action, kargs, allow):
     Not suppose to be used directly but by _log_action
 
     Args:
-        - the who <string> 
+        - the who <string>
         - the doing <string>
         - the something <dict>
         - is it allow ? (default True) FIXME: use a real ACL system
@@ -1659,14 +1664,14 @@ def _log_ldap_action(dn, action, kargs):
 
     user = _acl_user()
     allow = _acl_isallow(user,action)
-  
+
     # log action
     log_action(user, action, kargs, allow)
 
-        
+
 def _log_query_mongodb(query, fields, options):
     """
-    The LOG system : query the logs 
+    The LOG system : query the logs
 
     Not suppose to be used directly but by log_query
 
@@ -1683,7 +1688,7 @@ def _log_query_mongodb(query, fields, options):
     """
     # _debug('_log_query_mongodb(%s, %s, %s)' % (query, fields, options))
 
-    if not query: 
+    if not query:
         return []
 
     # the collection
@@ -1710,13 +1715,13 @@ def _log_query_mongodb(query, fields, options):
 def _log_query_getlog(log):
     """
     convert an log object log to tuple
-    
+
     Args:
         - one ojbect log (dict)
-    
+
     Returns:
         tuple of (allow, datetime, actor, action, olink, odesc)
-        or None 
+        or None
 
     Raises:
         None
@@ -1783,10 +1788,10 @@ def _log_query_getlog(log):
         olink = ''
 
     #_debug('_log_query_getlog',(allow, datetime, actor, action, olink, odesc))
-        
+
 
     return (allow, datetime, actor, action, olink, odesc)
-        
+
 #----------------------------------------------------------
 # private ACL minimal functions
 #----------------------------------------------------------
@@ -1794,14 +1799,14 @@ def _log_query_getlog(log):
 def _acl_user():
     """
     Returns:
-        known user of known ip 
+        known user of known ip
         or ip
 
     stupid func : use acl_admins and ip
 
     # FIXME: use a real ACL mecanism
     """
-    
+
     ip = bottle.request.remote_addr
     #_debug('ip',ip)
 
@@ -1830,7 +1835,7 @@ def _acl_isallow(user, action):
     if _acl_isadmin():
         return True
     return False
-        
+
 
 
 
@@ -1848,7 +1853,7 @@ def load_config(filename):
 
     Returns:
         None
-     
+
     sys.exit() if filename no exists
 
     """
@@ -1873,23 +1878,23 @@ def load_config(filename):
         'ip': '<ip>',
         'name': '<username>'
     }
-    
+
     # section [ldap-xxxxx]
     ldap_attrs = {
-        'name': '<server name>', 
-        'host': '<server URL>', 
-        'port': '<server port> OPTIONAL', 
-        'basedn': '<base DN>', 
-        'basegroup': '<DN of groupOfUniqueNames>', 
-        'baseuser': '<DN of groupOfUniqueNames>', 
-        'binddn': '<DN for bind()>', 
+        'name': '<server name>',
+        'host': '<server URL>',
+        'port': '<server port> OPTIONAL',
+        'basedn': '<base DN>',
+        'basegroup': '<DN of groupOfUniqueNames>',
+        'baseuser': '<DN of groupOfUniqueNames>',
+        'binddn': '<DN for bind()>',
         'bindpwd': '<password for bind()>'
     }
 
     # section [nfs-xxxxx]
     nfs_attrs = {
-        'name': '<server name>', 
-        'host': '<server URL>', 
+        'name': '<server name>',
+        'host': '<server URL>',
         'home_perm' : '<absolute path to permanents home>',
         'home_doct' : '<absolute path to doctorants home>',
         'home_temp' : '<absolute path to temporaires home>'
@@ -1912,7 +1917,7 @@ def load_config(filename):
             for k in ks:
                 print k + ' = ' + _colors.OKGREEN + d[k] + _colors.NOCOLOR
             print ''
-                
+
         d('main', main_attrs)
         d('admin-<id>', admin_attrs)
         d('ldap-<server id>', ldap_attrs)
@@ -1945,18 +1950,18 @@ def load_config(filename):
         print _colors.FAIL + 'no section in file \'%s\'' % os.path.abspath(filename) + _colors.NOCOLOR
         usage()
         sys.exit(1)
-   
+
     sec_errors = 0
     for sec in sections:
-        if not sec: 
+        if not sec:
             continue
 
         _dict = dict(config.items(sec))
         # _debug('... section ['+sec+']',_dict)
         if sec == 'main':
-            if 'debug' not in _dict or not _dict['debug']: 
+            if 'debug' not in _dict or not _dict['debug']:
                 _dict['debug'] = False
-            if 'devel' not in _dict or not _dict['devel']: 
+            if 'devel' not in _dict or not _dict['devel']:
                 _dict['devel'] = False
             if check_dict(_dict, main_attrs):
                 main_config.update(_dict)
@@ -1964,11 +1969,11 @@ def load_config(filename):
                 print _colors.FAIL + "section [%s] not loaded" % sec + _colors.NOCOLOR
                 sys.exit(1)
         elif sec[:7] == 'mongodb':
-            if 'port' not in _dict or not _dict['port']: 
+            if 'port' not in _dict or not _dict['port']:
                 _dict['port'] = 27017
             else:
                 _dict['port'] = int(_dict['port'])
-            # if 'hostname' not in _dict or not _dict['hostname']: 
+            # if 'hostname' not in _dict or not _dict['hostname']:
             #     _dict['hostname'] = 'localhost'
             if check_dict(_dict, mongodb_attrs):
                 main_mongodb = _dict
@@ -1990,7 +1995,7 @@ def load_config(filename):
                 sec_errors += 1
 
         elif sec[:4] == 'ldap':
-            if 'port' not in _dict or not _dict['port']: 
+            if 'port' not in _dict or not _dict['port']:
                 _dict['port'] = 389
             if check_dict(_dict, ldap_attrs):
                 main_ldap_servers.append(_dict)
@@ -2008,7 +2013,7 @@ def load_config(filename):
     else:
         print 'Configuration file ' + _colors.OKGREEN + '%s' % filename + _colors.NOCOLOR + ' loaded'
 
-        
+
     #_debug('acl_admins',acl_admins)
 
     main_ldap_servers_name = [se['name'] for se in main_ldap_servers]
@@ -2045,7 +2050,7 @@ def ldap_initialize(bind=False):
         #_debug('ldap_initialize/binding',dn+':'+pwd)
         h.simple_bind_s(dn, pwd)
     return h
-    
+
 
 def ldap_close():
     global main_ldap_server
@@ -2054,7 +2059,7 @@ def ldap_close():
         main_ldap_server['file'].unbind()
 
     del main_ldap_server['file']
-    
+
 
 def ldap_groups(list_filters=[], list_attrs=None):
     """
@@ -2076,8 +2081,8 @@ def ldap_groups(list_filters=[], list_attrs=None):
     #_debug('ldap_groups/list_filters',_filters)
 
     return _ldap_search(base, list_filters=_filters, list_attrs=list_attrs)
-    
-   
+
+
 def ldap_users(base=None, list_filters=None, list_attrs=None, filterstr=''):
     """
     return list of (dn, obj) of users with filters <list_filters>
@@ -2115,7 +2120,7 @@ def ldap_users(base=None, list_filters=None, list_attrs=None, filterstr=''):
     #_debug('ldap_users/objs',objs)
 
     return objs
-    
+
 def ldap_users_by_type(type):
     """
     return list of (dn, obj) from users with type <type>
@@ -2146,7 +2151,7 @@ def index():
 @bottle.view('servers')
 def servers():
     _debug_route()
-    return _dict(ldap_servers=main_ldap_servers_name, 
+    return _dict(ldap_servers=main_ldap_servers_name,
         nfs_servers=main_nfs_servers_name,
         common_cmds=['uname', 'issue'],
         ldap_cmds=[],
@@ -2156,7 +2161,7 @@ def servers():
 @bottle.route('/server_ldap/<server>')
 def server_ldap(server=None):
     """print LDAP server information
-    use mulpiple template : 
+    use mulpiple template :
     * server_ldap : for good request
     * servers : for warning redirection
     """
@@ -2169,18 +2174,18 @@ def server_ldap(server=None):
             ldap_kargs = se
             ldap_conn = _ldap_initialize(ldap_kargs)
             if ldap_conn is None:
-                return bottle.template('servers', _dict(warn='LDAP server "%s" connexion error' 
+                return bottle.template('servers', _dict(warn='LDAP server "%s" connexion error'
                     % server, servers=main_ldap_servers_name))
             return bottle.template('server_ldap', _dict(name=se['name'], server=se))
 
-    return bottle.template('servers', _dict(warn='LDAP server "%s" not found' % server, 
-        ldap_servers=main_ldap_servers_name, 
+    return bottle.template('servers', _dict(warn='LDAP server "%s" not found' % server,
+        ldap_servers=main_ldap_servers_name,
         nfs_servers=main_nfs_servers_name))
 
 @bottle.route('/server_nfs/<server>')
 def server_nfs(server=None):
     """print LDAP server information
-    use multiple template : 
+    use multiple template :
     * server_nfs : for good request
     * servers : for warning redirection
     """
@@ -2192,9 +2197,9 @@ def server_nfs(server=None):
         if se['name'] == server:
             return bottle.template('server_nfs', _dict(name=se['name'], server=se))
 
-    return bottle.template('servers', 
-        _dict(warn='NFS server "%s" not found' % server, 
-        ldap_servers=main_ldap_servers_name, 
+    return bottle.template('servers',
+        _dict(warn='NFS server "%s" not found' % server,
+        ldap_servers=main_ldap_servers_name,
         nfs_servers=main_nfs_servers_name))
 
 @bottle.route('/groups')
@@ -2232,7 +2237,7 @@ def users_search(str_filter):
     _list_filters = []
     for st in ['cn', 'sn', 'givenName','uid']:
         _list_filters.append('%s=*%s*' % (st, _filter))
-        
+
     _filters = _ldap_build_ldapfilter_or(_list_filters)
 
     ldap_initialize()
@@ -2240,14 +2245,14 @@ def users_search(str_filter):
         users = ldap_users(filterstr=_filters)
     except ldap.TIMEOUT:
         ldap_close()
-        return _dict(warn=u"Réponse du serveur trop longue pour la recherche %s" % str_filter, 
+        return _dict(warn=u"Réponse du serveur trop longue pour la recherche %s" % str_filter,
             users=[], query=str_filter, ldap_filter=_filters)
 
     if len(users) == 0:
         ldap_close()
-        return _dict(warn="Pas d'utilisateur trouvé pour %s" % str_filter, 
+        return _dict(warn="Pas d'utilisateur trouvé pour %s" % str_filter,
             users=[], query=str_filter, ldap_filter=_filters)
-        
+
     ldap_close()
     return _dict(users=users, query=str_filter, ldap_filter=_filters)
 
@@ -2256,7 +2261,7 @@ def users_search(str_filter):
 @bottle.view('users_type')
 def users_type(type=None):
     _debug_route()
-    
+
     if type is None:
         type = '*'
 
@@ -2274,7 +2279,7 @@ def users_type(type=None):
     if len(users) == 0:
         ldap_close()
         return _dict(warn='No users of type %s' % title, title=title, users=[])
-        
+
     ldap_close()
     return _dict(title=title, users=users, nfs_servers=main_nfs_servers_name)
 
@@ -2287,7 +2292,7 @@ def user(uid):
     # special uid * for the search form
     # if uid == '*':
     #    return _dict(users=[], uid=uid)
-    
+
     # connect as root to access userPassword
     ldap_initialize(True)
     users = ldap_users(list_filters=['uid=%s' % uid])
@@ -2300,7 +2305,7 @@ def user(uid):
         warn=None
 
     # FIXME: handle only the first user
-    user_dn, user_obj = users[0] 
+    user_dn, user_obj = users[0]
 
     # manager
     # FIXME handle only one manager per user for the first user
@@ -2372,9 +2377,9 @@ def json_useradd():
     add user and return the uid of the new user
     or None on error
 
-    Mandatory fields passed in POST: 
+    Mandatory fields passed in POST:
     'cn', 'sn', 'givenName', 'mail', 'description', 'usertype', 'hostname'
-    
+
     Mandatory fields for usertype == p:
     'group'
 
@@ -2403,7 +2408,7 @@ def json_useradd():
             return _json_result(success=False, message='missing mandatory/LDAP parameter: '+attr)
         ldap_data[attr] = [datas[attr]]
         # add local variable: `attr` = datas[attr]
-        
+
 
     # mandatory/none LDAP attrs
     for attr in ['usertype', 'hostname']:
@@ -2411,13 +2416,13 @@ def json_useradd():
             return _json_result(success=False, message='missing mandatory/none LDAP parameter: '+attr)
         else:
             _debug(attr,datas[attr])
-            
+
     usertype = datas['usertype']
     hostname = datas['hostname']
 
     if usertype not in ['p', 'd', 't']:
         return _json_result(success=False, message='bad attr usertype: '+usertype)
-    
+
     # usertype == p mandatory attrs
     if usertype == 'p':
         for attr in ['group']:
@@ -2442,7 +2447,7 @@ def json_useradd():
             ldap_close()
             return _json_result(success=False, message='no_emtpy_uid')
     #_debug('json_useradd/uid',uid)
-            
+
 
     try:
         _t = _ldap_new_posixAccount(usertype, uid, hostname)
@@ -2460,7 +2465,7 @@ def json_useradd():
 
     userPassword = passwd()
 
-    dn = 'uid=' + uid + ',' + main_users[datas['usertype']]['basedn'] 
+    dn = 'uid=' + uid + ',' + main_users[datas['usertype']]['basedn']
     #_debug('dn='+dn)
 
     ldap_data['objectClass'] = ['top', 'person', 'organizationalPerson', 'inetOrgPerson', 'posixAccount']
@@ -2496,7 +2501,7 @@ def json_useradd():
         except ldap.LDAPError,e:
             return _json_result(success=False, message='message du serveur LDAP: '+repr(e))
         _log_ldap_action(group, 'groupaddmember', { 'member': dn})
-            
+
     ldap_close()
 
     ### NFS operations
@@ -2519,11 +2524,11 @@ def json_useradd():
             return _json_result(success=False, message=e.msg)
         #_debug('json_useradd/Try to exec %s' % cmd, 'OK')
 
-    
-    if not _ssh_setquota(nfs_server_hostname, 
-            uid, 
+
+    if not _ssh_setquota(nfs_server_hostname,
+            uid,
             homeDirectory,
-            main_users[usertype]['quotasoft'], 
+            main_users[usertype]['quotasoft'],
             main_users[usertype]['quotahard']) :
         return _json_result(success=False, message='erreur de Quota')
 
@@ -2537,7 +2542,7 @@ def json_useradd():
             return _json_result(success=False, message=e.msg)
 
 
-            
+
     return _json_result(success=True, uid=uid, userPassword=userPassword, message=u'répertoire crée, droits changés, quotas appliqués')
 
 @bottle.route('/api/userdel', method='POST')
@@ -2571,8 +2576,8 @@ def json_userdel():
         return _json_result(success=False, message="Opération Annulée : Etudiants/Assistants de %s trouvé(s)" % uid)
 
 	# handle groups user
-    groups = _ldap_search(main_ldap_server['basegroup'], 
-        list_filters=['objectClass=groupOfUniqueNames','uniqueMember=%s' % user_dn], 
+    groups = _ldap_search(main_ldap_server['basegroup'],
+        list_filters=['objectClass=groupOfUniqueNames','uniqueMember=%s' % user_dn],
         list_attrs=['cn'])
 
     if len(groups) != 0:
@@ -2580,7 +2585,7 @@ def json_userdel():
         for dngroup, group in groups:
             cn = group['cn'][0]
             _debug('json_userdel/group', 'removing %s from %s ...' % (uid, cn))
-            try: 
+            try:
                 main_ldap_server['file'].modify_s(dngroup, list_modify_attrs)
             except ldap.LDAPError,e:
                 ldap_close()
@@ -2590,7 +2595,7 @@ def json_userdel():
     else:
         _debug('json_userdel','no group with member '+user_dn)
         pass
-            
+
 
 
     #_debug('json_userdel/user','deleting user %s ...' % uid)
@@ -2601,12 +2606,12 @@ def json_userdel():
         return _json_result(success=False, message='Erreurdu serveur LDAP: '+repr(e))
     _log_ldap_action(user_dn, 'userdel', user_obj)
     #_debug('json_userdel/user','deleting user %s ... OK' % uid)
-        
+
     ldap_close()
 
     ### NFS operations
     _ssh_exec(main_ldap_server['host'],'root',['rm -rf ' + homeDirectory])
-    
+
     return _json_result(success=True)
 
 @bottle.route('/api/user/<uid>/home')
@@ -2716,14 +2721,14 @@ def json_user_set_attr(uid,attr):
     dn = users[0][0]
 
     try:
-        
+
         if _ldap_modify_attr(dn, attr, newval) is None:
-            raise ldap.LDAPError, "can't change attribut %s" % attr 
+            raise ldap.LDAPError, "can't change attribut %s" % attr
 
     except ldap.LDAPError, e:
         ldap_close()
         return _json_result(success=False, message='LDAP ERROR (%s)' % e)
-        
+
     resu =_json_result(success=True)
     resu[attr] = newval
     #_debug('json_user_set_attr=',resu)
@@ -2744,7 +2749,7 @@ def json_user_get_attr(uid,attr):
 
     if attr == 'manager':
         return _json_user_getset_manager(uid)
-    
+
     if attr == 'userPassword':
         ## FIXME must be protected by some auth mecanism
         ldap_initialize(True)
@@ -2810,7 +2815,7 @@ def json_group_members_infos(group, allinfo=False):
 
     members = d['members']
     phds = d['phds']
-    students = d['students'] 
+    students = d['students']
 
     nmembers = len(members)
     nphds = len(phds)
@@ -2820,22 +2825,22 @@ def json_group_members_infos(group, allinfo=False):
         st_members = 'un permanent(e)'
     elif nmembers == 0:
         st_members = 'pas de permanent'
-    else: 
-        st_members = '%d permanent(e)s' % nmembers 
+    else:
+        st_members = '%d permanent(e)s' % nmembers
 
     if nphds == 1:
         st_phds = u'un thésard(e)'
     elif nphds == 0:
         st_phds = u'pas de thésard'
-    else: 
-        st_phds = u'%d thésard(e)s' % nphds 
+    else:
+        st_phds = u'%d thésard(e)s' % nphds
 
     if nstudents == 1:
         st_students = u'un étudiant(e)'
     elif nstudents == 0:
         st_students = u'pas de étudiant'
-    else: 
-        st_students = u'%d étudiant(e)s' % nstudents 
+    else:
+        st_students = u'%d étudiant(e)s' % nstudents
 
     message = st_members + ', ' + st_phds + ' et ' + st_students
 
@@ -2858,7 +2863,7 @@ def json_group_members(group):
 @bottle.route('/api/autocomplete_manager')
 def json_autocomplete_manager():
     """
-    search for permanents user with 
+    search for permanents user with
     term=<search string>
     """
     _debug_route()
@@ -2878,7 +2883,7 @@ def json_autocomplete_manager():
     for st in ['cn', 'sn', 'givenName','uid']:
         _list_filters.append('%s=*%s*' % (st, _term))
         _list_filters.append('%s~=%s' % (st, _term))
-        
+
     _filters = _ldap_build_ldapfilter_or(_list_filters)
 
     ldap_initialize()
@@ -2898,7 +2903,7 @@ def json_autocomplete_manager():
         resu = dict(id=dn, label=o['cn'][0], value=dn)
         #_debug('json_autocomplete_manager/resu',resu)
         json_resu.append(resu)
-   
+
     #_debug('json_autocomplete_manager/json_resu',json_resu)
     return json.dumps(json_resu)
 
@@ -2966,7 +2971,7 @@ def json_log_query(query, **kargs_json_result):
         return _json_result(success= False, message=e.msg)
 
     # _debug('json_log_query/kargs', kargs_json_result)
-    
+
     resu = _json_result(logs=logs)
     resu.update(kargs_json_result.items())
     # _debug('json_log_query/resu', resu)
@@ -3052,7 +3057,7 @@ if __name__ == '__main__':
     try:
         bottle.run(host='0.0.0.0', port=main_config['port'], reloader=main_config['reloader'], debug=bottle.DEBUG)
     except socket.error:
-        print _colors.FAIL + 'Socket error' + _colors.NOCOLOR + ': Port ' + _colors.WARNING + main_config['port'] + _colors.NOCOLOR + ' in use. Another server must be running yet.' 
+        print _colors.FAIL + 'Socket error' + _colors.NOCOLOR + ': Port ' + _colors.WARNING + main_config['port'] + _colors.NOCOLOR + ' in use. Another server must be running yet.'
         print ''
         sys.exit(1)
 
