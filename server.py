@@ -3022,6 +3022,15 @@ if __name__ == '__main__':
     parser.add_option("-D", "--debug", help="debug mode", action="store_true", dest="debug")
     (options, args) = parser.parse_args()
 
+    missingFile = False
+    for f in ['id_rsa', 'known_hosts']:
+        if not os.path.isfile(f):
+            print _colors.FAIL + 'Missing file' + _colors.NOCOLOR + ':  ' + _colors.WARNING + f + _colors.NOCOLOR
+            missingFile = True
+    if missingFile:
+        parser.print_help()
+        sys.exit(1)
+
     if len(args) != 1:
         parser.print_help()
         sys.exit(1)
@@ -3044,6 +3053,8 @@ if __name__ == '__main__':
 
     if main_config['debug']:
         bottle.debug(True)
+    
+
 
     # running server
     print 'Running server on port ' + _colors.OKGREEN + main_config['port'] + _colors.NOCOLOR ,
