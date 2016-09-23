@@ -37,6 +37,7 @@ do
     debug "script: $script"
     rm -f $script; 
     echo "s!@VERSION@!$VERSION!;" >> $script; 
+    echo "s!@DATE@!$DATE!;" >> $script; 
     echo 'w' $ds >> $script; 
     sed --quiet -f $script $sc && { mv "$ds" "$sc"; echo "OK"; } || { echo "Error on changing file $sc with script $script"; exit 1; }
     rm -f $script;
