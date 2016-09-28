@@ -2,4 +2,5 @@ test_server.py export-ignore
 time_ssh.py export-ignore
 bootstrap.py export-ignore
 create-bootstrap.py export-ignore
+requirements_devel.txt export-ignore
 
