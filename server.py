@@ -30,7 +30,8 @@ True
 """
 
 # standard libraries
-import os, os.path
+import os
+import os.path
 import sys
 import json
 import ConfigParser
@@ -68,7 +69,7 @@ main_news = (
         ("outils de diagnostic: liste des utilisateurs sans email; "
          "stagiaires/phds sans directeur ..."),
         "integration de l'overlay ppolicy",
-        'test matisse',]),
+        'test matisse']),
     ('1', '1 Jan 1970', [
         u'(Très vieille) version initiale :)']),
     ('2', '12 Mars 2012', [
@@ -139,7 +140,6 @@ main_news = (
         'changement lancement serveur',
         'put mongoDB datas in config.ini']),
 )
-
 
 
 main_nav = [
@@ -233,17 +233,20 @@ acl_roles = [
 # Exceptions
 #----------------------------------------------------------
 
+
 class ERROR(Exception):
     """
     base exception class for this project.
 
     have a optional string in init.
     """
+
     def __init__(self, msg=None):
         if msg is None:
             self.msg = ''
         else:
             self.msg = msg
+
     def __str__(self):
         return '[' + self.__class__ + '] ' + repr(self.msg)
 
@@ -251,10 +254,12 @@ class ERROR(Exception):
 class USER_TYPE_UNKNOWN(ERROR):
     pass
 
+
 class USER_EXISTS(ERROR):
     """
     USER error
     """
+
     def __init__(self, user, msg=None):
         self.user = user
         ERROR.__init__(self, msg)
@@ -264,9 +269,11 @@ class USER_PERM_EXISTS(USER_EXISTS):
     """
     Use in _ldap_new_uid to usertype 'p'
     """
+
     def __init__(self):
         USER_EXISTS.__init__(self, user,
                              msg='account "permanant" already exists !')
+
 
 class USER_STAGIAIRE_LOGIN_FULL(USER_EXISTS):
     """
@@ -274,48 +281,66 @@ class USER_STAGIAIRE_LOGIN_FULL(USER_EXISTS):
     """
     pass
 
+
 class POSIX(ERROR):
     pass
+
 
 class POSIX_UID_FULL(POSIX):
     """Used in _ldap_new_posixAccount"""
     pass
 
+
 class SSH_ERROR(ERROR):
     """general error in SSH ops"""
+
     def __init__(self, msg=None):
         if msg is None:
             ERROR.__init__(self, 'SSH error')
         else:
             ERROR.__init__(self, 'SSH error: ' + msg)
 
+
 class SSH_AUTH_ERROR(SSH_ERROR):
+
     def __init__(self, msg='SSH AUTH error'):
         ERROR.__init__(self, msg)
 
+
 class SSH_EXEC_ERROR(SSH_ERROR):
+
     def __init__(self, msg='SSH EXEC error'):
         ERROR.__init__(self, msg)
 
+
 class EXEC_NOSERVER(ERROR):
+
     def __init__(self, msg):
         ERROR.__init__(self, 'EXEC on unknown server: ' + msg)
 
+
 class EXEC_NOTALLOW(ERROR):
+
     def __init__(self, msg):
         ERROR.__init__(self, 'EXEC not allow: ' + msg)
 
+
 class MONGODB_ERROR(ERROR):
     """general error in mongoDB ops"""
+
     def __init__(self, msg):
-        ERROR.__init__(self, 'MONGODB error: '+msg)
+        ERROR.__init__(self, 'MONGODB error: ' + msg)
+
 
 class ACL_ERROR(ERROR):
     """general error in ACL system"""
+
     def __init__(self, msg):
-        ERROR.__init__(self, 'ACL error: '+msg)
+        ERROR.__init__(self, 'ACL error: ' + msg)
+
 
 class ACL_NOTALLOW(ACL_ERROR):
+
     def __init__(self, msg='ACL error : access not allow'):
         ACL_ERROR.__init__(self, msg)
 
@@ -344,6 +369,7 @@ class _colors:
         self.FAIL = ''
         self.NOCOLOR = ''
 
+
 def _debug(title, text=None):
     import pprint
     if not bottle.DEBUG:
@@ -357,17 +383,17 @@ def _debug(title, text=None):
             + _colors.NOCOLOR
     else:
         if isinstance(text, type('qwe')):
-            print _colors.HEADER + '[DEBUG] '+ _colors.OKGREEN + title \
+            print _colors.HEADER + '[DEBUG] ' + _colors.OKGREEN + title \
                 + _colors.NOCOLOR + ' : '
             for t in textwrap.wrap(text, 80):
                 print _tab + _colors.OKBLUE + t
 
-
         else:
-            print _colors.HEADER + '[DEBUG] '+ _colors.OKGREEN + title \
+            print _colors.HEADER + '[DEBUG] ' + _colors.OKGREEN + title \
                 + _colors.NOCOLOR + ' = ' + _colors.OKBLUE
             pp(text)
             print _colors.NOCOLOR
+
 
 def _debug_route():
     _debug("routing %s ..." % bottle.request.path)
@@ -390,6 +416,7 @@ def _nav():
             nav.append((l, n))
     return nav
 
+
 def _dict(**kargs):
     """
     Return the main dict used by routing functions
@@ -398,6 +425,7 @@ def _dict(**kargs):
     temp.update(kargs.items())
     #_debug('_dict=', temp)
     return temp
+
 
 def _json_result(**kargs):
     """
@@ -416,6 +444,7 @@ def _json_result(**kargs):
     #_debug('_json_result=', temp)
     return temp
 
+
 def _modules_version(mod):
     try:
         version = mod.__version__
@@ -432,6 +461,8 @@ def _modules_version(mod):
 
 #----------------------------------------------------------
 # HTML functions
+
+
 def _html_escape(text=''):
     """
     protect some character (& " ' < >) and transform it the the HTML entity
@@ -461,6 +492,7 @@ def _html_escape(text=''):
 #+, It must be done in the caller function
 #----------------------------------------------------------
 
+
 def _ldap_uri(kargs):
     """
     Calculate URI from dict
@@ -488,6 +520,7 @@ def _ldap_uri(kargs):
         kargs['port'] = 389
     return "ldap://%s:%s" % (kargs['host'], kargs['port'])
 
+
 def _ldap_initialize(kargs):
     """
     initialize the globale VAR main_ldap_server
@@ -506,7 +539,6 @@ def _ldap_initialize(kargs):
     if url == '':
         return None
 
-
     if 'file' in main_ldap_server:
         #_debug('LDAP', 'connexion to %s ... already connected.' % url)
         return main_ldap_server['file']
@@ -523,6 +555,7 @@ def _ldap_initialize(kargs):
     main_ldap_server['file'] = l
     #_debug('main_ldap_server',main_ldap_server)
     return l
+
 
 def _ldap_filter_base(list_filters):
     """
@@ -556,11 +589,12 @@ def _ldap_filter_base(list_filters):
     """
     _filter = ''
     for f in list_filters:
-        if not f: continue
+        if not f:
+            continue
         if f[0] == '(':
             _filter += f
         else:
-            _filter += '('+f+')'
+            _filter += '(' + f + ')'
     return _filter
 
 
@@ -602,6 +636,7 @@ def _ldap_build_ldapfilter_and(list_filters=None):
     #_debug('_ldap_build_ldapfilter_and', resu)
     return resu
 
+
 def _ldap_build_ldapfilter_or(list_filters):
     """
     Args:
@@ -638,6 +673,7 @@ def _ldap_build_ldapfilter_or(list_filters):
     #_debug('_ldap_build_ldapfilter_or', resu)
     return resu
 
+
 def _ldap_search(base, list_filters=[], list_attrs=None, filterstr=''):
     """
     general ldap search with base=base, scope=ldap.SCOPE_SUBTREE,
@@ -659,7 +695,6 @@ def _ldap_search(base, list_filters=[], list_attrs=None, filterstr=''):
                ) % (base, list_filters, list_attrs, filterstr))
         return None
 
-
     if filterstr:
         _filter = filterstr
     else:
@@ -676,6 +711,7 @@ def _ldap_search(base, list_filters=[], list_attrs=None, filterstr=''):
 
     _debug('RETURN _ldap_search', objs)
     return objs
+
 
 def _ldap_modify_attr(dn, attr, val):
     """
@@ -724,8 +760,10 @@ def _ldap_modify_attr(dn, attr, val):
     #_debug('_ldap_modify_attr/modify_s',objs)
     return objs
 
+
 def _ldap_delete_attr(dn, attr):
     return _ldap_modify_attr(dn, attr, '')
+
 
 def _ldap_new_uid(givenName, sn, usertype):
     """
@@ -742,7 +780,7 @@ def _ldap_new_uid(givenName, sn, usertype):
     if usertype == 'p' or usertype == 'd' or usertype == 't':
         gn = givenName[0].replace(' ', '').lower()
         fn = sn.split()[0].replace(' ', '').lower()
-        uid = gn+fn
+        uid = gn + fn
         #_debug('_ldap_new_uid/uid', uid)
 
         # FIXME check if newuid OK
@@ -786,6 +824,7 @@ def _ldap_new_uid(givenName, sn, usertype):
     # not suppose to be here
     raise USER_TYPE_UNKNOWN
 
+
 def _ldap_new_posixAccount(usertype, uid, hostname):
     """
     Return uidNumber, gidNumber, homeDirectory (in string)
@@ -804,9 +843,9 @@ def _ldap_new_posixAccount(usertype, uid, hostname):
 
     # FIXME : Dirty Hack for olympe : homeDirectory = /home/{group}/{user}
     if hostname == 'olympe':
-        homeDirectory = (main_users[usertype]['homebase'] % 'home')+uid
+        homeDirectory = (main_users[usertype]['homebase'] % 'home') + uid
     else:
-        homeDirectory = (main_users[usertype]['homebase'] % hostname)+uid
+        homeDirectory = (main_users[usertype]['homebase'] % hostname) + uid
 
     objs = _ldap_search(main_users[usertype]['basedn'],
                         filterstr='objectClass=person',
@@ -858,6 +897,7 @@ def _ldap_useradd(dn, kargs):
     _log_ldap_action(dn, 'useradd', kargs)
 
     return objs
+
 
 def _ldap_homeDirectory_server(path):
     """
@@ -913,6 +953,7 @@ def _ldap_homeDirectory_server(path):
     elif path[:6] == '/lmm2/' and path[6:]:
         return 'euler'
     return None
+
 
 def _ldap_group_members(group=None):
     """
@@ -1019,6 +1060,7 @@ def _ldap_group_members(group=None):
 #   function _json_result can help doing so
 #----------------------------------------------------------
 
+
 def _json_user_getset_manager(uid, vals=None):
     """
     Get / Set special multivalued manager attr
@@ -1095,7 +1137,8 @@ def _json_user_getset_manager(uid, vals=None):
             list_modify_attrs = []
         for _mandn in managers:
             mandn = _mandn.strip()
-            if not mandn: continue
+            if not mandn:
+                continue
 
             try:
                 _uid = ldap.dn.explode_dn(mandn, notypes=1)[0]
@@ -1149,6 +1192,7 @@ def _json_user_getset_manager(uid, vals=None):
 
     return resu
 
+
 def json_exec_common(server, cmd):
     """
     Common command executed to all NFS and LDAP servers.
@@ -1190,7 +1234,6 @@ def json_exec_common(server, cmd):
     #_debug('json_exec_common',output)
 
     return _json_result(success=True, message="\n".join(output))
-
 
 
 def json_exec_nfs(server, cmd):
@@ -1239,7 +1282,6 @@ def json_exec_nfs(server, cmd):
     if cmd not in ssh_kcmds:
         return _json_result(success=False, message='Commande interdite')
 
-
     # pre-action cmd
     if cmd.find('check') != -1:
         _path = nfs_server[cmd[6:]].rstrip('/')
@@ -1271,7 +1313,6 @@ def json_exec_nfs(server, cmd):
         return _json_result(success=False,
                             message='Commande "%s" inconnue' % cmd)
 
-
     # real cmd
     #_debug('json_exec_nfs/real_cmd',real_cmd)
 
@@ -1294,7 +1335,8 @@ def json_exec_nfs(server, cmd):
         for line in output:
             (login, mode, size, softsize, hardsize, grace,
              rest) = line.split(None, 6)
-            if login == 'root': continue
+            if login == 'root':
+                continue
             if mode == '+-' or mode == '++':
                 quota = True
             else:
@@ -1308,6 +1350,7 @@ def json_exec_nfs(server, cmd):
     #_debug('json_exec_common/message',message)
 
     return _json_result(success=True, message=message)
+
 
 def _ssh_exec(host, user, list_cmds):
     """
@@ -1325,6 +1368,7 @@ def _ssh_exec(host, user, list_cmds):
     """
     #_debug('_ssh_exec(%s, %s, %s)' % (host, user, list_cmds))
     return _ssh_exec_paramiko(host, user, list_cmds)
+
 
 def _ssh_exec_paramiko(host, user, list_cmds):
     """
@@ -1380,7 +1424,7 @@ def _ssh_exec_paramiko(host, user, list_cmds):
             raise SSH_AUTH_ERROR((
                 'Can not connect to host %s.'
                 'You need to set a public key'
-                ) % host)
+            ) % host)
 
     # commands
     list_out = []
@@ -1402,6 +1446,7 @@ def _ssh_exec_paramiko(host, user, list_cmds):
             list_out.append(o)
 
     return list_out
+
 
 def _ssh_exec_paramiko_extented(host, user, list_cmds):
     """
@@ -1439,7 +1484,6 @@ def _ssh_exec_paramiko_extented(host, user, list_cmds):
         #_debug('_ssh_exec_paramiko_extented','*** SSH negotiation failed.')
         return None
 
-
     # 3. check server's host key -- this is important.
     #_debug('_ssh_exec_paramiko_extented','transport: '+repr(t))
     known_hosts = paramiko.util.load_host_keys(
@@ -1459,7 +1503,6 @@ def _ssh_exec_paramiko_extented(host, user, list_cmds):
         #_debug('_ssh_exec_paramiko_extented/host_key', 'Host key OK.')
         pass
 
-
     # 4. private keys
     #agent_auth(t, 'root')
     try:
@@ -1473,7 +1516,6 @@ def _ssh_exec_paramiko_extented(host, user, list_cmds):
     #_debug('_ssh_exec_paramiko_extented/private_key',
     #       hexlify(private_key.get_fingerprint()))
     #_debug('_ssh_exec_paramiko_extented/private_key','Private key OK.')
-
 
     # 5. auth_publickey
     try:
@@ -1501,6 +1543,7 @@ def _ssh_exec_paramiko_extented(host, user, list_cmds):
     t.close()
 
     return list_out
+
 
 def _ssh_exec_subprocess(host, user, list_cmds):
     """
@@ -1533,6 +1576,7 @@ def _ssh_exec_subprocess(host, user, list_cmds):
         #_debug('_ssh_exec_subprocess/'+cmd,out)
         list_out.append(out)
     return list_out
+
 
 def _ssh_setquota(host, login, path, soft=0, hard=0):
     """
@@ -1597,6 +1641,8 @@ def _mount_point_rel_path(host, path):
 #----------------------------------------------------------
 # public LOG functions
 #----------------------------------------------------------
+
+
 def log_action(actor, action, kargs, allow):
     """
     The PUBLIC LOG system: who is doing what to something and is it allow
@@ -1621,6 +1667,7 @@ def log_action(actor, action, kargs, allow):
     finally:
         return None
 
+
 def log_query(query, fields=None, **options):
     """
     The public LOG system : query the log
@@ -1638,8 +1685,6 @@ def log_query(query, fields=None, **options):
     """
     resu = _log_query_mongodb(query, fields, options)
     return resu
-
-
 
 
 #----------------------------------------------------------
@@ -1686,6 +1731,7 @@ def _mongodb_connect(collection):
                             (collection, main_mongodb['db']))
 
     return coll
+
 
 def _log_action_mongodb(actor, action, kargs, allow):
     """
@@ -1827,7 +1873,7 @@ def _log_query_getlog(log):
     if 'actor' not in log or 'action' not in log or \
         'object' not in log or \
         'allow' not in log or \
-        'time' not in log:
+            'time' not in log:
         return None
 
     if 'dn' not in log['object']:
@@ -1851,17 +1897,17 @@ def _log_query_getlog(log):
     #     return None
 
     if action == 'useradd' or action == 'userdel':
-        olink = "/user/"+o['uid'][0]
+        olink = "/user/" + o['uid'][0]
         odesc = "compte de %s (login=%s home=%s)" % (
             o['cn'][0], o['uid'][0], o['homeDirectory'][0])
     elif action == 'userattrmod':
         uid = odn.split(',')[0].split('=')[1]
-        olink = "/user/"+uid
+        olink = "/user/" + uid
         odesc = "modification du compte %s avec %s=%s" % (
             uid, o['attr'], o['val'])
     elif action == 'groupaddmember' or action == 'groupdelmember':
         group = odn.split(',')[0].split('=')[1]
-        olink = '/group/'+group
+        olink = '/group/' + group
         odesc = "membre=%s" % o['member']
     else:
         olink = ''
@@ -1878,6 +1924,7 @@ def _log_query_getlog(log):
 #----------------------------------------------------------
 # private ACL minimal functions
 #----------------------------------------------------------
+
 
 def _acl_user():
     """
@@ -1899,6 +1946,7 @@ def _acl_user():
     else:
         return ip
 
+
 def _acl_role():
     ip = bottle.request.remote_addr
     #_debug('ip',ip)
@@ -1909,19 +1957,17 @@ def _acl_role():
     else:
         return 'no'
 
+
 def _acl_isadmin():
     if _acl_role() == 'admin':
         return True
     return False
 
+
 def _acl_isallow(user, action):
     if _acl_isadmin():
         return True
     return False
-
-
-
-
 
 
 #----------------------------------------------------------
@@ -1978,9 +2024,9 @@ def load_config(filename):
     nfs_attrs = {
         'name': '<server name>',
         'host': '<server URL>',
-        'home_perm' : '<absolute path to permanents home>',
-        'home_doct' : '<absolute path to doctorants home>',
-        'home_temp' : '<absolute path to temporaires home>'
+        'home_perm': '<absolute path to permanents home>',
+        'home_doct': '<absolute path to doctorants home>',
+        'home_temp': '<absolute path to temporaires home>'
     }
 
     # section [mongodb-xxx]
@@ -2011,10 +2057,10 @@ def load_config(filename):
         sec_err = 0
         for k in models.keys():
             if k not in datas or not datas[k]:
-                print 'Configuration File ' +_colors.WARNING \
+                print 'Configuration File ' + _colors.WARNING \
                     + filename + _colors.NOCOLOR + ' missing ' \
                     + _colors.WARNING + '"%s = "' % k + _colors.NOCOLOR \
-                    + ' on section ' +_colors.WARNING + '[%s]' % sec \
+                    + ' on section ' + _colors.WARNING + '[%s]' % sec \
                     + _colors.NOCOLOR
                 sec_err += 1
         if sec_err == 0:
@@ -2032,7 +2078,6 @@ def load_config(filename):
             'does not exists') % filename + _colors.NOCOLOR
         usage()
         sys.exit(1)
-
 
     sections = config.sections()
     if len(sections) == 0:
@@ -2107,14 +2152,12 @@ def load_config(filename):
                 "unknown type") % sec + _colors.NOCOLOR
             sec_errors += 1
 
-
     if sec_errors != 0:
         print 'Configuration file "%s" loaded ' % filename + _colors.WARNING \
             + 'but skip %d section(s)' % sec_errors + _colors.NOCOLOR
     else:
         print 'Configuration file ' + _colors.OKGREEN + '%s' % filename \
             + _colors.NOCOLOR + ' loaded'
-
 
     #_debug('acl_admins',acl_admins)
 
@@ -2145,7 +2188,8 @@ def ldap_initialize(bind=False):
     FIXME: and a ldap server parameter
     """
     h = _ldap_initialize(main_ldap_servers[0])
-    if h is None: return False
+    if h is None:
+        return False
     if bind:
         dn = main_ldap_server['binddn']
         pwd = main_ldap_server['bindpwd']
@@ -2196,7 +2240,6 @@ def ldap_users(base=None, list_filters=None, list_attrs=None, filterstr=''):
     #            "list_attrs=%s\n, filterstr=%s)") % (base, list_filters,
     #                                                 list_attrs, filterstr))
 
-
     if not ldap_initialize():
         return []
 
@@ -2205,7 +2248,6 @@ def ldap_users(base=None, list_filters=None, list_attrs=None, filterstr=''):
 
     if list_filters is None:
         list_filters = []
-
 
     # HACK to avoid uid=test
     nontest = '(!(uid=test))'
@@ -2227,6 +2269,7 @@ def ldap_users(base=None, list_filters=None, list_attrs=None, filterstr=''):
 
     return objs
 
+
 def ldap_users_by_type(type):
     """
     return list of (dn, obj) from users with type <type>
@@ -2244,15 +2287,18 @@ def ldap_users_by_type(type):
 #----------------------------------------------------------
 # Routing Functions
 
+
 @bottle.route('/static/<filepath:path>')
 def static(filepath):
     return bottle.static_file(filepath, root=os.path.join('.', 'static'))
+
 
 @bottle.route('/')
 @bottle.view('index')
 def index():
     _debug_route()
     return _dict(news=main_news)
+
 
 @bottle.route('/servers')
 @bottle.view('servers')
@@ -2266,6 +2312,7 @@ def servers():
         nfs_cmds=['check_home_perm', 'check_home_doct', 'check_home_temp',
                   'nfsstat']
     )
+
 
 @bottle.route('/server_ldap/<server>')
 def server_ldap(server=None):
@@ -2295,6 +2342,7 @@ def server_ldap(server=None):
                                  ldap_servers=main_ldap_servers_name,
                                  nfs_servers=main_nfs_servers_name))
 
+
 @bottle.route('/server_nfs/<server>')
 def server_nfs(server=None):
     """print LDAP server information
@@ -2316,6 +2364,7 @@ def server_nfs(server=None):
                                  ldap_servers=main_ldap_servers_name,
                                  nfs_servers=main_nfs_servers_name))
 
+
 @bottle.route('/groups')
 @bottle.view('groups')
 def groups():
@@ -2328,6 +2377,7 @@ def groups():
             warn='LDAP main server "%s" error' % main_ldap_server['name'],
             groups={})
     return _dict(groups=groups)
+
 
 @bottle.route('/group/<group>')
 @bottle.view('group')
@@ -2342,6 +2392,7 @@ def group(group=None):
 
     return _dict(cn=d['cn'], desc=d['desc'], members=d['members'],
                  phds=d['phds'], students=d['students'])
+
 
 @bottle.route('/users/search/<str_filter>')
 @bottle.view('users_search')
@@ -2375,6 +2426,7 @@ def users_search(str_filter):
 
     ldap_close()
     return _dict(users=users, query=str_filter, ldap_filter=_filters)
+
 
 @bottle.route('/users')
 @bottle.route('/users/<type>')
@@ -2485,6 +2537,7 @@ def user(uid):
                  students=students, phds=phds, assistants=assistants,
                  teams=teams)
 
+
 @bottle.route('/news')
 @bottle.route('/news/<ver>')
 @bottle.view('news')
@@ -2493,13 +2546,13 @@ def news(ver=None):
     return _dict(ver=ver, news=main_news)
 
 
-
 @bottle.route('/about')
 @bottle.view('about')
 def about():
     _debug_route()
     return _dict(warn=None, ldap_ver=ldap.__version__,
                  bottle_ver=bottle.__version__)
+
 
 @bottle.route('/logs')
 @bottle.view('logs')
@@ -2511,6 +2564,7 @@ def logs():
 #----------------------------------------------------------
 # Routing JSON Functions
 #----------------------------------------------------------
+
 
 @bottle.route('/api/useradd', method='POST')
 def json_useradd():
@@ -2552,13 +2606,12 @@ def json_useradd():
         ldap_data[attr] = [datas[attr]]
         # add local variable: `attr` = datas[attr]
 
-
     # mandatory/none LDAP attrs
     for attr in ['usertype', 'hostname']:
         if attr not in datas or not datas[attr]:
             return _json_result(
                 success=False,
-                message='missing mandatory/none LDAP parameter: '+attr)
+                message='missing mandatory/none LDAP parameter: ' + attr)
         else:
             _debug(attr, datas[attr])
 
@@ -2567,7 +2620,7 @@ def json_useradd():
 
     if usertype not in ['p', 'd', 't']:
         return _json_result(success=False,
-                            message='bad attr usertype: '+usertype)
+                            message='bad attr usertype: ' + usertype)
 
     # usertype == p mandatory attrs
     if usertype == 'p':
@@ -2575,13 +2628,13 @@ def json_useradd():
             if attr not in datas or not datas[attr]:
                 return _json_result(
                     success=False,
-                    message='missing permanents parameter: '+attr)
+                    message='missing permanents parameter: ' + attr)
     # usertype == t|d mandatory attrs
     elif usertype == 'd' or usertype == 't':
         if 'manager' not in datas or not datas['manager']:
             return _json_result(
                 success=False,
-                message='missing PHD/student parameter: '+'manager')
+                message='missing PHD/student parameter: ' + 'manager')
 
     # uid
     ldap_initialize(True)
@@ -2644,7 +2697,7 @@ def json_useradd():
         #_debug('json_useradd/Exception', repr(e))
         return _json_result(
             success=False,
-            message='message du serveur LDAP: '+repr(e))
+            message='message du serveur LDAP: ' + repr(e))
 
     # group update
     if usertype == 'p':
@@ -2656,7 +2709,7 @@ def json_useradd():
         except ldap.LDAPError, e:
             return _json_result(
                 success=False,
-                message='message du serveur LDAP: '+repr(e))
+                message='message du serveur LDAP: ' + repr(e))
         _log_ldap_action(group, 'groupaddmember', {'member': dn})
 
     ldap_close()
@@ -2675,7 +2728,7 @@ def json_useradd():
         ), (
             u'changement du propriétaire',
             'chown -R %s:%s %s' % (uidNumber, gidNumber, homeDirectory)
-        ), (
+    ), (
             'changement des droits',
             'chmod -R u=rwX,go= %s' % homeDirectory)]:
         #_debug('json_useradd/Try to exec %s [%s]' % (cmd, text))
@@ -2684,7 +2737,6 @@ def json_useradd():
         except SSH_EXEC_ERROR as e:
             return _json_result(success=False, message=e.msg)
         #_debug('json_useradd/Try to exec %s' % cmd, 'OK')
-
 
     if not _ssh_setquota(nfs_server_hostname,
                          uid,
@@ -2695,7 +2747,7 @@ def json_useradd():
 
     # email account on heywood
     if 'createemail' in datas and datas['createemail'] \
-        and 'createemaillogin' in datas and datas['createemaillogin']:
+            and 'createemaillogin' in datas and datas['createemaillogin']:
         cmd = 'useradd -c "%s" -g 5000 -s /dev/null -m %s' % (
             ldap_data['cn'], datas['createemaillogin'])
         _debug('createemail', cmd)
@@ -2707,6 +2759,7 @@ def json_useradd():
     return _json_result(
         success=True, uid=uid, userPassword=userPassword,
         message=u'répertoire crée, droits changés, quotas appliqués')
+
 
 @bottle.route('/api/userdel', method='POST')
 def json_userdel():
@@ -2721,7 +2774,7 @@ def json_userdel():
 
     objs = _ldap_search(
         main_users['*']['basedn'],
-        list_filters=['objectClass=person', 'uid='+uid])
+        list_filters=['objectClass=person', 'uid=' + uid])
     if len(objs) == 0:
         ldap_close()
         return _json_result(
@@ -2740,7 +2793,7 @@ def json_userdel():
     # check if user have students
     assistants = _ldap_search(
         main_users['*']['basedn'],
-        list_filters=['objectClass=person', 'manager='+user_dn])
+        list_filters=['objectClass=person', 'manager=' + user_dn])
     if len(assistants) > 0:
         _debug('json_userdel/assistants', '%d found' % len(assistants))
         ldap_close()
@@ -2772,10 +2825,8 @@ def json_userdel():
             _debug('json_userdel/group',
                    'removing %s from %s ... OK' % (uid, cn))
     else:
-        _debug('json_userdel', 'no group with member '+user_dn)
+        _debug('json_userdel', 'no group with member ' + user_dn)
         pass
-
-
 
     #_debug('json_userdel/user', 'deleting user %s ...' % uid)
     try:
@@ -2783,7 +2834,7 @@ def json_userdel():
     except ldap.LDAPError, e:
         ldap_close()
         return _json_result(success=False,
-                            message='Erreurdu serveur LDAP: '+repr(e))
+                            message='Erreurdu serveur LDAP: ' + repr(e))
     _log_ldap_action(user_dn, 'userdel', user_obj)
     #_debug('json_userdel/user', 'deleting user %s ... OK' % uid)
 
@@ -2793,6 +2844,7 @@ def json_userdel():
     _ssh_exec(main_ldap_server['host'], 'root', ['rm -rf ' + homeDirectory])
 
     return _json_result(success=True)
+
 
 @bottle.route('/api/user/<uid>/home')
 def json_user_home(uid):
@@ -2879,6 +2931,7 @@ def json_user_home(uid):
         dir=real_path,
         dirdate=lastmodification, rights=rights, owner=owner, quota=quota,
         server=server)
+
 
 @bottle.route('/api/user/<uid>/attr/<attr>', method='POST')
 def json_user_set_attr(uid, attr):
@@ -2997,6 +3050,7 @@ def json_groups():
 
     return resu
 
+
 def json_group_members_infos(group, allinfo=False):
     """
     Get list of a group members and all students in relations
@@ -3051,9 +3105,11 @@ def json_group_members_infos(group, allinfo=False):
 def json_group_infos(group):
     return json_group_members_infos(group, True)
 
+
 @bottle.route('/api/group/<group>/infos')
 def json_group_members(group):
     return json_group_members_infos(group, False)
+
 
 @bottle.route('/api/autocomplete_manager')
 def json_autocomplete_manager():
@@ -3109,45 +3165,54 @@ def json_server_issue(server):
     _debug_route()
     return json_exec_common(server, 'issue')
 
+
 @bottle.route('/api/server/<server>/uname')
 def json_server_uname(server):
     _debug_route()
     return json_exec_common(server, 'uname')
+
 
 @bottle.route('/api/server_nfs/<server>/check_home_perm')
 def json_server_nfs_check_home_perm(server):
     _debug_route()
     return json_exec_nfs(server, 'check_home_perm')
 
+
 @bottle.route('/api/server_nfs/<server>/check_home_doct')
 def json_server_nfs_check_home_doct(server):
     _debug_route()
     return json_exec_nfs(server, 'check_home_doct')
+
 
 @bottle.route('/api/server_nfs/<server>/check_home_temp')
 def json_server_nfs_check_home_temp(server):
     _debug_route()
     return json_exec_nfs(server, 'check_home_temp')
 
+
 @bottle.route('/api/server_nfs/<server>/nfsstat')
 def json_server_nfs_nfsstat(server):
     _debug_route()
     return json_exec_nfs(server, 'nfsstat')
+
 
 @bottle.route('/api/server_nfs/<server>/quota_home_perm')
 def json_server_nfs_quota_home_perm(server):
     _debug_route()
     return json_exec_nfs(server, 'quota_home_perm')
 
+
 @bottle.route('/api/server_nfs/<server>/quota_home_doct')
 def json_server_nfs_quota_home_doct(server):
     _debug_route()
     return json_exec_nfs(server, 'quota_home_doct')
 
+
 @bottle.route('/api/server_nfs/<server>/quota_home_temp')
 def json_server_nfs_quota_home_temp(server):
     _debug_route()
     return json_exec_nfs(server, 'quota_home_temp')
+
 
 @bottle.route('/api/server_nfs/<server>/quota_total')
 def json_server_nfs_quota_total(server):
@@ -3196,7 +3261,7 @@ def json_log_user(uid):
     q = {'$or': [
         {'object.dn': {'$regex': reg}},
         {'object.member': {'$regex': reg}}
-        ]}
+    ]}
     return json_log_query(q, user=uid)
 
 
