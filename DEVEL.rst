@@ -2,23 +2,29 @@
 Development notes
 *****************
 
-.. note:: This document is just working notes
+This document is just working notes.
+
+.. contents:: Table of Contents
+   :depth: 2
+   :backlinks: top
+
+.. |--| unicode:: U+02013 .. en dash
 
 Code Style
 ==========
 
-Try to follow the right path : **pep8**.
+Try to follow the right path : *Python Enhancement Proposals*.
 
 pep8
 ----
 
-**pep8**, Python Enhancement Proposals number 8, gives coding conventions for the Python code comprising the standard library in the main Python distribution.
+`Python Enhancement Proposals number 8 <https://www.python.org/dev/peps/pep-0008/>`_, gives coding conventions for the Python code comprising the standard library in the main Python distribution.
 
-In this projedct I use two tools in this purpose : ``pep8`` and ``autopep8``.
+In this project I use two tools in this purpose : ``pep8`` and ``autopep8``.
 
-Ths first, inform the developper about the code and the second can correct it.
+This first, inform the developer about the code and the second can correct it.
 
-The process is:
+The typical process is:
 
 #. get all warning and errors::
 
@@ -61,37 +67,43 @@ The process is:
     $ autopep8 --select=E265 -i -j10 server.py
 
 #. (repeat from step 2)
-git
-===
+
+Source workflow
+===============
 
 Use the `gitflow workflow <http://nvie.com/posts/a-successful-git-branching-model/>`_ with 2 main branches: **master** for the production code and **develop** for the current devel code.
 
-python and modules
-==================
+Required modules
+================
 
-Module uses:
+Modules uses by de application:
 
 * bottle == ``0.11`` (not tested ``0.12`` yet)
 * ldap
 * pymongo
 * paramiko == ``1.10.0`` (with last pycryto ``2.6.1``)(see below)
 
-Using virtualenv, I change the production environment to add required modules.
+Modules uses to help develop the application:
+
+* autopep8 |--| to check and clean de Python code
+* Pygments |--| to views sources in the commandline
+
+Using virtualenv, I can change the production/development environment to add required modules.
 
 paramiko
 --------
 
-With those two issue, I use paramoki the an old version of pycrypto to preserve the server speed.
+With those two issues, I use **paramiko** with an old version of **pycrypto** to preserve the server speed.
 
 warning issue
 _____________
 
-The old [*]_ paramiko module to use ssh in python use an old pycrypto function with the **warning**: ``RandomPool_DeprecationWarning``. 
-Since ``2.0`` pycrypto was replace by the module **Cryptography**.
+The old [*]_ **paramiko** module, to use ssh in python use an old **pycrypto** function with the **warning**: ``RandomPool_DeprecationWarning`` 
+Since ``2.0`` **pycrypto** was replace by the module **Cryptography**.
 
 .. [*] the devel computer is on Debian 6, with paramiko ``1.7.6``.
 
-This issue can be fixed with a recent version of pycrypto. On pypi, only the version ``2.6`` is available.
+This issue can be fixed with a recent version of **pycrypto** On pypi, only the version ``2.6`` is available.
 
 Speed issue
 ___________
@@ -322,4 +334,4 @@ The source is::
     #print_long(out, times)
     print_short(out, times)
 
-
+.. :vim:set spell spelllang=en:
