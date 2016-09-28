@@ -692,7 +692,8 @@ def _ldap_modify_attr(dn, attr, val):
         #           dn,attr,val))
         return None
 
-    #_debug('CALL _ldap_modify_attr','(dn=%s, attr=%s, val=%s)' % (dn,attr,val))
+    # _debug('CALL _ldap_modify_attr','(dn=%s, attr=%s, val=%s)' %
+    # (dn,attr,val))
 
     # Dont handle manager because it is multi-valued
     if attr == 'manager':
@@ -1414,7 +1415,8 @@ def _ssh_exec_paramiko_extented(host, user, list_cmds):
     try:
         from paramiko.util import hexlify
     except:
-        #_debug('_ssh_exec_paramiko_extented', 'module paramiko not found. Return!')
+        # _debug('_ssh_exec_paramiko_extented', 'module paramiko not found.
+        # Return!')
         return None
 
     # paramiko.util.log_to_file('paramiko.log')
@@ -1661,12 +1663,15 @@ def _mongodb_connect(collection):
         MONGODB_ERROR(text)
     """
     try:
-        conn = pymongo.MongoClient(host=main_mongodb['hostname'], port=main_mongodb['port'])
+        conn = pymongo.MongoClient(
+            host=main_mongodb['hostname'], port=main_mongodb['port'])
     except TypeError:
         # port not an int error
-        raise MONGODB_ERROR('Port invalid (not an int): %s' % main_mongodb['port'])
+        raise MONGODB_ERROR(
+            'Port invalid (not an int): %s' % main_mongodb['port'])
     except pymongo.errors.ConnectionFailure:
-        raise MONGODB_ERROR('connection error on host: %s at port: %s' % (main_mongodb['hostname'], main_mongodb['port']))
+        raise MONGODB_ERROR('connection error on host: %s at port: %s' %
+                            (main_mongodb['hostname'], main_mongodb['port']))
 
     try:
         db = conn[main_mongodb['db']]
@@ -1677,7 +1682,8 @@ def _mongodb_connect(collection):
     try:
         coll = db[collection]
     except pymongo.errors.InvalidName:
-        raise MONGODB_ERROR('invalid collection "%s" on db "%s"' % (collection, main_mongodb['db']))
+        raise MONGODB_ERROR('invalid collection "%s" on db "%s"' %
+                            (collection, main_mongodb['db']))
 
     return coll
 
@@ -1700,7 +1706,8 @@ def _log_action_mongodb(actor, action, kargs, allow):
         MONGODB_ERROR
         ACL_NOTALLOW
     """
-    #_debug('_log_action_mongodb(%s, %s, %s, %s)' % (actor, action, kargs, allow))
+    # _debug('_log_action_mongodb(%s, %s, %s, %s)' % (actor, action, kargs,
+    # allow))
 
     if not action or not kargs:
         #_debug('_log_action_mongodb','error: no action or kargs')
@@ -3080,7 +3087,8 @@ def json_autocomplete_manager():
         users = ldap_users(base=main_users['p']['basedn'], filterstr=_filters)
     except ldap.TIMEOUT:
         users = []
-        #return _json_result(succes=False, message=u"Réponse du serveur trop longue pour la recherche %s" % term)
+        # return _json_result(succes=False, message=u"Réponse du serveur trop
+        # longue pour la recherche %s" % term)
     ldap_close()
 
     # return only the first 10 items
