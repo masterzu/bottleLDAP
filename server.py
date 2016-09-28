@@ -139,6 +139,10 @@ main_news = (
         'Create email account on heywood',
         'changement lancement serveur',
         'put mongoDB datas in config.ini']),
+    ('15.1', '28 sept. 2016', [
+        'HOTFIX: optimisation pour les connexions ssh - Nettoyage du code',
+        'connexion ssh rapide : utilisation de paramiko 1.10',
+        'nettoyage du code avec autopep8'])
 )
 
 
