@@ -29,7 +29,7 @@ True
 True
 """
 
-### standard libraries
+# standard libraries
 import os, os.path
 import sys
 import json
@@ -39,7 +39,7 @@ import datetime
 import optparse
 import socket
 
-### external libraries
+# external libraries
 import bottle
 import ldap
 import ldap.filter
@@ -217,7 +217,7 @@ main_mongodb = {
     'db': 'bottleldap'
 }
 
-### fake ACL system
+# fake ACL system
 # admin read from config.ini
 acl_admins = []
 
@@ -745,7 +745,7 @@ def _ldap_new_uid(givenName, sn, usertype):
         uid = gn+fn
         #_debug('_ldap_new_uid/uid', uid)
 
-        ## FIXME check if newuid OK
+        # FIXME check if newuid OK
         objs = _ldap_search(main_users['*']['basedn'],
                             filterstr='uid=%s' % uid)
         if len(objs) != 0:
@@ -769,7 +769,7 @@ def _ldap_new_uid(givenName, sn, usertype):
         #_debug('_ldap_new_uid/uid','login %s : OK' % uid)
         return uid
 
-    #elif usertype == 't':
+    # elif usertype == 't':
     #    uid = None
     #    for i in range(1,200):
     #        objs = ldap_users(base=main_users[usertype]['basedn'],
@@ -1240,7 +1240,7 @@ def json_exec_nfs(server, cmd):
         return _json_result(success=False, message='Commande interdite')
 
 
-    ### pre-action cmd
+    # pre-action cmd
     if cmd.find('check') != -1:
         _path = nfs_server[cmd[6:]].rstrip('/')
         #_debug('json_exec_nfs/_path',_path)
@@ -1272,7 +1272,7 @@ def json_exec_nfs(server, cmd):
                             message='Commande "%s" inconnue' % cmd)
 
 
-    ### real cmd
+    # real cmd
     #_debug('json_exec_nfs/real_cmd',real_cmd)
 
     try:
@@ -1282,7 +1282,7 @@ def json_exec_nfs(server, cmd):
     except (SSH_AUTH_ERROR, SSH_EXEC_ERROR, SSH_ERROR) as e:
         return _json_result(success=False, message=e.msg)
 
-    ### post-action cmd
+    # post-action cmd
     if cmd.find('check') != -1:
         message = 'OK'
 
@@ -1350,10 +1350,10 @@ def _ssh_exec_paramiko(host, user, list_cmds):
     if bottle.DEBUG:
         paramiko.util.log_to_file('paramiko.log')
 
-    ### client SSH
+    # client SSH
     ssh = paramiko.SSHClient()
 
-    ### known_hosts
+    # known_hosts
     ssh.load_system_host_keys()
     try:
         ssh.load_host_keys('known_hosts')
@@ -1363,7 +1363,7 @@ def _ssh_exec_paramiko(host, user, list_cmds):
         except:
             raise SSH_AUTH_ERROR('Can find known_hosts file in host %s' % host)
 
-    ### connection
+    # connection
     #ssh.connect(host, username='root', password='', pkey=private_key)
     try:
         ssh.connect(host, username='root', password='',
@@ -1382,7 +1382,7 @@ def _ssh_exec_paramiko(host, user, list_cmds):
                 'You need to set a public key'
                 ) % host)
 
-    ### commands
+    # commands
     list_out = []
     for cmd in list_cmds:
         #_debug('_ssh_exec_paramiko','Try to execute "%s" ...' % cmd)
@@ -1421,17 +1421,17 @@ def _ssh_exec_paramiko_extented(host, user, list_cmds):
 
     # paramiko.util.log_to_file('paramiko.log')
 
-    ### 1. socket
+    # 1. socket
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((host, 22))
     except Exception, e:
         #_debug('_ssh_exec_paramiko_extented','*** Connect failed: ' + str(e))
-        #traceback.print_exc()
-        #sys.exit(1)
+        # traceback.print_exc()
+        # sys.exit(1)
         return None
 
-    ### 2. transport
+    # 2. transport
     t = paramiko.Transport(sock)
     try:
         t.start_client()
@@ -1440,7 +1440,7 @@ def _ssh_exec_paramiko_extented(host, user, list_cmds):
         return None
 
 
-    ### 3. check server's host key -- this is important.
+    # 3. check server's host key -- this is important.
     #_debug('_ssh_exec_paramiko_extented','transport: '+repr(t))
     known_hosts = paramiko.util.load_host_keys(
         os.path.expanduser('~/.ssh/known_hosts'))
@@ -1460,7 +1460,7 @@ def _ssh_exec_paramiko_extented(host, user, list_cmds):
         pass
 
 
-    ### 4. private keys
+    # 4. private keys
     #agent_auth(t, 'root')
     try:
         private_key = paramiko.RSAKey.from_private_key_file(
@@ -1475,7 +1475,7 @@ def _ssh_exec_paramiko_extented(host, user, list_cmds):
     #_debug('_ssh_exec_paramiko_extented/private_key','Private key OK.')
 
 
-    ### 5. auth_publickey
+    # 5. auth_publickey
     try:
         t.auth_publickey(user, private_key)
     except paramiko.AuthenticationException, e:
@@ -1483,12 +1483,12 @@ def _ssh_exec_paramiko_extented(host, user, list_cmds):
         t.close()
         return None
 
-    ### 6. create a channel and execute in it
+    # 6. create a channel and execute in it
     list_out = []
     for cmd in list_cmds:
         chan = t.open_session()
         # do I need it ?
-        #chan.get_pty()
+        # chan.get_pty()
         #_debug('_ssh_exec_paramiko_extented/channel',repr(chan))
         #_debug('_ssh_exec_paramiko_extented','Try to execute "%s" ...' % cmd)
         chan.exec_command(cmd)
@@ -1781,7 +1781,7 @@ def _log_query_mongodb(query, fields, options):
         # _debug('_log_query_mongodb/find error', 'type error')
         raise MONGODB_ERROR('find error query=%s fields=%s' % (query, fields))
 
-    ### options sort
+    # options sort
     if 'sort' in options and options['sort']:
         # must be a list of (key, value)
         query_sort = options['sort']
@@ -2541,7 +2541,7 @@ def json_useradd():
     datas = bottle.request.params
     ldap_data = {}
 
-    ### LDAP operations
+    # LDAP operations
 
     # mandatory/LDAP attrs
     for attr in ['cn', 'sn', 'givenName', 'mail', 'description']:
@@ -2661,7 +2661,7 @@ def json_useradd():
 
     ldap_close()
 
-    ### NFS operations
+    # NFS operations
     nfs_server_hostname = ''
     for n in main_nfs_servers:
         if n['name'] == hostname:
@@ -2789,7 +2789,7 @@ def json_userdel():
 
     ldap_close()
 
-    ### NFS operations
+    # NFS operations
     _ssh_exec(main_ldap_server['host'], 'root', ['rm -rf ' + homeDirectory])
 
     return _json_result(success=True)
@@ -2811,7 +2811,7 @@ def json_user_home(uid):
     """
     _debug_route()
 
-    ### dir
+    # dir
     ldap_initialize()
     users = ldap_users(list_filters=['uid=%s' % uid],
                        list_attrs=['homeDirectory'])
@@ -2832,7 +2832,7 @@ def json_user_home(uid):
     if not server:
         return _json_result(success=False, message='serveur NFS introuvable')
 
-    ### direxists && POSIX rights
+    # direxists && POSIX rights
     real_path = path
     rights = ''
     owner = ''
@@ -2852,7 +2852,7 @@ def json_user_home(uid):
     except SSH_EXEC_ERROR:
         pass
 
-    ### quota
+    # quota
     quota = (0, 0, 0, '')
     try:
         mount_point = _mount_point_rel_path(server, path)
@@ -2943,7 +2943,7 @@ def json_user_get_attr(uid, attr):
         return _json_user_getset_manager(uid)
 
     if attr == 'userPassword':
-        ## FIXME must be protected by some auth mecanism
+        # FIXME must be protected by some auth mecanism
         ldap_initialize(True)
     else:
         ldap_initialize()
@@ -3067,7 +3067,7 @@ def json_autocomplete_manager():
         term = datas['term']
     except:
         return ['no term']
-        #return _json_result(success=False, message='wrong parameters')
+        # return _json_result(success=False, message='wrong parameters')
 
     if term == '':
         return ['term empty']
@@ -3190,7 +3190,7 @@ def json_log_users():
 @bottle.route('/api/log/user/<uid>')
 def json_log_user(uid):
     _debug_route()
-    ### query : object.dn ~= /^uid=<uid>,/ or object.member ~= /^uid=<uid>,/
+    # query : object.dn ~= /^uid=<uid>,/ or object.member ~= /^uid=<uid>,/
     # the final comma is important !
     reg = "^uid=%s," % uid
     q = {'$or': [
@@ -3209,7 +3209,7 @@ def json_log_groups():
 @bottle.route('/api/log/group/<cn>')
 def json_log_group(cn):
     _debug_route()
-    ### query : object.cn ~= /^cn=<cn>,/
+    # query : object.cn ~= /^cn=<cn>,/
     reg = "^cn=%s," % cn
     q = {'object.dn': {'$regex': reg}}
     return json_log_query(q, cn=cn)
