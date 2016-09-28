@@ -1,4 +1,4 @@
-bottle==0.11.7
+bottle==0.12.9
 python-ldap
 pymongo
 paramiko==1.10.0
