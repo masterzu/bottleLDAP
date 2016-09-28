@@ -919,7 +919,7 @@ def _ldap_group_members(group=None):
     Get the group infos
 
     Args:
-    	the group id
+        the group id
 
     Returns:
         dict {dn=..., cn=..., desc="...",
@@ -950,7 +950,7 @@ def _ldap_group_members(group=None):
     _members_filter = _ldap_build_ldapfilter_or(_m_list_filters)
     _students_filter = _ldap_build_ldapfilter_or(_s_list_filters)
 
-	# all kind of users
+    # all kind of users
     _members = _ldap_search(main_users['p']['basedn'],
                             filterstr=_members_filter,
                             list_attrs=['cn', 'uid', 'sn', 'description'])
@@ -999,7 +999,7 @@ def _ldap_group_members(group=None):
     ]
     _debug('students', students)
 
-	## sort by surname
+    # sort by surname
     members.sort(cmp=lambda x, y: cmp(x['sn'], y['sn']))
     phds.sort(cmp=lambda x, y: cmp(x['sn'], y['sn']))
     students.sort(cmp=lambda x, y: cmp(x['sn'], y['sn']))
@@ -1816,7 +1816,7 @@ def _log_query_getlog(log):
     >>> _log_query_getlog({'allow':'', 'datetime':'', 'actor':'', 'action':'', 'object':{'dn':''}}) is None
     True
 
-	# FIXME handle complex Doctests
+    # FIXME handle complex Doctests
     # >>> _d0 = datetime.datetime(2013, 2, 15, 11, 37, 4, 861000)
     # >>> _d1 = _d0.replace(microsecond=0).isoformat()
     # >>> _log_query_getlog({'allow':'yes', 'datetime':_d0, 'actor':'me',
@@ -2749,7 +2749,7 @@ def json_userdel():
             message=("Opération Annulée :"
                      "Etudiants/Assistants de %s trouvé(s)") % uid)
 
-	# handle groups user
+    # handle groups user
     groups = _ldap_search(
         main_ldap_server['basegroup'],
         list_filters=['objectClass=groupOfUniqueNames',
