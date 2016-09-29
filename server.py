@@ -7,6 +7,26 @@ bottleDAP - basic LDAP administration site using bottlepy Web Framework
 ### code checked with Google Python Style Guide
 ### https://google.github.io/styleguide/pyguide.html
 
+### LICENCE AGPL-3.0
+
+A small LDAP admin site
+https://github.com/masterzu/bottleLDAP
+Copyright (C) 2013-2016  Patrick Cao Huu Thien <patrick.cao_huu_thien@upmc.fr>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 Doctest global variables
 >>> isinstance(main_news,tuple)
 True
