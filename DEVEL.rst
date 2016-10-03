@@ -42,40 +42,7 @@ Tools for server side devel
 Go to release
 =============
 
-Process to make a release from a git clone, branch **master**
-
-#. make a git branch for release::
-
-   $ git checkout -b r16
-
-#. build/import all modules for client and server side::
-
-   $ npm install
-
-#. make tests scripts, client and server side::
-
-   $ npm test
-
-#. change code with the right version::
-
-   $ make_release.sh 16
-
-#. commit::
-
-   $ git commit -am 'release 16'
-
-#. push to master branch::
-
-   $ git checkout master
-   $ git merge r16
-
-#. resolve merging problems...
-
-#. commit and push
-
-   $ git commit
-   $ git push
-
+Use `make_release.sh` script.
 
 Python modules notes
 ====================

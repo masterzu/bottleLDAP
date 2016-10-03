@@ -70,6 +70,9 @@ git checkout -b "v$VERSION"
 ## install devel tools
 npm install
 
+## add new files
+git add static/all.min.js static/all.css
+
 ## tests
 npm test
 

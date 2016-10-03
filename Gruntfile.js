@@ -44,7 +44,7 @@ module.exports = function(grunt) {
                 'kilobytesToSize', 
                 'ajax_button_span_url', 
                 'show_warning', 
-                'log_on_click',''] }
+                'log_on_click'] }
       },
       js: {
         files: {
