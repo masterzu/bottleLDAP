@@ -1,6 +1,13 @@
+AGPL-3.0_header export-ignore
 test_server.py export-ignore
 time_ssh.py export-ignore
 bootstrap.py export-ignore
 create-bootstrap.py export-ignore
 requirements_devel.txt export-ignore
+
+make_release.sh export-ignore
+bower.json export-ignore
+Gruntfile.js export-ignore
+grunt_files/ export-ignore
+package.json export-ignore
 
