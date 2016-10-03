@@ -82,17 +82,23 @@ Pour **Debian/Ubuntu** la marche a suivre est la suivante:
   	$ pip install --upgrade -r requirements.txt
 
 En Production
-==========
+=============
 
-* changer la version dans les fichiers sources, par exemple la version **42**::
+Le processus complet de création d'un site
+
+#. importation du source depuis github::
+
+   $ git clone https://github.com/masterzu/bottleLDAP.git
+
+#. changer la version dans les fichiers sources, par exemple la version **42**::
 
   $ make_release.sh 42
 
-* ajouter la clé ssh *rsa_id* et les clés publiques des serveurs *known_hosts* pour les connexions ssh
+#. ajouter la clé ssh *rsa_id* et les clés publiques des serveurs *known_hosts* pour les connexions ssh
 
-* ajouter le fichier de configuration *config.ini*
+#. ajouter le fichier de configuration *config.ini*
 
-* copier les sources depuis la branche *master*::
+#. copier les sources depuis la branche *master*::
 
   $ git archive HEAD -o production-42.zip
 

@@ -568,8 +568,11 @@ ul.news > li:not(:first-child) {
     background: white url('/static/jquery-ui/images/ui-anim_basic_16x16.gif') right center no-repeat; 
 }
 
-.ui-menu {
+.ui-autocomplete {
     font: 13px/22px 'Droid Sans', 'Trebuchet MS', sans-serif;
+    background-color: #eeeeee;
+    border: 1px solid #cccccc;
+    cursor: pointer;
 }
 
 

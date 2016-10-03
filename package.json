@@ -1,0 +1,34 @@
+{
+  "name": "bottleldap",
+  "version": "0.15.0",
+  "description": "small LDAP admin site",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "pip install -r requirements.txt && bower install && grunt ",
+    "test": "python test_server.py -v && grunt test",
+    "start": "python server.py config.ini"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/masterzu/bottleLDAP.git"
+  },
+  "devDependencies": {
+    "grunt": "",
+    "grunt-contrib-uglify": "",
+    "grunt-contrib-concat": "",
+    "grunt-contrib-jshint": "",
+
+    "bower": ""
+  },
+  "keywords": [
+    "ldap",
+    "python",
+    "bottle"
+  ],
+  "author": "Patrick Cao Huu Thien <patrick.cao_huu_thien@upmc.fr>",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/masterzu/bottleLDAP/issues"
+  },
+  "homepage": "https://github.com/masterzu/bottleLDAP#readme"
+}

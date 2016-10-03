@@ -589,3 +589,4 @@ $(function() {
 <div>Erreur : Il n'existe pas de compte <code>{{uid}}</code>.</div>
 %end
 
+<!-- :vim:ft=html: -->

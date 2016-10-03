@@ -18,3 +18,4 @@ Un soupçon de <a class="reference external" href="http://www.mongodb.org/">mong
 <p>Patrick Cao Huu Thien avec comme outils <a href="http://www.vim.org/" target="_blanck">vim</a> et quelques <a href="http://fr.wikipedia.org/wiki/R%C3%A9flexe_de_flexion" target="_blanck">doigts et neurones</a> a réussi ce tour de force de faire fonctionner ce site.</p>
 </div>
 
+<!-- :vim:ft=html: -->
