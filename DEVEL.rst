@@ -66,7 +66,7 @@ Process to make a release from a git clone, branch **master**
 
 #. push to master branch::
 
-   $ git checkour master
+   $ git checkout master
    $ git merge r16
 
 #. resolve merging problems...
