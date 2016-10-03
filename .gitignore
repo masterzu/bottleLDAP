@@ -7,5 +7,3 @@ id_rsa
 known_hosts
 bower_components/
 node_modules/
-static/all.min.js
-static/all.css
