@@ -4,7 +4,6 @@
 <script type="text/javascript">
 <!-- 
 $(function() {
-
     // click on load
     log_on_click($('#button_users'), '/api/log/users', $('#logs_users'));
     log_on_click($('#button_groups'), '/api/log/groups', $('#logs_groups'));
@@ -33,3 +32,5 @@ $(function() {
     </div><!-- #groups -->
 
 </div><!-- #onglets -->
+
+<!-- :vim:ft=html: -->

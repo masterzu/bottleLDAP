@@ -27,3 +27,4 @@ $(function() {
     </ul>
 </div>
 
+<!-- :vim:ft=html: -->

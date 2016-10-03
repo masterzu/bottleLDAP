@@ -44,3 +44,4 @@ $(function() {
     </dl>
 </div><!-- box shadow -->
 
+<!-- :vim:ft=html: -->

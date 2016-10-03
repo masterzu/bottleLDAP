@@ -5,31 +5,29 @@
 <!-- 
 $(function() {
     // click on load
-        log_on_click($('#addlogd'), '/api/log/group/{{cn}}', $('#logs-texts'));
+    log_on_click($('#addlogd'), '/api/log/group/{{cn}}', $('#logs-texts'));
 
-        $('.toggle').click(function(){
-            var item = $(this).next('.toggle-item');
-            if (item.css('display') == 'none') {
-                item.show('fast');
-                $(this).text('-').attr('title', 'fermer');
-            } else {
-                item.hide('fast');
-                $(this).text('+').attr('title', 'ouvrir');
-            };
+    $('.toggle').click(function(){
+        var item = $(this).next('.toggle-item');
+        if (item.css('display') == 'none') {
+            item.show('fast');
+            $(this).text('-').attr('title', 'fermer');
+        } else {
+            item.hide('fast');
+            $(this).text('+').attr('title', 'ouvrir');
+        };
 
-            });
-        $('.toggle-all').click(function(){
-            if ($(this).text() == 'tout ouvrir') {
-                $(this).text('tout fermer');
-                $('.toggle-item').show();
-            } else {
-                $(this).text('tout ouvrir');
-                $('.toggle-item').hide();
-            };
-            $(this).focus();
-            });
-
-    
+    });
+    $('.toggle-all').click(function(){
+        if ($(this).text() == 'tout ouvrir') {
+            $(this).text('tout fermer');
+            $('.toggle-item').show();
+        } else {
+            $(this).text('tout ouvrir');
+            $('.toggle-item').hide();
+        };
+    $(this).focus();
+    })
 });
 // -->
 </script>
@@ -141,3 +139,5 @@ $(function() {
     </div><!-- #logs -->
 
 </div><!-- #onglets -->
+
+<!-- :vim:ft=html: -->

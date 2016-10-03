@@ -7,19 +7,21 @@
 %ns = list(news[:])
 %ns.reverse()
 %first = True
-%for v, d, l_t in ns:
+%for version, date, list_texts in ns:
     %if first:
-        <p>Dernière version du <a href="/news/{{v}}">{{d}}</a> (version {{v}}):</p>
-        %for t in l_t:
-        <dd>{{t}}</dd>
+        <p>Dernière version du <a href="/news/{{version}}">{{date}}</a> (version {{version}}):</p>
+        %for text in list_texts:
+        <dd>{{text}}</dd>
         %end
         %first = False
     %else:
-        %if v != 'TODO':
-            %l.append('<a href="/news/%s" title="%s">%s</a>' % (v,l_t[0],d))
+        %if version != 'TODO':
+            %l.append('<a href="/news/%s" title="%s">%s</a>' % (version,list_texts[0],date))
         %end
     %end
 %end
 %s = ', '.join(l)
-<p> Autres versions: {{!s}} </p>
+    <p> Autres versions: {{!s}} </p>
 </div>
+
+<!-- :vim:ft=html: -->
