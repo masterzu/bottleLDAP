@@ -19,8 +19,8 @@
 
 
 
-Installation
-============
+Prérequis
+=========
 
 En PYTHON l'outil standard (et indépendant de toutes contrainte du système hôte) d'installation de paquet est `pip <http://www.pip-installer.org>`_. Il remplace l'ancien outils ``easy_install``.
 
@@ -61,8 +61,8 @@ L'environnement est installer dans le répertoire de votre choix et activé par 
   	$ pip --version
     pip 1.3.1 from /home/patrick/test/myenv/lib/python2.6/site-packages/pip-1.3.1-py2.6.egg (python 2.6)
 
-Prérequis
----------
+Modules
+-------
 
 Le fichier *requirements.txt* permet de lister pour ``pip`` les modules à installer.
 L'installation des modules se fait par un simple::
@@ -104,21 +104,18 @@ Pour **Debian/Ubuntu** la marche a suivre est la suivante:
 En Production
 =============
 
-Le processus complet de création d'un site
+Le processus complet de création du site
 
-#. importation du source depuis github::
+#. importation des sources depuis github::
 
-   $ git clone https://github.com/masterzu/bottleLDAP.git
+   $ wget https://github.com/masterzu/bottleLDAP/archive/master.zip
 
-#. changer la version dans les fichiers sources, par exemple la version **42**::
+#. ajout de la clé ssh *rsa_id* et des clés publiques des serveurs *known_hosts* pour les connexions ssh
 
-  $ make_release.sh 42
+#. ajout/création du fichier de configuration *config.ini*
 
-#. ajouter la clé ssh *rsa_id* et les clés publiques des serveurs *known_hosts* pour les connexions ssh
+#. lancement du serveur::
 
-#. ajouter le fichier de configuration *config.ini*
+   python server.py config.ini
 
-#. copier les sources depuis la branche *master*::
-
-  $ git archive HEAD -o production-42.zip
 
