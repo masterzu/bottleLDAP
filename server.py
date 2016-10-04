@@ -162,7 +162,11 @@ main_news = (
     ('15.1', '28 sept. 2016', [
         'HOTFIX: optimisation pour les connexions ssh - Nettoyage du code',
         'connexion ssh rapide : utilisation de paramiko 1.10',
-        'nettoyage du code avec autopep8'])
+        'nettoyage du code avec autopep8']),
+    ('0.16.0', '4 oct 2016', [
+        'detach client side libraries ; use semver',
+        'use bower and grunt to detach javascript libraries from repo',
+        'use semver - sementic version number http://semver.org'])
 )
 
 
