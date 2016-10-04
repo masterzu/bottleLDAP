@@ -373,4 +373,4 @@ $(function() {
 </table>
 </div><!-- box shadow -->
 
-
+<!-- :vim:ft=html: -->

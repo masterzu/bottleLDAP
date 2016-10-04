@@ -21,3 +21,5 @@ $(function(){
 </script>
 <strong>Recherche</strong>: <input type="text" name="search" value="" id="input_search">
 </div>
+
+<!-- :vim:ft=html: -->

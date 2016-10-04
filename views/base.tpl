@@ -2,20 +2,12 @@
 <html>
 <head>
   <title>{{"bottleLDAP | " + title or 'No title'}}</title>
-  <link rel="stylesheet" type="text/css" href="/static/jquery-ui/jquery-ui-1.8.19.autocomplete.css" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" type="text/css" href="/static/bootstrap.min.css" />
-  <link rel="stylesheet" type="text/css" href="/static/bootstrap-responsive.min.css" />
-  <link rel="stylesheet" type="text/css" href="/static/base.css" />
+  <link rel="stylesheet" type="text/css" href="/static/all.css" />
   <link rel="shortcut icon" href="/static/favicon.ico" />
+  <script src="/static/all.min.js"></script>
 </head>
 <body>
-    <script src="/static/bootstrap.min.js"></script><!-- bootstrap -->
-    <script src="/static/jquery.1.7.1.min.js"></script>
-    <script src="/static/jquery-ui/jquery-ui-1.8.19.autocomplete.min.js"></script><!-- jquery-ui-custom-autocomplete -->
-    <script src="/static/jquery.tablesorter.min.js"></script><!-- http://tablesorter.com/docs/ -->
-    <script src="/static/jquery.autogrowinput.js"></script>
-    <script src="/static/jquery.base.js"></script><!-- my research engine -->
 
     <div id="top">
         <div id="top-container" class="container">

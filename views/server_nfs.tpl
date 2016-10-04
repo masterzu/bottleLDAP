@@ -1,6 +1,4 @@
 %rebase base title="serveur NFS : %s" % name, nav=nav, warn=warn, author=author, version=version
-<script src="/static/raphael-min.js"></script>
-<script src="/static/raphael.pie.js"></script>
 <script type="text/javascript">
 <!--
 $(function() {
@@ -133,11 +131,6 @@ $(function() {
         <dt> <button id="all" class="btn btn-mini">toutes</button> </dt>
     </dl>
 
-
-
-
-
-
-
 </div><!-- box shadow -->
 
+<!-- :vim:ft=html: -->

@@ -15,3 +15,4 @@
 </ol>
 </div><!-- box shadow -->
 
+<!-- :vim:ft=html: -->

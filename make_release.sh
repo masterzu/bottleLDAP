@@ -1,4 +1,43 @@
-#!/bin/bash
+#!/bin/bash -e
+
+# make a release script from git-clone to git push to master
+
+# A small LDAP admin site
+# https://github.com/masterzu/bottleLDAP
+# Copyright (C) 2013-2016  Patrick Cao Huu Thien <patrick.cao_huu_thien@upmc.fr>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# make a release script
+
+# A small LDAP admin site
+# https://github.com/masterzu/bottleLDAP
+# Copyright (C) 2013-2016  Patrick Cao Huu Thien <patrick.cao_huu_thien@upmc.fr>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 
 FILES="README.rst server.py"
 
@@ -22,8 +61,20 @@ test -z "$1" && usage
 VERSION="$1"
 DATE=$(date '+%d %b %Y')
 
-debug VERSION: $VERSION
-debug DATE: $DATE
+# debug VERSION: $VERSION
+# debug DATE: $DATE
+
+## make new git branch
+git checkout -b "v$VERSION"
+
+## install devel tools
+npm install
+
+## add new files
+git add static/all.min.js static/all.css
+
+## tests
+npm test
 
 ### files to transform
 for sc in $FILES
@@ -43,7 +94,31 @@ do
     rm -f $script;
 done
 
-# auto remove
-rm make_release.sh
+cat <<EOT
+OK
+
+Release v$VERSION allmost done.
+
+things to do:
+
+* add version info in server.py
+* add Changes ?
+* commit
+
+  git commit -a -m '$VERSION'
+
+* merge from master
+
+  git checkout master
+  git merge v$VERSION
+
+* resolve merge conflics
+* commit and push
+
+  git commit
+  git push
+
+EOT
+
 
 exit 0

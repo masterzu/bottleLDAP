@@ -24,23 +24,23 @@ Raphael.fn.pieChart = function (cx, cy, r, values, labels, quotas, graces, title
                 delta = 20,
                 user_dx = - r * 1.1 * Math.cos(-popangle * rad),
                 user_dy = - r * 1.1 * Math.sin(-popangle * rad),
-                color = Raphael.hsb(start, .5, 1),
+                color = Raphael.hsb(start, 0.5, 1),
                 // h' = h + 180deg (ou + .5) ; s' = (v.s)/(v.(s-1)+1) ; v' = v.(s-1)+1
                 // http://fr.wikipedia.org/wiki/Teinte_Saturation_Valeur#Couleurs_compl.C3.A9mentaires
                 bcolor = Raphael.hsb(start, 1, 1),
-                bcolor_comp = Raphael.hsb(start+.5, 1, 1),
-                sector_fillcolor = quotas[j] 
-                    ? '-' + [bcolor, bcolor_comp, bcolor, bcolor_comp, bcolor, bcolor_comp, bcolor, bcolor_comp, bcolor, bcolor_comp, bcolor].join('-')
-                    : "-" + bcolor + "-" + color,
-                user_anim = quotas[j]
-                    ? {transform: "s3", fill: "#f00", stroke: "#000", opacity: 1}
-                    : {transform: "s2", fill: "#fff", stroke: "#000", opacity: 1},
-                user_size_text = quotas[j]
-                    ? value_human + '(' + graces[j] + ')'
-                    : value_human,
-                user_size_anim = quotas[j]
-                    ? {transform: "s3", opacity: 1, fill: "#f00", stroke: "#000", opacity: 1}
-                    : {transform: "s2", opacity: 1, fill: "#fff", stroke: "#000", opacity: 1},
+                bcolor_comp = Raphael.hsb(start + 0.5, 1, 1),
+                sector_fillcolor = quotas[j] ?
+                    '-' + [bcolor, bcolor_comp, bcolor, bcolor_comp, bcolor, bcolor_comp, bcolor, bcolor_comp, bcolor, bcolor_comp, bcolor].join('-') : 
+                    "-" + bcolor + "-" + color,
+                user_anim = quotas[j] ?
+                    {transform: "s3", fill: "#f00", stroke: "#000", opacity: 1} :
+                    {transform: "s2", fill: "#fff", stroke: "#000", opacity: 1},
+                user_size_text = quotas[j] ?
+                    value_human + '(' + graces[j] + ')' : 
+                    value_human,
+                user_size_anim = quotas[j] ? 
+                    {transform: "s3", opacity: 1, fill: "#f00", stroke: "#000"} :
+                    {transform: "s2", opacity: 1, fill: "#fff", stroke: "#000"},
                 p = sector(cx, cy, r, angle, angle + angleplus, 
                     {fill: (angle+angleplus/2) + sector_fillcolor, stroke: "#fff", "stroke-width": 3}).attr('cursor', 'pointer'),
                 user = paper.text(cx - user_dx, cy - user_dy, labels[j]).attr({fill: "#000", stroke: "none", "font-size": 13, opacity: 0}).hide(),
@@ -75,7 +75,7 @@ Raphael.fn.pieChart = function (cx, cy, r, values, labels, quotas, graces, title
             chart.push(user);
             chart.push(user_size);
             angle += angleplus;
-            start += .1;
+            start += 0.1;
         },
         thetitle,
         thesize;

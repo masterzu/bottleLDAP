@@ -4,16 +4,16 @@
 <!--
 
 $(function() {
-    %for dn, gr in groups:
+%for dn, gr in groups:
 	%code = gr['cn'][0]
-        $('a#infos-{{code}}').click(function() { ajax_button_span_url($(this), $('span#infos-{{code}}'), '/api/group/{{code}}/infos') });
-        %end
-        $('#all').click(function(){
-            %for dn, gr in groups:
-                %code = gr['cn'][0]
-                ajax_button_span_url($('a#infos-{{code}}'), $('span#infos-{{code}}'), '/api/group/{{code}}/infos') 
-            %end
-            });    
+    $('a#infos-{{code}}').click(function() { ajax_button_span_url($(this), $('span#infos-{{code}}'), '/api/group/{{code}}/infos') });
+    %end
+    $('#all').click(function(){
+    %for dn, gr in groups:
+        %code = gr['cn'][0]
+        ajax_button_span_url($('a#infos-{{code}}'), $('span#infos-{{code}}'), '/api/group/{{code}}/infos') 
+    %end
+    });    
 });
 // -->
 </script>
@@ -31,3 +31,5 @@ $(function() {
 %end
 <p>Action: <a id="all" class="btn btn-mini">+infos</a></p>
 </div><!-- box shadow -->
+
+<!-- :vim:ft=html: -->
