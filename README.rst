@@ -3,8 +3,8 @@ bottleLDAP
 ==========
 
 :Author: Patrick Cao Huu Thien
-:Date: @DATE@
-:Version: @VERSION@
+:Date: 04 oct. 2016
+:Version: 0.16.0
 :Licence: AGPL-3.0
 
 .. LICENCE
