@@ -111,6 +111,8 @@ things to do:
   git merge v$VERSION
 
 * resolve merge conflics
+* add version info in server.py
+* add Changes ?
 * commit and push
 
   git commit
