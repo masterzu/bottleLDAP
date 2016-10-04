@@ -101,6 +101,8 @@ Release v$VERSION allmost done.
 
 things to do:
 
+* add version info in server.py
+* add Changes ?
 * commit
 
   git commit -a -m '$VERSION'
@@ -111,8 +113,6 @@ things to do:
   git merge v$VERSION
 
 * resolve merge conflics
-* add version info in server.py
-* add Changes ?
 * commit and push
 
   git commit
