@@ -23,9 +23,6 @@
 <p>Retour aux <a href="/news">news</a></p>
 </div>
 
-
-
-
 %else:
 
 <div class="box shadow">
@@ -60,3 +57,5 @@
 
 </div>
 %end
+
+<!-- :vim:ft=html: -->

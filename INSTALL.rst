@@ -1,6 +1,26 @@
+.. LICENCE
+    A small LDAP admin site
+    https://github.com/masterzu/bottleLDAP
+    Copyright (C) 2013-2016  Patrick Cao Huu Thien <patrick.cao_huu_thien@upmc.fr>
 
-Installation
-============
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
+
+Prérequis
+=========
 
 En PYTHON l'outil standard (et indépendant de toutes contrainte du système hôte) d'installation de paquet est `pip <http://www.pip-installer.org>`_. Il remplace l'ancien outils ``easy_install``.
 
@@ -41,8 +61,8 @@ L'environnement est installer dans le répertoire de votre choix et activé par 
   	$ pip --version
     pip 1.3.1 from /home/patrick/test/myenv/lib/python2.6/site-packages/pip-1.3.1-py2.6.egg (python 2.6)
 
-Prérequis
----------
+Modules
+-------
 
 Le fichier *requirements.txt* permet de lister pour ``pip`` les modules à installer.
 L'installation des modules se fait par un simple::
@@ -82,17 +102,20 @@ Pour **Debian/Ubuntu** la marche a suivre est la suivante:
   	$ pip install --upgrade -r requirements.txt
 
 En Production
-==========
+=============
 
-* changer la version dans les fichiers sources, par exemple la version **42**::
+Le processus complet de création du site
 
-  $ make_release.sh 42
+#. importation des sources depuis github::
 
-* ajouter la clé ssh *rsa_id* et les clés publiques des serveurs *known_hosts* pour les connexions ssh
+   $ wget https://github.com/masterzu/bottleLDAP/archive/master.zip
 
-* ajouter le fichier de configuration *config.ini*
+#. ajout de la clé ssh *rsa_id* et des clés publiques des serveurs *known_hosts* pour les connexions ssh
 
-* copier les sources depuis la branche *master*::
+#. ajout/création du fichier de configuration *config.ini*
 
-  $ git archive HEAD -o production-42.zip
+#. lancement du serveur::
+
+   python server.py config.ini
+
 

@@ -3,8 +3,28 @@ bottleLDAP
 ==========
 
 :Author: Patrick Cao Huu Thien
-:Date: 28 sept. 2016
-:Version: 15.1
+:Date: 04 oct. 2016
+:Version: 0.16.0
+:Licence: AGPL-3.0
+
+.. LICENCE
+    A small LDAP admin site
+    https://github.com/masterzu/bottleLDAP
+    Copyright (C) 2013-2016  Patrick Cao Huu Thien <patrick.cao_huu_thien@upmc.fr>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 
 :abstract: 
 

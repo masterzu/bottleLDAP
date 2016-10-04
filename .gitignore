@@ -7,3 +7,10 @@ id_rsa
 known_hosts
 bower_components/
 node_modules/
+
+.gitignore
+AGPL-3.0_header
+Gruntfile.js
+bower.json
+package.json
+

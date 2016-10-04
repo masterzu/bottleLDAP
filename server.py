@@ -7,6 +7,26 @@ bottleDAP - basic LDAP administration site using bottlepy Web Framework
 ### code checked with Google Python Style Guide
 ### https://google.github.io/styleguide/pyguide.html
 
+### LICENCE AGPL-3.0
+
+A small LDAP admin site
+https://github.com/masterzu/bottleLDAP
+Copyright (C) 2013-2016  Patrick Cao Huu Thien <patrick.cao_huu_thien@upmc.fr>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 Doctest global variables
 >>> isinstance(main_news,tuple)
 True
@@ -49,7 +69,7 @@ import paramiko
 import pymongo
 
 __author__ = 'P. Cao Huu Thien'
-__version__ = '15.1'
+__version__ = '0.16.0'
 __license__ = 'GPL'
 
 
@@ -142,7 +162,11 @@ main_news = (
     ('15.1', '28 sept. 2016', [
         'HOTFIX: optimisation pour les connexions ssh - Nettoyage du code',
         'connexion ssh rapide : utilisation de paramiko 1.10',
-        'nettoyage du code avec autopep8'])
+        'nettoyage du code avec autopep8']),
+    ('0.16.0', '4 oct 2016', [
+        'detach client side libraries ; use semver',
+        'use bower and grunt to detach javascript libraries from repo',
+        'use semver - sementic version number http://semver.org'])
 )
 
 

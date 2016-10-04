@@ -33,7 +33,7 @@ function kilobytesToSize(kilobytes, precision) {
         gigabyte = megabyte * 1024,
         terabyte = gigabyte * 1024;
 
-    if (kilobytes == 0) 
+    if (kilobytes === 0) 
         return '0';
     
     if ((kilobytes >= 0) && (kilobytes < kilobyte)) {
@@ -55,7 +55,7 @@ function kilobytesToSize(kilobytes, precision) {
         return kilobytes + ' Ko';
 
     }
-};
+}
 
 /**********************************************************
  jQuery extented:
@@ -85,7 +85,7 @@ jQuery.fn.center = function () {
     // add fermer link
     $('a',this).click(function(){ calc.hide(); });
     return this;
-}
+};
 
 
 /**********************************************************
@@ -100,7 +100,7 @@ function ajax_button_span_url(button, span, url){
     var this_button = button;
     var this_span = span;
 
-    if (button == null && span == null) {
+    if (button === null && span === null) {
         show_warning('ERROR in ajax_button_span_url: null !');
         return;
     }
@@ -112,7 +112,7 @@ function ajax_button_span_url(button, span, url){
     button.addClass('btn-inverse');
 
     //alert('serveur {{name}} with url:'+url);
-    if (this_span != null) this_span.addClass('ui-autocomplete-loading').html('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
+    if (this_span !== null) this_span.addClass('ui-autocomplete-loading').html('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
 
     // do the ajax job with a timeout
     $.ajax({
@@ -122,15 +122,15 @@ function ajax_button_span_url(button, span, url){
         timeout: 2000,
         success: function(response) {
             button.removeClass('btn-inverse');
-            if (this_span != null) this_span.removeClass('ui-autocomplete-loading').text('');
-            if (response['success']) {
-                if (this_span != null)
-                    this_span.text(response['message'])
+            if (this_span !== null) this_span.removeClass('ui-autocomplete-loading').text('');
+            if (response.success) {
+                if (this_span !== null)
+                    this_span.text(response.message);
                 else
                     this_button.addClass('btn-success').removeClass('btn-danger');
             } else {
-                if (this_span != null)
-                    show_warning(response['message'])
+                if (this_span !== null)
+                    show_warning(response.message);
                 else
                     this_button.addClass('btn-success').removeClass('btn-danger');
             }
@@ -139,12 +139,12 @@ function ajax_button_span_url(button, span, url){
             button.removeClass('btn-inverse');
             this_span.removeClass('ui-autocomplete-loading').text('');
             if (textStatus == "timeout")
-                show_warning('Serveur Timeout ... Réessayez si vous osez :)')
+                show_warning('Serveur Timeout ... Réessayez si vous osez :)');
             else 
                 show_warning('Erreur de serveur: '+error+' ('+textStatus+')');
         }
     });
-}; 
+}
 
 
 /**********************************************************
@@ -155,12 +155,12 @@ function show_warning(text) {
     if (text) {
         $('#warning').text(text).slideDown();
         // close after 20s
-        setTimeout("$('#warning').hide('slow')", 20000);
+        setTimeout(function(){ $('#warning').hide('slow'); }, 20000);
         //alert(text);
     } else {
         $('#warning').slideUp();
     }
-};
+}
 
 /**********************************************************
 * when wbutton.click do a ajax the url and send result to wresult
@@ -176,11 +176,11 @@ function log_on_click(wbutton, url, wresult){
 
         $.getJSON(url,function(data, textStatus){
             //for ( var v in data) { alert('data['+v+']='+data[v]); };
-            if (textStatus == 'success' && data['success']) { // ajax OK && data ok
-                var logs = data['logs'],
+            if (textStatus == 'success' && data.success) { // ajax OK && data ok
+                var logs = data.logs,
                     section_date = '',
                     months = ['Jan','Fev','Mars','Avr','Mai','Juin','Juil','Aout','Sept','Oct','Nov','Dec'];
-                for (k in logs) {
+                for (var k in logs) {
                     var o = logs[k],
                         log_allow = o[0],
                         log_iso8601 = o[1],
@@ -200,39 +200,39 @@ function log_on_click(wbutton, url, wresult){
                         log_allowtxt = '';
                     } else {
                         log_allowtxt = ' <span class="warn hover" title="action interdite">[TENTATIVE]</span> ';
-                    };
+                    }
 
                     // link
                     if (olink) {
                         link = ' <a href="'+olink+'">'+odesc+'</a>';
                     } else {
                         link = ' <span>'+odesc+'</span>';
-                    };
+                    }
 
                     // section date
                     if (section_date != log_section_date) {
                         wresult.append('<div class="sectionlog">'+log_section_date+'</div>');
-                    };
+                    }
                     section_date = log_section_date;
                 
-                    wresult.append('<div class="log">'+log_time+log_allowtxt
-                        //+' <a href="/actor/'+log_actor+'" title="actor" class="actor">'+log_actor+'</a>'
-                        +' <span title="actor" class="label label-info help">'+log_actor+'</span>'
-                        +' <span title="action" class="label label-success help">'+log_action+'</span>'+link
-                        +'</div>');
-                };
+                    wresult.append('<div class="log">' + log_time+log_allowtxt +
+                        //' <a href="/actor/'+log_actor+'" title="actor" class="actor">'+log_actor+'</a>' +
+                        ' <span title="actor" class="label label-info help">'+log_actor+'</span>' +
+                        ' <span title="action" class="label label-success help">'+log_action+'</span>' + link +
+                        '</div>');
+                }
                 wbutton.text('metre a jour');
 
-                if (logs.length == 0) {
+                if (logs.length === 0) {
                     wresult.append('<div>Pas de logs</div>');
                 }
 
             } else { //ajax error
-                show_warning('AJAX: error: GET '+url+'; '+data['message']);
-            };
+                show_warning('AJAX: error: GET '+url+'; '+data.message);
+            }
         });
     });
-};
+}
 
 
 /**********************************************************
@@ -247,9 +247,9 @@ $(function(){
     $("#input_search").keypress(function(e){
         if (e.which == 13) {
             var val = $(this).val();
-            if (val.match('[*=~]') != null ) {
+            if (val.match('[*=~]') !== null ) {
                 alert('ne pas utiliser les caractères *, = ou ~');
-            } else if (val != "") {
+            } else if (val !== "") {
                 window.location='/users/search/'+val;
             } else {
                 show_warning("hum ?!");
