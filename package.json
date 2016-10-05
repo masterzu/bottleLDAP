@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "postinstall": "pip install -r requirements.txt && bower install && grunt ",
-    "test": "python test_server.py -v && grunt test",
+    "test": "python test_server.py && grunt test",
     "start": "python server.py config.ini"
   },
   "repository": {
