@@ -23,7 +23,7 @@ env:
     # - PYMONGO=3.2
     # - PYMONGO=3.3
 install: 
-    - pip install -r requirements.txt
+    - npm install
     - pip install bottle==$BOTTLE
 
 # command to run tests
