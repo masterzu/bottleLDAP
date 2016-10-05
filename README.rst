@@ -2,6 +2,9 @@
 bottleLDAP
 ==========
 
+.. image:: https://travis-ci.org/masterzu/bottleLDAP.svg?branch=develop
+    :target: https://travis-ci.org/masterzu/bottleLDAP
+
 :Author: Patrick Cao Huu Thien
 :Date: @DATE@
 :Version: @VERSION@
@@ -42,8 +45,6 @@ bottleLDAP
    (ne pas oublier l'espace final)
 .. contents:: Sommaire
 
-.. image:: https://travis-ci.org/masterzu/bottleLDAP.svg?branch=develop
-    :target: https://travis-ci.org/masterzu/bottleLDAP
 
 Présentation générale
 =====================
