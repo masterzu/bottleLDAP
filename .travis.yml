@@ -23,7 +23,9 @@ env:
     # - PYMONGO=3.2
     # - PYMONGO=3.3
 before_install:
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew install node; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install node && npm install -g grunt-cli; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install python; fi
 install: 
     - npm install
     - pip install bottle==$BOTTLE
