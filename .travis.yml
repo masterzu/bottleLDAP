@@ -6,9 +6,27 @@ python:
   # - "3.3"
   # - "3.4"
   # - "3.5"
+os:
+    - linux
+    - osx
+env:
+    bottle:
+        - BOTTLE=0.10.12
+        - BOTTLE=0.11.7
+        - BOTTLE=0.12.9
+    # pymongo:
+    #     - PYMONGO=2.4
+    #     - PYMONGO=2.6
+    #     - PYMONGO=2.8
+    #     - PYMONGO=2.9
+    #     - PYMONGO=3.0
+    #     - PYMONGO=3.1
+    #     - PYMONGO=3.2
+    #     - PYMONGO=3.3
 install: 
-    - pip install -r requirements.txt
-    - npm install
+    - pip install -q -r requirements.txt
+    - npm install -q bottle==$BOTTLE
+    # - npm install -q pymongo==$PYMONGO
 # command to run tests
 script: 
     - npm test
