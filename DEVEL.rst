@@ -21,7 +21,11 @@ Tools for client side
 I use `grunt <http://gruntjs.com/>`_ and `bower <https://bower.io/>`_ to import all javascript libraries
 
 * install ``npm``. ``npm`` is part of `nodejs <https://nodejs.org/en/download/>`_ project.
-* install ``grunt`` and ``bower`` listed in *package.json*::
+* install commands ``grunt``, ``bower`` and ``phantomjs`` ::
+    
+    $ npm install -g grunt-cli bower phantomjs
+
+* install grunt libraries listed in *package.json*::
 
 	$ npm install
 
