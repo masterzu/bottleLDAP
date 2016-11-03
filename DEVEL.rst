@@ -53,7 +53,7 @@ Python modules notes
 
 Modules uses by de application:
 
-* bottle == ``0.11`` (not tested ``0.12`` yet)
+* bottle == ``0.12`` 
 * ldap
 * pymongo
 * paramiko == ``1.10.0`` (with last pycryto ``2.6.1``)(see below)
