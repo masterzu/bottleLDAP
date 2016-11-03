@@ -39,7 +39,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-FILES="README.rst server.py"
+FILES="README.rst server.py package.json"
 
 usage () {
     cat <<EOT

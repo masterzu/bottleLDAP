@@ -1,6 +1,6 @@
 {
   "name": "bottleldap",
-  "version": "0.15.0",
+  "version": "@VERSION@",
   "description": "small LDAP admin site",
   "main": "index.js",
   "scripts": {
