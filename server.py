@@ -727,83 +727,12 @@ def _ldap_search(base, list_filters=[], list_attrs=None, filterstr=''):
 
     # timelimit default in openldap = 3600 (s)
     # sizelimit default in openldap = 500 (# of result)
-    objs = _ldap_search_ext_s(main_ldap_server['file'],
-                              base,
-                              ldap.SCOPE_SUBTREE,
-                              filterstr=_filter,
-                              attrlist=list_attrs,
-                              timeout=30,
-                              sizelimit=100)
-    _debug('RETURN _ldap_search/size', len(objs))
+    objs = main_ldap_server['file'].search_st(base,
+                                              ldap.SCOPE_SUBTREE,
+                                              filterstr=_filter,
+                                              attrlist=list_attrs, timeout=30)
+    # _debug('RETURN _ldap_search/size', len(objs))
     return objs
-
-def _ldap_search_ext_s(self,base,scope,filterstr='(objectClass=*)',attrlist=None,attrsonly=0,timeout=-1,sizelimit=0):
-    """
-    Behaves exactly like LDAPObject.search_ext_s() but internally uses the
-    simple paged results control to retrieve search results in chunks.
-    
-    This is non-sense for really large results sets which you would like
-    to process one-by-one
-
-    from https://bitbucket.org/jaraco/python-ldap/src/f208b6338a28/Demo/paged_search_ext_s.py
-
-    Handle SIZELIMIT_EXCEEDED by returning partial list
-    """
-    _debug('CALL _ldap_search_ext_s(base=%s, filterstr=%s, attrlist=%s, timeout=%s, sizelimit=%s)' % (base, filterstr, attrlist, timeout, sizelimit))
-    req_ctrl = ldap.controls.SimplePagedResultsControl(True,size=sizelimit,cookie='')
-    # try with alt implementation
-    # from list python-ldap michael at stroeder.com  Fri Dec 12 11:42:46 2014
-    # req_ctrl = ldap.controls.pagedresults.SimplePagedResultsControl(True,size=sizelimit,cookie='')
-
-    # Send first search request
-    msgid = self.search_ext(
-      base,
-      scope,
-      filterstr=filterstr,
-      attrlist=attrlist,
-      serverctrls=[ req_ctrl ]
-    )
-
-    result_pages = 0
-    all_results = []
-    
-    while True:
-      result_pages += 1
-      _debug('_ldap_search_ext_s/PAGE', result_pages) 
-      _debug('_ldap_search_ext_s/new req_ctrl.size=%s' % req_ctrl.size)
-      _debug('_ldap_search_ext_s/new req_ctrl.cookie=%s' % req_ctrl.cookie)
-      try:
-          rtype, rdata, rmsgid, rctrls = self.result3(msgid)
-      except ldap.SIZELIMIT_EXCEEDED:
-          _debug('RETURN _ldap_search_ext_s with SIZELIMIT/len=%s' % len(all_results))
-          return all_results
-      _debug('_ldap_search_ext_s/result3/data/len=%s' % len(rdata)) 
-      all_results.extend(rdata)
-      # Extract the simple paged results response control
-      # for c in rctrls:
-      #     _debug('_ldap_search_ext_s/remote_ctrls', '%s' % c)
-      pctrls = [
-        c
-        for c in rctrls
-        if c.controlType == ldap.controls.SimplePagedResultsControl.controlType
-      ]
-      # _debug('_ldap_search_ext_s/pctrls/len=%s' % len( pctrls ))
-      if pctrls:
-        if pctrls[0].cookie:
-            # Copy cookie from response control to request control
-            req_ctrl.cookie = pctrls[0].cookie
-            # req_ctrl = ldap.controls.SimplePagedResultsControl(True,size=sizelimit,cookie=pctrls[0].cookie)
-            msgid = self.search_ext(
-              base,
-              scope,
-              filterstr=filterstr,
-              attrlist=attrlist,
-              serverctrls=[req_ctrl]
-            )
-        else:
-            break
-    _debug('RETURN _ldap_search_ext_s/len=%s' % len(all_results))
-    return all_results
 
 def _ldap_modify_attr(dn, attr, val):
     """

@@ -27,7 +27,7 @@ I use `grunt <http://gruntjs.com/>`_ and `bower <https://bower.io/>`_ to import 
 
 * install grunt libraries listed in *package.json*::
 
-	$ npm install
+    $ npm install
 
 * install all javascript libraries listed in *bower.json*::
 
@@ -36,7 +36,7 @@ I use `grunt <http://gruntjs.com/>`_ and `bower <https://bower.io/>`_ to import 
 Tools for server side devel
 ---------------------------
 
-* (optional) install **virtualenv** to have separated python env from OS host
+* (optional) install **virtualenv** to have separated python environment from OS host
 
 * install python modules listed in *requirements.txt* and *requirements_devel.txt*::
 
@@ -307,6 +307,16 @@ The source is::
     #print_long(out, times)
     print_short(out, times)
 
+ldap
+----
+
+The module **SimplePagedResultsControl** (RFC 2696) controlling the ``sizelimit`` parameter don't work with the server **openldap**.
+
+The only solution, if you see error like ``SIZELIMIT_EXCEEDED``, is to set a bigger limit to `slapd.conf` (default is 500)::
+
+	sizelimit 1000
+
+
 Code Style
 ==========
 
@@ -365,4 +375,4 @@ The typical process is:
 
 #. (repeat from step 2)
 
-.. :vim:set spell spelllang=en:
+.. :vim:set spell spelllang=en:set ft=rst:
