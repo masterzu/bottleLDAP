@@ -31,7 +31,6 @@ before_install:
 install: 
     - npm install
     - pip install bottle==$BOTTLE
-    - pip install pymongo==$PYMONGO
 
 # command to run tests
 script: 
