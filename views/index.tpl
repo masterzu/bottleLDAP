@@ -1,4 +1,7 @@
 %rebase base title='', nav=nav, warn=warn, author=author, version=version
+%#
+%# Vars: cn, desc, members, phds, students
+%#
 <div class="box shadow">
 <h1>Bienvenue sur <strong>bottleLDAP</strong></h1>
 

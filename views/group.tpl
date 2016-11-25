@@ -1,5 +1,7 @@
 %rebase base title="Équipes : %s" % cn , nav=nav, warn=warn, author=author, version=version
-
+%#
+%# Vars: cn, desc, members, students
+%#
 
 <script type="text/javascript">
 <!-- 

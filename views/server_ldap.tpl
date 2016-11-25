@@ -1,4 +1,7 @@
 %rebase base title="serveur LDAP : %s" % name, nav=nav, warn=warn, author=author, version=version
+%#
+%# Vars: name, server
+%#
 
 <script type="text/javascript">
 <!--

@@ -1,4 +1,7 @@
 %rebase base title="Utilisateur : %s" % uid, nav=nav, warn=warn, author=author, version=version
+%#
+%# Vars: uid, teams, managers, assistants, phds, students
+%#
 
 %mandatory_ldap = ['sn','cn','uidNumber','gidNumber', 'homeDirectory']
 %mandatory_nfs = ['homeDirectory', 'uidNumber', 'gidNumber', 'loginShell', 'userPassword']

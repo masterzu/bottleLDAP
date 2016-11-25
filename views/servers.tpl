@@ -1,4 +1,7 @@
 %rebase base title="Tableau de Bord", nav=nav, warn=warn, author=author, version=version
+%#
+%# Vars: ldap_servers
+%#
 <script type="text/javascript">
 <!--
 

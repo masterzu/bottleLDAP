@@ -1,4 +1,7 @@
 %rebase base title="serveur NFS : %s" % name, nav=nav, warn=warn, author=author, version=version
+%#
+%# Vars: server, name
+%#
 <script type="text/javascript">
 <!--
 $(function() {

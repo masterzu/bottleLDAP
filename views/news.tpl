@@ -1,4 +1,7 @@
 %rebase base title="Nouveautés", nav=nav, warn=warn, author=author, version=version
+%#
+%# Vars: ver, news
+%#
 
 %if ver:
 <div class="box shadow">

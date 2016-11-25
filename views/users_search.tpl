@@ -1,4 +1,7 @@
 %rebase base title="recherche d'utilisateur", nav=nav, warn=warn, author=author, version=version
+%#
+%# Vars: query, users, ldap_filter
+%#
 <div class="box shadow">
 <h1>Recherche utilisateur : {{query}}</h1>
 

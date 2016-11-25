@@ -1,4 +1,7 @@
 %rebase base title="À Propos", nav=nav, warn=warn, author=author, version=version
+%#
+%# Vars: ldap_ver, bottle_ver
+%#
 <div class="box shadow">
 <h1>À Propos</h1>
 
