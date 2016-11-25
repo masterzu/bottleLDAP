@@ -410,18 +410,11 @@ def _debug(title, text=None):
         print _colors.HEADER + '[DEBUG] ' + _colors.OKGREEN + title \
             + _colors.NOCOLOR
     else:
-        if isinstance(text, type('qwe')):
-            print _colors.HEADER + '[DEBUG] ' + _colors.OKGREEN + title \
-                + _colors.NOCOLOR + ' : '
-            for t in textwrap.wrap(text, 80):
-                print _tab + _colors.OKBLUE + t
-
-        else:
-            print _colors.HEADER + '[DEBUG] ' + _colors.OKGREEN + title \
-                + _colors.NOCOLOR + ' = ' + _colors.OKBLUE
-            pp(text)
-            print _colors.NOCOLOR
-
+        text = str(text)
+        print _colors.HEADER + '[DEBUG] ' + _colors.OKGREEN + title \
+            + _colors.NOCOLOR + '= ' 
+        for t in textwrap.wrap(text, 80):
+            print _tab + _colors.OKBLUE + t
 
 def _debug_route():
     _debug("routing %s ..." % bottle.request.path)
@@ -712,8 +705,11 @@ def _ldap_search(base, list_filters=[], list_attrs=None, filterstr=''):
     return ldap.search result
         or None if error
 
-    May return Exception TIMEOUT if search time > 30s
+    May return Exception 
+    - TIMEOUT if search time > 30s
+    - SIZELIMIT_EXCEEDED if server has low sizelimit set
     """
+    # _debug('CALL _ldap_search(base=%s, list_filters=%s, list_attrs=%s, filterstr=%s' % (base, list_filters, list_attrs, filterstr))
 
     if 'file' not in main_ldap_server or not main_ldap_server['file']:
         _debug('CALL _ldap_search',
@@ -729,17 +725,85 @@ def _ldap_search(base, list_filters=[], list_attrs=None, filterstr=''):
         _filter = _ldap_build_ldapfilter_and(list_filters)
     # _debug('_ldap_search/_filter', _filter)
 
-    _debug('CALL _ldap_search',
-           'base=%s, list_filters=%s, list_attrs=%s, filterstr=%s' % (
-               base, list_filters, list_attrs, filterstr))
-    objs = main_ldap_server['file'].search_st(base,
-                                              ldap.SCOPE_SUBTREE,
-                                              filterstr=_filter,
-                                              attrlist=list_attrs, timeout=30)
-
-    _debug('RETURN _ldap_search', objs)
+    # timelimit default in openldap = 3600 (s)
+    # sizelimit default in openldap = 500 (# of result)
+    objs = _ldap_search_ext_s(main_ldap_server['file'],
+                              base,
+                              ldap.SCOPE_SUBTREE,
+                              filterstr=_filter,
+                              attrlist=list_attrs,
+                              timeout=30,
+                              sizelimit=100)
+    _debug('RETURN _ldap_search/size', len(objs))
     return objs
 
+def _ldap_search_ext_s(self,base,scope,filterstr='(objectClass=*)',attrlist=None,attrsonly=0,timeout=-1,sizelimit=0):
+    """
+    Behaves exactly like LDAPObject.search_ext_s() but internally uses the
+    simple paged results control to retrieve search results in chunks.
+    
+    This is non-sense for really large results sets which you would like
+    to process one-by-one
+
+    from https://bitbucket.org/jaraco/python-ldap/src/f208b6338a28/Demo/paged_search_ext_s.py
+
+    Handle SIZELIMIT_EXCEEDED by returning partial list
+    """
+    _debug('CALL _ldap_search_ext_s(base=%s, filterstr=%s, attrlist=%s, timeout=%s, sizelimit=%s)' % (base, filterstr, attrlist, timeout, sizelimit))
+    req_ctrl = ldap.controls.SimplePagedResultsControl(True,size=sizelimit,cookie='')
+    # try with alt implementation
+    # from list python-ldap michael at stroeder.com  Fri Dec 12 11:42:46 2014
+    # req_ctrl = ldap.controls.pagedresults.SimplePagedResultsControl(True,size=sizelimit,cookie='')
+
+    # Send first search request
+    msgid = self.search_ext(
+      base,
+      scope,
+      filterstr=filterstr,
+      attrlist=attrlist,
+      serverctrls=[ req_ctrl ]
+    )
+
+    result_pages = 0
+    all_results = []
+    
+    while True:
+      result_pages += 1
+      _debug('_ldap_search_ext_s/PAGE', result_pages) 
+      _debug('_ldap_search_ext_s/new req_ctrl.size=%s' % req_ctrl.size)
+      _debug('_ldap_search_ext_s/new req_ctrl.cookie=%s' % req_ctrl.cookie)
+      try:
+          rtype, rdata, rmsgid, rctrls = self.result3(msgid)
+      except ldap.SIZELIMIT_EXCEEDED:
+          _debug('RETURN _ldap_search_ext_s with SIZELIMIT/len=%s' % len(all_results))
+          return all_results
+      _debug('_ldap_search_ext_s/result3/data/len=%s' % len(rdata)) 
+      all_results.extend(rdata)
+      # Extract the simple paged results response control
+      # for c in rctrls:
+      #     _debug('_ldap_search_ext_s/remote_ctrls', '%s' % c)
+      pctrls = [
+        c
+        for c in rctrls
+        if c.controlType == ldap.controls.SimplePagedResultsControl.controlType
+      ]
+      # _debug('_ldap_search_ext_s/pctrls/len=%s' % len( pctrls ))
+      if pctrls:
+        if pctrls[0].cookie:
+            # Copy cookie from response control to request control
+            req_ctrl.cookie = pctrls[0].cookie
+            # req_ctrl = ldap.controls.SimplePagedResultsControl(True,size=sizelimit,cookie=pctrls[0].cookie)
+            msgid = self.search_ext(
+              base,
+              scope,
+              filterstr=filterstr,
+              attrlist=attrlist,
+              serverctrls=[req_ctrl]
+            )
+        else:
+            break
+    _debug('RETURN _ldap_search_ext_s/len=%s' % len(all_results))
+    return all_results
 
 def _ldap_modify_attr(dn, attr, val):
     """
@@ -1855,6 +1919,7 @@ def _log_query_mongodb(query, fields, options):
         # _debug('_log_query_mongodb/find error', 'type error')
         raise MONGODB_ERROR('find error query=%s fields=%s' % (query, fields))
 
+    # _debug('_log_query_mongodb/resu', resu)
     # options sort
     if 'sort' in options and options['sort']:
         # must be a list of (key, value)
@@ -1905,6 +1970,7 @@ def _log_query_getlog(log):
         return None
 
     if 'dn' not in log['object']:
+        # _debug('_log_query_getlog', 'no valid dn')
         return None
 
     # _debug('_log_query_getlog/log',log)
@@ -2214,6 +2280,7 @@ def ldap_initialize(bind=False):
         or False on error
 
     FIXME: and a ldap server parameter
+    FIXME: add a timeout
     """
     h = _ldap_initialize(main_ldap_servers[0])
     if h is None:
@@ -2292,7 +2359,10 @@ def ldap_users(base=None, list_filters=None, list_attrs=None, filterstr=''):
 
     #_debug('ldap_users/list_filters',list_filters)
 
-    objs = _ldap_search(base, list_filters, list_attrs)
+    try:
+        objs = _ldap_search(base, list_filters, list_attrs)
+    except ldap.SIZELIMIT_EXCEEDED:
+        return []
     #_debug('ldap_users/objs',objs)
 
     return objs
@@ -2461,6 +2531,7 @@ def users_search(str_filter):
 @bottle.view('users_type')
 def users_type(type=None):
     _debug_route()
+    _debug('CALL users_type(type=%s)' % type)
 
     if type is None:
         type = '*'
@@ -2475,11 +2546,16 @@ def users_type(type=None):
     except ldap.TIMEOUT:
         ldap_close()
         return _dict(warn='LDAP server too long. Retry later :(',
-                     title=title, users=[])
+                     title=title, users=[], nfs_servers=main_nfs_servers_name)
+    except ldap.SIZELIMIT_EXCEEDED:
+        _debug('users_type', 'SIZELIMIT_EXCEEDED')
+        ldap_close()
+        return _dict(warn='LDAP server reply partial result',
+                     title=title, users=users, nfs_servers=main_nfs_servers_name)
 
     if len(users) == 0:
         ldap_close()
-        return _dict(warn='No users of type %s' % title, title=title, users=[])
+        return _dict(warn='No users of type %s' % title, title=title, users=[], nfs_servers=main_nfs_servers_name)
 
     ldap_close()
     return _dict(title=title, users=users, nfs_servers=main_nfs_servers_name)
@@ -3372,8 +3448,10 @@ if __name__ == '__main__':
     print '...'
 
     try:
-        bottle.run(host='0.0.0.0', port=main_config['port'],
-                   reloader=main_config['reloader'], debug=bottle.DEBUG)
+        bottle.run(host='0.0.0.0', 
+                   port=main_config['port'],
+                   reloader=main_config['reloader'], 
+                   debug=bottle.DEBUG)
     except socket.error:
         print _colors.FAIL + 'Socket error' + _colors.NOCOLOR + ': Port ' \
             + _colors.WARNING + main_config['port'] + _colors.NOCOLOR \
