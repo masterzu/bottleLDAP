@@ -15,12 +15,6 @@ env:
     - BOTTLE=0.10.12
     - BOTTLE=0.11.7
     - BOTTLE=0.12.9
-matrix:
-    include:
-    - env: PYMONGO=3.2
-    - env: PYMONGO=3.3
-
-
     # pymongo:
     # - PYMONGO=2.4
     # - PYMONGO=2.6
