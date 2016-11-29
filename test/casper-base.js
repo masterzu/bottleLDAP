@@ -22,7 +22,7 @@ casper.test.begin('bottleLDAP Accueil', 9, function(test) {
 
 });
 
-casper.test.begin('bottleLDAP Tableau de bord', 9, function(test) {
+casper.test.begin('bottleLDAP Tableau de bord', 6, function(test) {
     casper.start('http://localhost:8080/servers', function(){
         test.assertTitle("bottleLDAP | Tableau de Bord")
 	test.assertExists('#content-text a.ldap')
@@ -43,12 +43,20 @@ casper.test.begin('bottleLDAP Tableau de bord', 9, function(test) {
 
     casper.thenClick('#content-text a.nfs', function(){
         test.assertTitle("bottleLDAP | serveur NFS : mynfs", 'click to serveur NFS')
+    })
+
+    casper.run(function() { test.done() })
+});
+
+casper.test.begin('bottleLDAP Master LDAP', 4, function(test) {
+    casper.start('http://localhost:8080/server_ldap/myldap', function(){
+        test.assertTitle("bottleLDAP | serveur LDAP : myldap")
 	test.assertExists('a#issue')
     })
 
     casper.thenClick('a#issue', function(){
 	test.assertExists('#warning')
-        this.echo('wait 1s ...', 'INFO')
+        // this.echo('wait 1s ...', 'INFO')
     })
 
 
@@ -59,10 +67,28 @@ casper.test.begin('bottleLDAP Tableau de bord', 9, function(test) {
     casper.run(function() { test.done() })
 });
 
-casper.test.begin('bottleLDAP Master LDAP', function(test) {
-    casper.start('http://localhost:8080/server_ldap/myldap', function(){
-        test.assertTitle("bottleLDAP | serveur LDAP : myldap")
-    })
 
-    casper.run(function() { test.done() })
-});
+// casper.test.begin('bottleLDAP permanents', function(test) {
+//     casper.start('http://localhost:8080/users/p', function(){
+//         test.assertTitle("bottleLDAP | Utilisateurs")
+//     })
+
+//     casper.run(function() { test.done() })
+// });
+
+// casper.test.begin('bottleLDAP thesards', function(test) {
+//     casper.start('http://localhost:8080/users/d', function(){
+//         test.assertTitle("bottleLDAP | Utilisateurs")
+//     })
+
+//     casper.run(function() { test.done() })
+// });
+
+// casper.test.begin('bottleLDAP etudiants', function(test) {
+//     casper.start('http://localhost:8080/users/t', function(){
+//         test.assertTitle("bottleLDAP | Utilisateurs")
+//     })
+
+//     casper.run(function() { test.done() })
+// });
+
