@@ -32,6 +32,10 @@ install:
     - npm install
     - pip install bottle==$BOTTLE
 
+# pre-run web server
+before_script:
+    - python server.py config_test.ini
+
 # command to run tests
 script: 
     - npm test

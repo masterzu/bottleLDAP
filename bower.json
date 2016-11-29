@@ -19,5 +19,8 @@
     "jquery-ui": "^1.7.x",
     "jquery.tablesorter": "",
     "raphael": "^2.1.0"
+  },
+  "devDependencies": {
+    "casperjs": ""
   }
 }
