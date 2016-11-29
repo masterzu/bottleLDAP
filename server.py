@@ -3327,6 +3327,9 @@ if __name__ == '__main__':
     parser.add_option(
         "-D", "--debug",
         help="debug mode", action="store_true", dest="debug")
+    parser.add_option(
+        "-M", "--mock",
+        help="mock mode", action="store_true", dest="mock")
     (options, args) = parser.parse_args()
 
     missingFile = False
@@ -3335,7 +3338,7 @@ if __name__ == '__main__':
             print _colors.FAIL + 'Missing file' + _colors.NOCOLOR + ':  ' \
                 + _colors.WARNING + f + _colors.NOCOLOR
             missingFile = True
-    if missingFile:
+    if missingFile and not options.mock:
         parser.print_help()
         sys.exit(1)
 
@@ -3367,13 +3370,19 @@ if __name__ == '__main__':
         + _colors.NOCOLOR,
     if main_config['devel']:
         print 'in mode ' + _colors.WARNING + 'DEVEL' + _colors.NOCOLOR,
+    if options.mock:
+        print 'in mode ' + _colors.WARNING + 'MOCK' + _colors.NOCOLOR,
     if options.debug or main_config['debug']:
         print 'and ' + _colors.WARNING + 'DEBUG' + _colors.NOCOLOR \
             + ' verbosity',
-    print 'using mongoDB on ' + _colors.OKGREEN + main_mongodb['hostname'] \
-        + _colors.NOCOLOR + ':' + _colors.OKGREEN + str(main_mongodb['port']) \
-        + _colors.NOCOLOR + ' with db ' + _colors.OKGREEN + main_mongodb['db'] \
-        + _colors.NOCOLOR,
+    if not options.mock:
+        print 'using mongoDB on ' + _colors.OKGREEN + main_mongodb['hostname'] \
+            + _colors.NOCOLOR + ':' + _colors.OKGREEN + str(main_mongodb['port']) \
+            + _colors.NOCOLOR + ' with db ' + _colors.OKGREEN + main_mongodb['db'] \
+            + _colors.NOCOLOR,
+    else:
+        print 'for mongoDB and DB', 
+
     print '...'
 
     try:
