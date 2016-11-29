@@ -34,7 +34,7 @@ install:
 
 # pre-run web server
 before_script:
-    - python server.py config_test.ini
+        - python server.py -M config_test.ini
 
 # command to run tests
 script: 
