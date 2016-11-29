@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "postinstall": "pip install -r requirements.txt && bower install && grunt",
-    "test": "python test_server.py && casperjs test test/min.js && grunt test",
+    "test": "python test_server.py && casperjs test test/casper-base.js && grunt test",
     "start": "python server.py config.ini"
   },
   "repository": {
