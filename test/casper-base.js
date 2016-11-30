@@ -1,6 +1,6 @@
 casper.test.begin('bottleLDAP Accueil', 9, function(test) {
-    casper.start("http://localhost:8080", function() {
-        test.assertTitle("bottleLDAP |");
+    casper.start('http://localhost:8080', function() {
+        test.assertTitle('bottleLDAP |');
 	test.assertExists('div#nav');
 	test.assertExists('div#nav a');
 	test.assertExists('div#nav input#input_search');
@@ -48,7 +48,7 @@ casper.test.begin('bottleLDAP Tableau de bord', 6, function(test) {
     casper.run(function() { test.done() })
 });
 
-casper.test.begin('bottleLDAP Master LDAP', 4, function(test) {
+casper.test.begin('bottleLDAP Master LDAP', 5, function(test) {
     casper.start('http://localhost:8080/server_ldap/myldap', function(){
         test.assertTitle("bottleLDAP | serveur LDAP : myldap")
 	test.assertExists('a#issue')
@@ -60,8 +60,18 @@ casper.test.begin('bottleLDAP Master LDAP', 4, function(test) {
     })
 
 
-    casper.wait(1000, function(){
-        test.assertVisible('#warning')
+    casper.then(function() {
+        this.echo('waiting 1s ...', 'INFO')
+	casper.wait(1000, function(){
+	    test.assertVisible('#warning', '#warning open')
+        })
+    })
+
+    casper.then(function() {
+        this.echo('waiting 20s ...', 'INFO')
+	casper.wait(20000, function(){
+	    test.assertNotVisible('#warning', '#warning auto-close after 20s')
+        })
     })
 
     casper.run(function() { test.done() })
