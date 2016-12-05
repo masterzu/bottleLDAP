@@ -20,5 +20,5 @@
 
 bottle==0.12.9
 python-ldap
-pymongo
+pymongo==2.9.4
 paramiko==1.10.0

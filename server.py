@@ -69,7 +69,7 @@ import paramiko
 import pymongo
 
 __author__ = 'P. Cao Huu Thien'
-__version__ = '0.16.0'
+__version__ = '0.16.1'
 __license__ = 'GPL'
 
 
@@ -166,7 +166,11 @@ main_news = (
     ('0.16.0', '4 oct 2016', [
         'detach client side libraries ; use semver',
         'use bower and grunt to detach javascript libraries from repo',
-        'use semver - sementic version number http://semver.org'])
+        'use semver - sementic version number http://semver.org']),
+    ('0.16.1', '5 dec 2016', [
+        'Utilisation de mongo 2.x',
+        'HOTFIX 0.16.1: requirements pymongo 2.x'
+        ])
 )
 
 
