@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-server.py Tests Module
+server.py Simple Tests Module
 
 To laught the tests::
 
@@ -10,9 +10,12 @@ In verbose mode::
 
     python test_server.py -v
 
-see http://docs.python.org/2.6/library/doctest.html
+see http://docs.python.org/2.7/library/doctest.html
 """
 
-import server
 import doctest
+
+# import my code using config.py
+from context import server
+
 doctest.testmod(server, report=True)
