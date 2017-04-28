@@ -137,7 +137,8 @@ function ajax_button_span_url(button, span, url){
         },
         error: function(xhr, textStatus, error) {
             button.removeClass('btn-inverse');
-            this_span.removeClass('ui-autocomplete-loading').text('');
+	    if (this_span !== null)
+		this_span.removeClass('ui-autocomplete-loading').text('');
             if (textStatus == "timeout")
                 show_warning('Serveur Timeout ... Réessayez si vous osez :)');
             else 
