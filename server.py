@@ -1249,7 +1249,7 @@ def json_exec_common(server, cmd):
 
     try:
         output = _ssh_exec(host, user, ssh_kcmds[cmd])
-    except (SSH_AUTH_ERROR, SSH_EXEC_ERROR, SSH_ERROR) as e:
+    except (SSH_AUTH_ERROR, SSH_EXEC_ERROR, SSH_ERROR, ERROR) as e:
         return _json_result(success=False, message=e.msg)
 
     #_debug('json_exec_common',output)
@@ -1423,29 +1423,33 @@ def _ssh_exec_paramiko(host, user, list_cmds):
     try:
         ssh.load_host_keys('known_hosts')
     except:
-        try:
-            ssh.load_host_keys(os.path.expanduser('~/.ssh/known_hosts'))
-        except:
-            raise SSH_AUTH_ERROR('Can find known_hosts file in host %s' % host)
+        ssh.close()
+        raise SSH_AUTH_ERROR('Can find local file `known_hosts`')
 
     # connection
-    #ssh.connect(host, username='root', password='', pkey=private_key)
+    _debug('_ssh_exec_paramiko/connecting ...')
     try:
-        ssh.connect(host, username='root', password='',
-                    key_filename=os.path.expanduser('id_rsa'))
-    except paramiko.BadHostKeyException, paramiko.AuthenticationException:
-        #_debug('_ssh_exec_paramiko',
-        #       'connection to %s with `id_rsa` ... FAILED' % host)
-        try:
-            ssh.connect(host, username='root', password='',
-                        key_filename=os.path.expanduser('~/.ssh/id_rsa'))
-        except paramiko.BadHostKeyException, paramiko.AuthenticationException:
-            #_debug('_ssh_exec_paramiko',
-            #       'connection to %s with `~/.ssh/id_rsa` ... FAILED' % host)
-            raise SSH_AUTH_ERROR((
-                'Can not connect to host %s.'
-                'You need to set a public key'
-            ) % host)
+        ssh.connect(host, username='root', key_filename='id_rsa')
+        _debug('_ssh_exec_paramiko/connection done with root and local priv key ...')
+    except paramiko.BadHostKeyException:
+        _debug('_ssh_exec_paramiko', 'Can not connect to host %s. Host not in local file `known_hosts`' % host)
+        ssh.close()
+        raise SSH_AUTH_ERROR( 'Can not connect to host %s. Host not in local file `known_hosts`' % host)
+    except paramiko.AuthenticationException:
+        _debug('_ssh_exec_paramiko', 'Authentification Failed on %s' % host)
+        ssh.close()
+        raise SSH_AUTH_ERROR( 'Authentification Failed on %s' % host)
+    except paramiko.SSHException:
+        # ssh session error 
+        _debug('_ssh_exec_paramiko/network error')
+        ssh.close()
+        raise SSH_ERROR('Can not connect to host %s. ssh error' % host)
+    except socket.error:
+        # connection error
+        _debug('_ssh_exec_paramiko/network error')
+        ssh.close()
+        raise SSH_ERROR('Can not connect to host %s. network error' % host)
+    _debug('_ssh_exec_paramiko/connection OK')
 
     # commands
     list_out = []
@@ -3397,4 +3401,4 @@ if __name__ == '__main__':
         print ''
         sys.exit(1)
 
-# vim:spelllang=en:
+# vim: spelllang=en nospell:
