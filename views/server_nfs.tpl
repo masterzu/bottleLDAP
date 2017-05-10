@@ -44,16 +44,17 @@ $(function() {
                 } else {
                     span.text('Pas de quota');
                 }
-                },
+	    },
             timeout: 2000,
             error: function(xhr, textStatus, error){
                 span.removeClass('ui-autocomplete-loading').text('');
                 if (textStatus=='timeout') {
-                    show_warning('Serveur trop lent. Peut etre inaccessible ?');
+                    show_warning('Serveur lent. Peut etre inaccessible ?');
                 } else {
                     show_warning('Server error: '+error);
-                }},
-            });
+                }
+            },
+        });
     };
     $('a#issue').click(function() { 
         ajax_button_span_url($(this), $('span#issue'), '/api/server/{{name}}/issue');
