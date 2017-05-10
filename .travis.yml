@@ -1,6 +1,8 @@
 notifications:
     email: false
+sudo: required
 language: python
+dist: precise
 python:
     # - "2.6"
     - "2.7"
