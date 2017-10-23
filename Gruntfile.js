@@ -38,7 +38,7 @@ module.exports = function(grunt) {
       options: {
         banner: '/*! grunt-contrib-uglify for <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
         mangle: { 
-            except: [
+            reserved: [
                 'jQuery', 
                 'Raphael',
                 'kilobytesToSize', 
