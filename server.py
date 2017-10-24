@@ -412,9 +412,10 @@ def _debug(title, text=None):
     else:
         text = str(text)
         print _colors.HEADER + '[DEBUG] ' + _colors.OKGREEN + title \
-            + _colors.NOCOLOR + '= ' 
+            + _colors.NOCOLOR + '= '
         for t in textwrap.wrap(text, 80):
             print _tab + _colors.OKBLUE + t
+
 
 def _debug_route():
     _debug("routing %s ..." % bottle.request.path)
@@ -444,7 +445,6 @@ def _dict(**kargs):
     """
     temp = dict(warn=None, nav=_nav(), author=__author__, version=__version__)
     temp.update(kargs.items())
-    #_debug('_dict=', temp)
     return temp
 
 
@@ -705,18 +705,18 @@ def _ldap_search(base, list_filters=[], list_attrs=None, filterstr=''):
     return ldap.search result
         or None if error
 
-    May return Exception 
+    May return Exception
     - TIMEOUT if search time > 30s
     - SIZELIMIT_EXCEEDED if server has low sizelimit set
     """
     # _debug('CALL _ldap_search(base=%s, list_filters=%s, list_attrs=%s, filterstr=%s' % (base, list_filters, list_attrs, filterstr))
 
     if 'file' not in main_ldap_server or not main_ldap_server['file']:
-        _debug('CALL _ldap_search',
-               (
-                   'base=%s, list_filters=%s, list_attrs=%s, '
-                   'filterstr=%s - None (LDAP not connected?)'
-               ) % (base, list_filters, list_attrs, filterstr))
+        # _debug('CALL _ldap_search',
+        #        (
+        #            'base=%s, list_filters=%s, list_attrs=%s, '
+        #            'filterstr=%s - None (LDAP not connected?)'
+        #        ) % (base, list_filters, list_attrs, filterstr))
         return None
 
     if filterstr:
@@ -733,6 +733,7 @@ def _ldap_search(base, list_filters=[], list_attrs=None, filterstr=''):
                                               attrlist=list_attrs, timeout=30)
     # _debug('RETURN _ldap_search/size', len(objs))
     return objs
+
 
 def _ldap_modify_attr(dn, attr, val):
     """
@@ -1297,7 +1298,8 @@ def json_exec_nfs(server, cmd):
 
     # check host/server
     if not host or not server:
-        return _json_result(success=False, message='Serveur "%s" inconnu' % server)
+        return _json_result(
+            success=False, message='Serveur "%s" inconnu' % server)
 
     # chech cmd
     if cmd not in ssh_kcmds:
@@ -1432,15 +1434,17 @@ def _ssh_exec_paramiko(host, user, list_cmds):
         ssh.connect(host, username='root', key_filename='id_rsa')
         _debug('_ssh_exec_paramiko/connection done with root and local priv key ...')
     except paramiko.BadHostKeyException:
-        _debug('_ssh_exec_paramiko', 'Can not connect to host %s. Host not in local file `known_hosts`' % host)
+        _debug('_ssh_exec_paramiko',
+               'Can not connect to host %s. Host not in local file `known_hosts`' % host)
         ssh.close()
-        raise SSH_AUTH_ERROR( 'Can not connect to host %s. Host not in local file `known_hosts`' % host)
+        raise SSH_AUTH_ERROR(
+            'Can not connect to host %s. Host not in local file `known_hosts`' % host)
     except paramiko.AuthenticationException:
         _debug('_ssh_exec_paramiko', 'Authentification Failed on %s' % host)
         ssh.close()
-        raise SSH_AUTH_ERROR( 'Authentification Failed on %s' % host)
+        raise SSH_AUTH_ERROR('Authentification Failed on %s' % host)
     except paramiko.SSHException:
-        # ssh session error 
+        # ssh session error
         _debug('_ssh_exec_paramiko/network error')
         ssh.close()
         raise SSH_ERROR('Can not connect to host %s. ssh error' % host)
@@ -1734,13 +1738,15 @@ def _mongodb_connect(collection):
     """
     try:
         conn = pymongo.MongoClient(
-            host=main_mongodb['hostname'], port=main_mongodb['port'])
+            host=main_mongodb['hostname'],
+            port=main_mongodb['port'],
+            serverSelectionTimeoutMS=500)
     except TypeError:
         # port not an int error
         raise MONGODB_ERROR(
             'Port invalid (not an int): %s' % main_mongodb['port'])
-    except pymongo.errors.ConnectionFailure:
-        raise MONGODB_ERROR('connection error on host: %s at port: %s' %
+    except (pymongo.errors.ConnectionFailure, pymongo.errors.ServerSelectionTimeoutError):
+        raise MONGODB_ERROR('Cant connect on %s at port %s (#0)' %
                             (main_mongodb['hostname'], main_mongodb['port']))
 
     try:
@@ -1754,6 +1760,12 @@ def _mongodb_connect(collection):
     except pymongo.errors.InvalidName:
         raise MONGODB_ERROR('invalid collection "%s" on db "%s"' %
                             (collection, main_mongodb['db']))
+
+    # test if server responding
+    try:
+        conn.admin.command('ismaster')
+    except pymongo.errors.ConnectionFailure:
+        raise MONGODB_ERROR('Server Down')
 
     return coll
 
@@ -1777,11 +1789,7 @@ def _log_action_mongodb(actor, action, kargs, allow):
         MONGODB_ERROR
         ACL_NOTALLOW
     """
-    # _debug('_log_action_mongodb(%s, %s, %s, %s)' % (actor, action, kargs,
-    # allow))
-
     if not action or not kargs:
-        #_debug('_log_action_mongodb','error: no action or kargs')
         sys.exit()
         return None
 
@@ -1794,12 +1802,10 @@ def _log_action_mongodb(actor, action, kargs, allow):
         'object': kargs,
         'allow': allow,
     }
-    #_debug('_log_action_mongodb/data',data)
 
     try:
         coll.insert(data, safe=True)
     except pymongo.errors.OperationFailure:
-        #_debug('_log_action_mongodb','Error: Cant performe insert: '+repr(e))
         raise MONGODB_ERROR('operation "%s" fail' % data)
 
 
@@ -1810,7 +1816,8 @@ def _log_ldap_action(dn, action, kargs):
         print "action %s conflict between %s ans %s" % (action, dn, kargs)
         sys.exit(1)
 
-    if action not in ['useradd', 'userdel', 'userattrmod', 'userattrdel', 'groupaddmember', 'groupdelmember']:
+    if action not in ['useradd', 'userdel', 'userattrmod',
+                      'userattrdel', 'groupaddmember', 'groupdelmember']:
         print "action %s unknown" % action
         sys.exit(1)
 
@@ -1838,21 +1845,14 @@ def _log_query_mongodb(query, fields, options):
     Raises:
         MONGODB_ERROR
     """
-    # _debug('_log_query_mongodb(%s, %s, %s)' % (query, fields, options))
-
     if not query:
         return []
 
     # the collection
     logs = _mongodb_connect('logs')
 
-    try:
-        resu = logs.find(query, fields)
-    except TypeError:
-        # _debug('_log_query_mongodb/find error', 'type error')
-        raise MONGODB_ERROR('find error query=%s fields=%s' % (query, fields))
+    resu = logs.find(query, fields)
 
-    # _debug('_log_query_mongodb/resu', resu)
     # options sort
     if 'sort' in options and options['sort']:
         # must be a list of (key, value)
@@ -1861,7 +1861,6 @@ def _log_query_mongodb(query, fields, options):
         resu = resu.sort(query_sort)
 
     lresu = [_log_query_getlog(i) for i in resu]
-
     return lresu
 
 
@@ -2488,7 +2487,8 @@ def users_type(type=None):
 
     if len(users) == 0:
         ldap_close()
-        return _dict(warn='No users of type %s' % title, title=title, users=[], nfs_servers=main_nfs_servers_name)
+        return _dict(warn='No users of type %s' % title, title=title,
+                     users=[], nfs_servers=main_nfs_servers_name)
 
     ldap_close()
     return _dict(title=title, users=users, nfs_servers=main_nfs_servers_name)
@@ -2832,7 +2832,7 @@ def json_userdel():
         main_users['*']['basedn'],
         list_filters=['objectClass=person', 'manager=' + user_dn])
     if len(assistants) > 0:
-        _debug('json_userdel/assistants', '%d found' % len(assistants))
+        # _debug('json_userdel/assistants', '%d found' % len(assistants))
         ldap_close()
         return _json_result(
             success=False,
@@ -2850,7 +2850,7 @@ def json_userdel():
         list_modify_attrs = [(ldap.MOD_DELETE, 'uniqueMember', user_dn)]
         for dngroup, group in groups:
             cn = group['cn'][0]
-            _debug('json_userdel/group', 'removing %s from %s ...' % (uid, cn))
+            # _debug('json_userdel/group', 'removing %s from %s ...' % (uid, cn))
             try:
                 main_ldap_server['file'].modify_s(dngroup, list_modify_attrs)
             except ldap.LDAPError, e:
@@ -2859,10 +2859,10 @@ def json_userdel():
                     success=False,
                     message="Erreur serveur LDAP: %s" % str(e))
             _log_ldap_action(dngroup, 'groupdelmember', {'member': user_dn})
-            _debug('json_userdel/group',
-                   'removing %s from %s ... OK' % (uid, cn))
+            # _debug('json_userdel/group',
+            #        'removing %s from %s ... OK' % (uid, cn))
     else:
-        _debug('json_userdel', 'no group with member ' + user_dn)
+        # _debug('json_userdel', 'no group with member ' + user_dn)
         pass
 
     #_debug('json_userdel/user', 'deleting user %s ...' % uid)
@@ -3266,7 +3266,7 @@ def json_log_query(query, **kargs_json_result):
         logs = [i for i in log_query(
             query, None, sort=[('time', pymongo.DESCENDING)])]
     except MONGODB_ERROR as e:
-        print 'MONGODB_ERROR(%s)' % e.msg
+        # _debug('json_log_query/server error', e.msg)
         return _json_result(success=False, message=e.msg)
 
     # _debug('json_log_query/kargs', kargs_json_result)
@@ -3385,14 +3385,14 @@ if __name__ == '__main__':
             + _colors.NOCOLOR + ' with db ' + _colors.OKGREEN + main_mongodb['db'] \
             + _colors.NOCOLOR,
     else:
-        print 'for mongoDB and DB', 
+        print 'for mongoDB and DB',
 
     print '...'
 
     try:
-        bottle.run(host='0.0.0.0', 
+        bottle.run(host='0.0.0.0',
                    port=main_config['port'],
-                   reloader=main_config['reloader'], 
+                   reloader=main_config['reloader'],
                    debug=bottle.DEBUG)
     except socket.error:
         print _colors.FAIL + 'Socket error' + _colors.NOCOLOR + ': Port ' \
