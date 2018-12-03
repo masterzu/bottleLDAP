@@ -46,17 +46,33 @@ Tools for server side devel
 Go to release
 =============
 
-Use `make_release.sh` script.
+Before release, you **must** have a clean repository.
+
+#. Launch ./make_release.sh with the *good* version ie ``x.y.z``::
+
+   make_release.sh 0.17.0
+
+#. If no error occurs, follow the script steps:
+
+   #. commit
+
+   #. pass to master branch
+
+   #. merge and resolve merges (``git mergetool`` may help)
+
+   #. commit
+
+   #. tag
 
 Python modules notes
 ====================
 
-Modules uses by de application:
+Modules uses by de application (see requirements.txt for details):
 
-* bottle == ``0.12`` 
+* bottle
 * ldap
 * pymongo
-* paramiko == ``1.10.0`` (with last pycryto ``2.6.1``)(see below)
+* paramiko (with last pycryto ``2.6.1``)(see below)
 
 Modules uses to help develop the application:
 
