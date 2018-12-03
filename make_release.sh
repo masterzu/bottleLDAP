@@ -100,7 +100,7 @@ done
 git add $FILES
 
 ## clean all devel files
-git rm Gruntfile.js package.json bower.json
+git rm Gruntfile.js package.json bower.json .travis.yml
 git rm -r grunt_files/
 git rm -r tests/
 
