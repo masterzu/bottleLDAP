@@ -6,8 +6,8 @@ bottleLDAP
     :target: https://travis-ci.org/masterzu/bottleLDAP
 
 :Author: Patrick Cao Huu Thien
-:Date: @DATE@
-:Version: @VERSION@
+:Date: 03 déc. 2018
+:Version: 0.17.0
 :Licence: AGPL-3.0
 
 .. LICENCE

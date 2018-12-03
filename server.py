@@ -69,7 +69,7 @@ import paramiko
 import pymongo
 
 __author__ = 'P. Cao Huu Thien'
-__version__ = '@VERSION@'
+__version__ = '0.17.0'
 __license__ = 'AGPL'
 
 
