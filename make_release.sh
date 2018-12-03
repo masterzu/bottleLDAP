@@ -73,7 +73,8 @@ npm install
 ## add new files
 git add static/all.min.js static/all.css
 
-## tests
+## running python test and run tests
+python server.py -M config_test.ini &
 npm test
 
 ### files to transform
