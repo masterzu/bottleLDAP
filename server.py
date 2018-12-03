@@ -172,6 +172,8 @@ main_news = (
     ('0.17.0', '29 nov 2018', [
         'disable NFS ops -- dont work',
         'user paramiko 2.4'])
+    ('0.17.1', '29 nov 2018', [
+        'HOTFIX: paramiko 2.4.2'])
 )
 
 
