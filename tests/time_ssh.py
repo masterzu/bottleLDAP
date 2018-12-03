@@ -153,8 +153,8 @@ def print_short(cmds, times):
 
 times = []
 c = ssh_init()
-ssh_connect(c,'olympe')
-out = ssh_commands(c, ['uname'])
+ssh_connect(c,'poisson')
+out = ssh_commands(c, ['uname -a'])
 c.close()
 
 #print_long(out, times)
