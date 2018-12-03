@@ -65,7 +65,7 @@
         <div class="span12">
         bottleLDAP {{version}} 
         &bull; 
-	    &copy; <span id="author">{{author}}</span>, 2011&ndash;2017
+	    &copy; <span id="author">{{author}}</span>, 2011&ndash;2018
         &bull; 
         illustré par <a href="http://dmitrybaranovskiy.github.io/raphael/" target="_raph">Raphaël JS</a>
         &bull; 
