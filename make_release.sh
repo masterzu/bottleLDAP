@@ -76,6 +76,7 @@ git add static/all.min.js static/all.css
 ## running python test and run tests
 python server.py -M config_test.ini &
 npm test
+kill %1
 
 ### files to transform
 for sc in $FILES
@@ -102,8 +103,7 @@ Release v$VERSION allmost done.
 
 things to do:
 
-* add version info in server.py
-* add Changes ?
+* add Changes (when it will exists)
 * commit
 
   git commit -a -m '$VERSION'
