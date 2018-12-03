@@ -69,7 +69,7 @@ import paramiko
 import pymongo
 
 __author__ = 'P. Cao Huu Thien'
-__version__ = '0.17.0'
+__version__ = '0.17.1'
 __license__ = 'AGPL'
 
 
@@ -171,7 +171,9 @@ main_news = (
         'use pymongo 2.x']),
     ('0.17.0', '29 nov 2018', [
         'disable NFS ops -- dont work',
-        'user paramiko 2.4'])
+        'user paramiko 2.4']),
+    ('0.17.1', '29 nov 2018', [
+        'HOTFIX: paramiko 2.4.2'])
 )
 
 

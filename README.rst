@@ -3,14 +3,14 @@ bottleLDAP
 ==========
 
 :Author: Patrick Cao Huu Thien
-:Date: 5 dec 2016
-:Version: 0.16.1
+:Date: 3 dec 2018
+:Version: 0.17.1
 :Licence: AGPL-3.0
 
 .. LICENCE
     A small LDAP admin site
     https://github.com/masterzu/bottleLDAP
-    Copyright (C) 2013-2016  Patrick Cao Huu Thien <patrick.cao_huu_thien@upmc.fr>
+    Copyright (C) 2013-2018  Patrick Cao Huu Thien <patrick.cao_huu_thien@upmc.fr>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
