@@ -166,21 +166,26 @@ main_news = (
     ('0.16.0', '4 oct 2016', [
         'detach client side libraries ; use semver',
         'use bower and grunt to detach javascript libraries from repo',
-        'use semver - sementic version number http://semver.org'])
+        'use semver - sementic version number http://semver.org']),
+    ('0.16.1', '4 oct 2016', [
+        'use pymongo 2.x']),
+    ('0.17.0', '29 nov 2018', [
+        'disable NFS ops -- dont work',
+        'user paramiko 2.4'])
 )
 
 
 main_nav = [
     ('/', 'accueil'),
-    ('*', 'serveurs'),
-    ('/servers', 'tableau de bord'),
-    (None, 'master ldap'),
     ('', ''),
-    ('*', 'personnels'),
+    # ('*', 'serveurs'),
+    # ('_LDAP_', 'ldap'),
+    # ('/servers', 'tous'),
+    # ('*', 'personnels'),
     ('_SEARCH_', 'rechercher...'),
-    ('/users/p', None),
-    ('/users/d', None),
-    ('/users/t', None),
+    ('/users/p', 'permanents'),
+    ('/users/d', 'doctorants'),
+    ('/users/t', u'étudiants et invités'),
     ('', ''),
     ('*', 'structure'),
     ('/groups', u'équipes'),
@@ -206,7 +211,7 @@ main_users = {
         'quotahard': 0,
     },
     'd': {
-        'name': u'thésards',
+        'name': u'doctorants',
         'basedn': 'ou=doctorants,ou=personnels,o=ijlrda',
         'gid': 40000,
         'homebase': '/%s/doctorants/',
@@ -326,19 +331,19 @@ class SSH_ERROR(ERROR):
         if msg is None:
             ERROR.__init__(self, 'SSH error')
         else:
-            ERROR.__init__(self, 'SSH error: ' + msg)
+            ERROR.__init__(self, msg)
 
 
 class SSH_AUTH_ERROR(SSH_ERROR):
 
     def __init__(self, msg='SSH AUTH error'):
-        ERROR.__init__(self, msg)
+        SSH_ERROR.__init__(self, msg)
 
 
 class SSH_EXEC_ERROR(SSH_ERROR):
 
     def __init__(self, msg='SSH EXEC error'):
-        ERROR.__init__(self, msg)
+        SSH_ERROR.__init__(self, msg)
 
 
 class EXEC_NOSERVER(ERROR):
@@ -427,8 +432,8 @@ def _nav():
     """
     Calculate the current nav object depending on request.path
 
-    >>> _nav()
-    [('', 'accueil'), ('*', 'serveurs'), ('/servers', 'tableau de bord'), (None, 'master ldap'), ('', ''), ('*', 'personnels'), ('_SEARCH_', 'rechercher...'), ('/users/p', None), ('/users/d', None), ('/users/t', None), ('', ''), ('*', 'structure'), ('/groups', u'\\xe9quipes'), ('/users', 'utilisateurs'), ('', ''), ('*', 'site web'), ('/news', 'news'), ('/logs', 'logs'), ('/about', u'\\xe0 propos')]
+    # >>> _nav()
+    # [('', 'accueil'), ('*', 'serveurs'), ('/servers', 'tableau de bord'), (None, 'master ldap'), ('', ''), ('*', 'personnels'), ('_SEARCH_', 'rechercher...'), ('/users/p', None), ('/users/d', None), ('/users/t', None), ('', ''), ('*', 'structure'), ('/groups', u'\\xe9quipes'), ('/users', 'utilisateurs'), ('', ''), ('*', 'site web'), ('/news', 'news'), ('/logs', 'logs'), ('/about', u'\\xe0 propos')]
     """
     nav = []
     for (l, n) in main_nav:
@@ -1321,9 +1326,9 @@ def json_exec_nfs(server, cmd):
         # calculate mount point related to _path
         try:
             _path = _mount_point_rel_path(host, _path)
-        except (SSH_EXEC_ERROR, SSH_AUTH_ERROR, SSH_EXEC_ERROR,
-                SSH_ERROR) as e:
+        except (SSH_EXEC_ERROR, SSH_AUTH_ERROR, SSH_ERROR) as e:
             return _json_result(success=False, message=e.msg)
+
         if _path is None:
             return _json_result(success=False,
                                 message='Pas de montage pour %s' % _path_save)
@@ -1343,7 +1348,7 @@ def json_exec_nfs(server, cmd):
         output = _ssh_exec(host, user, [real_cmd])
     except SSH_EXEC_ERROR as e:
         return _json_result(success=False, message="Erreur d'execution")
-    except (SSH_AUTH_ERROR, SSH_EXEC_ERROR, SSH_ERROR) as e:
+    except (SSH_AUTH_ERROR, SSH_ERROR) as e:
         return _json_result(success=False, message=e.msg)
 
     # post-action cmd
@@ -1390,7 +1395,8 @@ def _ssh_exec(host, user, list_cmds):
         see _ssh_exec_paramiko
     """
     #_debug('_ssh_exec(%s, %s, %s)' % (host, user, list_cmds))
-    return _ssh_exec_paramiko(host, user, list_cmds)
+    raise SSH_ERROR("Opérations NFS désactivés")
+    # return _ssh_exec_paramiko(host, user, list_cmds)
 
 
 def _ssh_exec_paramiko(host, user, list_cmds):
@@ -1421,7 +1427,13 @@ def _ssh_exec_paramiko(host, user, list_cmds):
     ssh = paramiko.SSHClient()
 
     # known_hosts
-    ssh.load_system_host_keys()
+    try:
+        ssh.load_system_host_keys()
+    except IOError:
+        ssh.close()
+        _debug("_ssh_exec_paramiko/load_system_host_keys",
+                "user known_hosts cant be read")
+        raise SSH_AUTH_ERROR('Can load user `known_hosts`')
     try:
         ssh.load_host_keys('known_hosts')
     except:
@@ -1429,9 +1441,9 @@ def _ssh_exec_paramiko(host, user, list_cmds):
         raise SSH_AUTH_ERROR('Can find local file `known_hosts`')
 
     # connection
-    _debug('_ssh_exec_paramiko/connecting ...')
+    _debug('_ssh_exec_paramiko/connecting to %s ...' % host)
     try:
-        ssh.connect(host, username='root', key_filename='id_rsa')
+        ssh.connect(host, username='root', key_filename='id_rsa', allow_agent=False)
         _debug('_ssh_exec_paramiko/connection done with root and local priv key ...')
     except paramiko.BadHostKeyException:
         _debug('_ssh_exec_paramiko',
@@ -1445,7 +1457,7 @@ def _ssh_exec_paramiko(host, user, list_cmds):
         raise SSH_AUTH_ERROR('Authentification Failed on %s' % host)
     except paramiko.SSHException:
         # ssh session error
-        _debug('_ssh_exec_paramiko/network error')
+        _debug('_ssh_exec_paramiko/ssh error')
         ssh.close()
         raise SSH_ERROR('Can not connect to host %s. ssh error' % host)
     except socket.error:
@@ -1458,11 +1470,11 @@ def _ssh_exec_paramiko(host, user, list_cmds):
     # commands
     list_out = []
     for cmd in list_cmds:
-        #_debug('_ssh_exec_paramiko','Try to execute "%s" ...' % cmd)
+        _debug('_ssh_exec_paramiko','Try to execute "%s" ...' % cmd)
         stdin, stdout, stderr = ssh.exec_command(cmd)
         err = stderr.read()
         if err:
-            #_debug('_ssh_exec_paramiko/exec cmd(%s)/sdterr' % cmd, err)
+            _debug('_ssh_exec_paramiko/exec cmd(%s)/sdterr' % cmd, err)
             raise SSH_EXEC_ERROR(err)
         else:
             #_debug('_ssh_exec_paramiko/exec cmd(%s)/sdterr' % cmd, 'OK')
@@ -1615,8 +1627,11 @@ def _ssh_setquota(host, login, path, soft=0, hard=0):
     """
     if not host or not login or not path:
         return False
-
-    mount = _mount_point_rel_path(host, path)
+    
+    try:
+        mount = _mount_point_rel_path(host, path)
+    except:
+        return False
 
     cmd = 'setquota -u ' + login + ' %d %d 0 0 %s' % (soft, hard, mount)
     #_debug('_ssh_setquota(%s, %s, %s, %d, %d)' % (host, login, mount, soft,
@@ -1625,7 +1640,7 @@ def _ssh_setquota(host, login, path, soft=0, hard=0):
 
     try:
         _ssh_exec(host, 'root', [cmd])
-    except SSH_EXEC_ERROR:
+    except:
         return False
 
     return True
@@ -2197,11 +2212,13 @@ def load_config(filename):
         print _colors.FAIL + 'Configuration syntax error:' + _colors.NOCOLOR + 'on file ' + filename
         sys.exit(1)
 
-    # add some links
-    main_nav[3] = ('/server_ldap/' + main_ldap_servers_name[0], 'master ldap')
-    main_nav[7] = ('/users/p', main_users['p']['name'])
-    main_nav[8] = ('/users/d', main_users['d']['name'])
-    main_nav[9] = ('/users/t', main_users['t']['name'])
+    # modify some links
+    i = 0
+    for k,v in main_nav:
+        if (k == '_LDAP_'):
+            main_nav[i] = ('/server_ldap/' + main_ldap_servers_name[0], v)
+        _debug("main_nav[%d] = %s" % (i,main_nav[i]))
+        i += 1
 
 
 def ldap_initialize(bind=False):
@@ -2588,7 +2605,8 @@ def news(ver=None):
 def about():
     _debug_route()
     return _dict(warn=None, ldap_ver=ldap.__version__,
-                 bottle_ver=bottle.__version__)
+                 bottle_ver=bottle.__version__,
+                 paramiko_ver=paramiko.__version__)
 
 
 @bottle.route('/logs')
@@ -2771,7 +2789,7 @@ def json_useradd():
         #_debug('json_useradd/Try to exec %s [%s]' % (cmd, text))
         try:
             _ssh_exec(nfs_server_hostname, 'root', [cmd])
-        except SSH_EXEC_ERROR as e:
+        except (ERROR, SSH_EXEC_ERROR, SSH_AUTH_ERROR) as e:
             return _json_result(success=False, message=e.msg)
         #_debug('json_useradd/Try to exec %s' % cmd, 'OK')
 
@@ -2790,7 +2808,7 @@ def json_useradd():
         _debug('createemail', cmd)
         try:
             _ssh_exec('heywood', 'root', [cmd])
-        except SSH_EXEC_ERROR as e:
+        except (ERROR, SSH_EXEC_ERROR, SSH_AUTH_ERROR) as e:
             return _json_result(success=False, message=e.msg)
 
     return _json_result(
@@ -2878,7 +2896,10 @@ def json_userdel():
     ldap_close()
 
     # NFS operations
-    _ssh_exec(main_ldap_server['host'], 'root', ['rm -rf ' + homeDirectory])
+    try:
+        _ssh_exec(main_ldap_server['host'], 'root', ['rm -rf ' + homeDirectory])
+    except (ERROR, SSH_EXEC_ERROR, SSH_AUTH_ERROR) as e:
+        return _json_result(success=False, message=e.msg)
 
     return _json_result(success=True)
 
@@ -2938,7 +2959,7 @@ def json_user_home(uid):
         owner = t[2]
         lastmodification = t[3]
         direxists = True
-    except SSH_EXEC_ERROR:
+    except (ERROR, SSH_EXEC_ERROR, SSH_AUTH_ERROR) as e:
         pass
 
     # quota
@@ -2952,8 +2973,8 @@ def json_user_home(uid):
             server,
             'root',
             ['LANG=C repquota -u %s | grep %s' % (mount_point, uid)])
-    except:
-        output = ''
+    except (SSH_EXEC_ERROR, SSH_AUTH_ERROR, SSH_EXEC_ERROR, SSH_ERROR) as e:
+        return _json_result(success=False, message=e.msg)
 
     if output:
         t = output[0].split()
@@ -3114,18 +3135,18 @@ def json_group_members_infos(group, allinfo=False):
         st_members = '%d permanent(e)s' % nmembers
 
     if nphds == 1:
-        st_phds = u'un thésard(e)'
+        st_phds = u'un doctorant(e)'
     elif nphds == 0:
-        st_phds = u'pas de thésard'
+        st_phds = u'pas de doctorant'
     else:
-        st_phds = u'%d thésard(e)s' % nphds
+        st_phds = u'%d doctorant(e)s' % nphds
 
     if nstudents == 1:
-        st_students = u'un étudiant(e)'
+        st_students = u'un étudiant(e) ou invité(e)'
     elif nstudents == 0:
-        st_students = u'pas de étudiant'
+        st_students = u"pas de étudiant ni d'invité"
     else:
-        st_students = u'%d étudiant(e)s' % nstudents
+        st_students = u'%d étudiant(e)s / invité(e)s' % nstudents
 
     message = st_members + ', ' + st_phds + ' et ' + st_students
 
