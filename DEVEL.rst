@@ -72,7 +72,7 @@ Modules uses by de application (see requirements.txt for details):
 * bottle
 * ldap
 * pymongo
-* paramiko (with last pycryto ``2.6.1``)(see below)
+* paramiko
 
 Modules uses to help develop the application:
 
@@ -97,10 +97,14 @@ This issue can be fixed with a recent version of **pycrypto** On pypi, only the 
 Speed issue
 ___________
 
+
+.. note:: With paramiko 2.3.x the speed and security issues are over.
+
 With the last tested [*]_ of **paramiko** and **pycrypto**/**cryptography** in last version, the all process is very slow. 
 (See tables below)
 
 :Conclusion: To have optimal speed I use **paramiko** ``1.10.0`` and **pycrypto** ``2.6.1`` (in pip version)
+
 
 .. [*] last test is for paramiko ``2.0.2``
 
@@ -167,6 +171,11 @@ All tables of measurements.
 1.15.0              0.44s      0.15s       0.00s             0.58s
 1.16.0              0.43s      0.15s       0.00s             0.58s
 1.17.0              0.44s      0.15s       0.00s             0.58s
+2.0.0        X      0.12s      0.13s       0.00s             0.26s
+2.1.0        X      0.11s      0.13s       0.00s             0.25s
+2.2.0        X      0.11s      0.20s       0.01s             0.33s
+2.3.0               0.12s      0.19s       0.01s             0.32s
+2.4.0               0.12s      0.21s       0.01s             0.34s
  (new tests with cryptography ``1.5``)
 ------------------------------------------------------------------
 2.0.0               0.56s      0.14s       0.00s             0.71s
