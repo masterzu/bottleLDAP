@@ -1,22 +1,21 @@
 notifications:
     email: false
-sudo: required
 language: python
-dist: precise
 python:
     # - "2.6"
     - "2.7"
-os:
-    - linux
-    # - osx FIXME: cant install python2.7 on osx box
 env:
-    # - BOTTLE=0.10.12
-    # - BOTTLE=0.11.7
-    - BOTTLE=0.12.9
-before_install:
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install node && npm install -g grunt-cli; fi
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install python; fi
+    # - BOTTLE=0.10.12 DONT WORK
+    # - BOTTLE=0.11.7 DONT WORK
+    # - BOTTLE=0.12.7
+    # - BOTTLE=0.12.8
+    # - BOTTLE=0.12.9
+    # - BOTTLE=0.12.9
+    # - BOTTLE=0.12.10
+    # - BOTTLE=0.12.11
+    # - BOTTLE=0.12.12
+    # - BOTTLE=0.12.13
+    - BOTTLE=0.12.14
 install: 
     - npm install
     - pip install bottle==$BOTTLE

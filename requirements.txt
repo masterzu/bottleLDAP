@@ -18,7 +18,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-bottle==0.12.9
+bottle==0.12.14
 python-ldap
 pymongo==3.3
 paramiko==2.4
