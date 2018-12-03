@@ -110,17 +110,20 @@ git commit -a -m "prepare v$VERSION"
 # merge from master
 
 git checkout master
-git merge "v$VERSION"
 
 cat <<EOT
 OK
 
-Release v$VERSION allmost done.
+Release v$VERSION is allmost done.
 
 things to do:
 
+* merge 
+
+  git merge "v$VERSION"
+
 * resolve merge conflics
-  
+
   git mergetool
 
 * commit, tag, 
@@ -128,6 +131,10 @@ things to do:
   git commit 
   git tag $VERSION
   git push
+
+* clean branch v$VERSION
+
+  git branch -d "v$VERSION"
 
 EOT
 
