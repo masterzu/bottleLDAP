@@ -1,3 +1,6 @@
+%#
+%# Vars: title, warn, version, author, nav
+%#
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
@@ -62,15 +65,15 @@
         <div class="span12">
         bottleLDAP {{version}} 
         &bull; 
-	    &copy; <span id="author">{{author}}</span>, 2011&ndash;2013
+	    &copy; <span id="author">{{author}}</span>, 2011&ndash;2018
         &bull; 
-        illustré par <a href="http://raphaeljs.com" target="_blanck">Raphaël JS</a>
+        illustré par <a href="http://dmitrybaranovskiy.github.io/raphael/" target="_raph">Raphaël JS</a>
         &bull; 
-        animé par <a href="http://jquery.com" target="_blanck">jQUERY</a>
+        animé par <a href="http://jquery.com" target="_jquery">jQUERY</a>
         &bull; 
-        propulsé par <a href="http://bottlepy.org/docs/0.11/" target="_blanck">bottlepy</a> 
+        propulsé par <a href="http://bottlepy.org/docs/0.12/" target="_bottle">bottle</a> 
         &bull; 
-        coagulé par <a href="http://www.python-ldap.org/" target="_blanck">python-ldap</a>
+        coagulé par <a href="http://www.python-ldap.org/" target="_pyldap">python-ldap</a>
         </div><!-- #bottom -->
     </div>
     </div><!-- #content-container -->

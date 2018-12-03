@@ -1,4 +1,7 @@
 %rebase base title="Logs", nav=nav, warn=warn, author=author, version=version
+%#
+%# Vars: None
+%#
 
 
 <script type="text/javascript">

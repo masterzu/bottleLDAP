@@ -21,9 +21,13 @@ Tools for client side
 I use `grunt <http://gruntjs.com/>`_ and `bower <https://bower.io/>`_ to import all javascript libraries
 
 * install ``npm``. ``npm`` is part of `nodejs <https://nodejs.org/en/download/>`_ project.
-* install ``grunt`` and ``bower`` listed in *package.json*::
+* install commands ``grunt``, ``bower`` and ``phantomjs`` ::
+    
+    $ npm install -g grunt-cli bower phantomjs
 
-	$ npm install
+* install grunt libraries listed in *package.json*::
+
+    $ npm install
 
 * install all javascript libraries listed in *bower.json*::
 
@@ -32,7 +36,7 @@ I use `grunt <http://gruntjs.com/>`_ and `bower <https://bower.io/>`_ to import 
 Tools for server side devel
 ---------------------------
 
-* (optional) install **virtualenv** to have separated python env from OS host
+* (optional) install **virtualenv** to have separated python environment from OS host
 
 * install python modules listed in *requirements.txt* and *requirements_devel.txt*::
 
@@ -42,17 +46,33 @@ Tools for server side devel
 Go to release
 =============
 
-Use `make_release.sh` script.
+Before release, you **must** have a clean repository.
+
+#. Launch ./make_release.sh with the *good* version ie ``x.y.z``::
+
+   make_release.sh 0.17.0
+
+#. If no error occurs, follow the script steps:
+
+   #. commit
+
+   #. pass to master branch
+
+   #. merge and resolve merges (``git mergetool`` may help)
+
+   #. commit
+
+   #. tag
 
 Python modules notes
 ====================
 
-Modules uses by de application:
+Modules uses by de application (see requirements.txt for details):
 
-* bottle == ``0.11`` (not tested ``0.12`` yet)
+* bottle
 * ldap
 * pymongo
-* paramiko == ``1.10.0`` (with last pycryto ``2.6.1``)(see below)
+* paramiko
 
 Modules uses to help develop the application:
 
@@ -77,10 +97,14 @@ This issue can be fixed with a recent version of **pycrypto** On pypi, only the 
 Speed issue
 ___________
 
+
+.. note:: With paramiko 2.3.x the speed and security issues are over.
+
 With the last tested [*]_ of **paramiko** and **pycrypto**/**cryptography** in last version, the all process is very slow. 
 (See tables below)
 
 :Conclusion: To have optimal speed I use **paramiko** ``1.10.0`` and **pycrypto** ``2.6.1`` (in pip version)
+
 
 .. [*] last test is for paramiko ``2.0.2``
 
@@ -147,6 +171,11 @@ All tables of measurements.
 1.15.0              0.44s      0.15s       0.00s             0.58s
 1.16.0              0.43s      0.15s       0.00s             0.58s
 1.17.0              0.44s      0.15s       0.00s             0.58s
+2.0.0        X      0.12s      0.13s       0.00s             0.26s
+2.1.0        X      0.11s      0.13s       0.00s             0.25s
+2.2.0        X      0.11s      0.20s       0.01s             0.33s
+2.3.0               0.12s      0.19s       0.01s             0.32s
+2.4.0               0.12s      0.21s       0.01s             0.34s
  (new tests with cryptography ``1.5``)
 ------------------------------------------------------------------
 2.0.0               0.56s      0.14s       0.00s             0.71s
@@ -303,6 +332,16 @@ The source is::
     #print_long(out, times)
     print_short(out, times)
 
+ldap
+----
+
+The module **SimplePagedResultsControl** (RFC 2696) controlling the ``sizelimit`` parameter don't work with the server **openldap**.
+
+The only solution, if you see error like ``SIZELIMIT_EXCEEDED``, is to set a bigger limit to `slapd.conf` (default is 500)::
+
+	sizelimit 1000
+
+
 Code Style
 ==========
 
@@ -361,4 +400,4 @@ The typical process is:
 
 #. (repeat from step 2)
 
-.. :vim:set spell spelllang=en:
+.. :vim:set spell spelllang=en:set ft=rst:

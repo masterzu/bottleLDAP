@@ -1,11 +1,14 @@
 %rebase base title="Équipes", nav=nav, warn=warn, author=author, version=version
+%#
+%# Vars: groups
+%#
 
 <script type="text/javascript">
 <!--
 
 $(function() {
 %for dn, gr in groups:
-	%code = gr['cn'][0]
+    %code = gr['cn'][0]
     $('a#infos-{{code}}').click(function() { ajax_button_span_url($(this), $('span#infos-{{code}}'), '/api/group/{{code}}/infos') });
     %end
     $('#all').click(function(){
@@ -13,7 +16,7 @@ $(function() {
         %code = gr['cn'][0]
         ajax_button_span_url($('a#infos-{{code}}'), $('span#infos-{{code}}'), '/api/group/{{code}}/infos') 
     %end
-    });    
+    });
 });
 // -->
 </script>
@@ -29,7 +32,7 @@ $(function() {
     <dd> <span id="infos-{{code}}">&nbsp;</span> </dd>
 </dl>
 %end
-<p>Action: <a id="all" class="btn btn-mini">+infos</a></p>
+<p>Action: <a id="all" class="btn btn-mini">toutes les infos</a></p>
 </div><!-- box shadow -->
 
 <!-- :vim:ft=html: -->

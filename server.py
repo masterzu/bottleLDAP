@@ -69,8 +69,8 @@ import paramiko
 import pymongo
 
 __author__ = 'P. Cao Huu Thien'
-__version__ = '0.16.1'
-__license__ = 'GPL'
+__version__ = '0.17.0'
+__license__ = 'AGPL'
 
 
 """
@@ -167,24 +167,25 @@ main_news = (
         'detach client side libraries ; use semver',
         'use bower and grunt to detach javascript libraries from repo',
         'use semver - sementic version number http://semver.org']),
-    ('0.16.1', '5 dec 2016', [
-        'Utilisation de mongo 2.x',
-        'HOTFIX 0.16.1: requirements pymongo 2.x'
-        ])
+    ('0.16.1', '4 oct 2016', [
+        'use pymongo 2.x']),
+    ('0.17.0', '29 nov 2018', [
+        'disable NFS ops -- dont work',
+        'user paramiko 2.4'])
 )
 
 
 main_nav = [
     ('/', 'accueil'),
-    ('*', 'serveurs'),
-    ('/servers', 'tableau de bord'),
-    (None, 'master ldap'),
     ('', ''),
-    ('*', 'personnels'),
+    # ('*', 'serveurs'),
+    # ('_LDAP_', 'ldap'),
+    # ('/servers', 'tous'),
+    # ('*', 'personnels'),
     ('_SEARCH_', 'rechercher...'),
-    ('/users/p', None),
-    ('/users/d', None),
-    ('/users/t', None),
+    ('/users/p', 'permanents'),
+    ('/users/d', 'doctorants'),
+    ('/users/t', u'étudiants et invités'),
     ('', ''),
     ('*', 'structure'),
     ('/groups', u'équipes'),
@@ -210,7 +211,7 @@ main_users = {
         'quotahard': 0,
     },
     'd': {
-        'name': u'thésards',
+        'name': u'doctorants',
         'basedn': 'ou=doctorants,ou=personnels,o=ijlrda',
         'gid': 40000,
         'homebase': '/%s/doctorants/',
@@ -330,19 +331,19 @@ class SSH_ERROR(ERROR):
         if msg is None:
             ERROR.__init__(self, 'SSH error')
         else:
-            ERROR.__init__(self, 'SSH error: ' + msg)
+            ERROR.__init__(self, msg)
 
 
 class SSH_AUTH_ERROR(SSH_ERROR):
 
     def __init__(self, msg='SSH AUTH error'):
-        ERROR.__init__(self, msg)
+        SSH_ERROR.__init__(self, msg)
 
 
 class SSH_EXEC_ERROR(SSH_ERROR):
 
     def __init__(self, msg='SSH EXEC error'):
-        ERROR.__init__(self, msg)
+        SSH_ERROR.__init__(self, msg)
 
 
 class EXEC_NOSERVER(ERROR):
@@ -414,17 +415,11 @@ def _debug(title, text=None):
         print _colors.HEADER + '[DEBUG] ' + _colors.OKGREEN + title \
             + _colors.NOCOLOR
     else:
-        if isinstance(text, type('qwe')):
-            print _colors.HEADER + '[DEBUG] ' + _colors.OKGREEN + title \
-                + _colors.NOCOLOR + ' : '
-            for t in textwrap.wrap(text, 80):
-                print _tab + _colors.OKBLUE + t
-
-        else:
-            print _colors.HEADER + '[DEBUG] ' + _colors.OKGREEN + title \
-                + _colors.NOCOLOR + ' = ' + _colors.OKBLUE
-            pp(text)
-            print _colors.NOCOLOR
+        text = str(text)
+        print _colors.HEADER + '[DEBUG] ' + _colors.OKGREEN + title \
+            + _colors.NOCOLOR + '= '
+        for t in textwrap.wrap(text, 80):
+            print _tab + _colors.OKBLUE + t
 
 
 def _debug_route():
@@ -437,8 +432,8 @@ def _nav():
     """
     Calculate the current nav object depending on request.path
 
-    >>> _nav()
-    [('', 'accueil'), ('*', 'serveurs'), ('/servers', 'tableau de bord'), (None, 'master ldap'), ('', ''), ('*', 'personnels'), ('_SEARCH_', 'rechercher...'), ('/users/p', None), ('/users/d', None), ('/users/t', None), ('', ''), ('*', 'structure'), ('/groups', u'\\xe9quipes'), ('/users', 'utilisateurs'), ('', ''), ('*', 'site web'), ('/news', 'news'), ('/logs', 'logs'), ('/about', u'\\xe0 propos')]
+    # >>> _nav()
+    # [('', 'accueil'), ('*', 'serveurs'), ('/servers', 'tableau de bord'), (None, 'master ldap'), ('', ''), ('*', 'personnels'), ('_SEARCH_', 'rechercher...'), ('/users/p', None), ('/users/d', None), ('/users/t', None), ('', ''), ('*', 'structure'), ('/groups', u'\\xe9quipes'), ('/users', 'utilisateurs'), ('', ''), ('*', 'site web'), ('/news', 'news'), ('/logs', 'logs'), ('/about', u'\\xe0 propos')]
     """
     nav = []
     for (l, n) in main_nav:
@@ -716,15 +711,17 @@ def _ldap_search(base, list_filters=[], list_attrs=None, filterstr=''):
     return ldap.search result
         or None if error
 
-    May return Exception TIMEOUT if search time > 30s
+    May return Exception
+    - TIMEOUT if search time > 30s
+    - SIZELIMIT_EXCEEDED if server has low sizelimit set
     """
 
     if 'file' not in main_ldap_server or not main_ldap_server['file']:
-        _debug('CALL _ldap_search',
-               (
-                   'base=%s, list_filters=%s, list_attrs=%s, '
-                   'filterstr=%s - None (LDAP not connected?)'
-               ) % (base, list_filters, list_attrs, filterstr))
+        # _debug('CALL _ldap_search',
+        #        (
+        #            'base=%s, list_filters=%s, list_attrs=%s, '
+        #            'filterstr=%s - None (LDAP not connected?)'
+        #        ) % (base, list_filters, list_attrs, filterstr))
         return None
 
     if filterstr:
@@ -733,15 +730,13 @@ def _ldap_search(base, list_filters=[], list_attrs=None, filterstr=''):
         _filter = _ldap_build_ldapfilter_and(list_filters)
     # _debug('_ldap_search/_filter', _filter)
 
-    _debug('CALL _ldap_search',
-           'base=%s, list_filters=%s, list_attrs=%s, filterstr=%s' % (
-               base, list_filters, list_attrs, filterstr))
+    # timelimit default in openldap = 3600 (s)
+    # sizelimit default in openldap = 500 (# of result)
     objs = main_ldap_server['file'].search_st(base,
                                               ldap.SCOPE_SUBTREE,
                                               filterstr=_filter,
                                               attrlist=list_attrs, timeout=30)
-
-    _debug('RETURN _ldap_search', objs)
+    # _debug('RETURN _ldap_search/size', len(objs))
     return objs
 
 
@@ -1260,7 +1255,7 @@ def json_exec_common(server, cmd):
 
     try:
         output = _ssh_exec(host, user, ssh_kcmds[cmd])
-    except (SSH_AUTH_ERROR, SSH_EXEC_ERROR, SSH_ERROR) as e:
+    except (SSH_AUTH_ERROR, SSH_EXEC_ERROR, SSH_ERROR, ERROR) as e:
         return _json_result(success=False, message=e.msg)
 
     #_debug('json_exec_common',output)
@@ -1308,7 +1303,8 @@ def json_exec_nfs(server, cmd):
 
     # check host/server
     if not host or not server:
-        return _json_result(success=False, message='Serveur "%s" inconnu' % server)
+        return _json_result(
+            success=False, message='Serveur "%s" inconnu' % server)
 
     # chech cmd
     if cmd not in ssh_kcmds:
@@ -1330,9 +1326,9 @@ def json_exec_nfs(server, cmd):
         # calculate mount point related to _path
         try:
             _path = _mount_point_rel_path(host, _path)
-        except (SSH_EXEC_ERROR, SSH_AUTH_ERROR, SSH_EXEC_ERROR,
-                SSH_ERROR) as e:
+        except (SSH_EXEC_ERROR, SSH_AUTH_ERROR, SSH_ERROR) as e:
             return _json_result(success=False, message=e.msg)
+
         if _path is None:
             return _json_result(success=False,
                                 message='Pas de montage pour %s' % _path_save)
@@ -1352,7 +1348,7 @@ def json_exec_nfs(server, cmd):
         output = _ssh_exec(host, user, [real_cmd])
     except SSH_EXEC_ERROR as e:
         return _json_result(success=False, message="Erreur d'execution")
-    except (SSH_AUTH_ERROR, SSH_EXEC_ERROR, SSH_ERROR) as e:
+    except (SSH_AUTH_ERROR, SSH_ERROR) as e:
         return _json_result(success=False, message=e.msg)
 
     # post-action cmd
@@ -1399,7 +1395,8 @@ def _ssh_exec(host, user, list_cmds):
         see _ssh_exec_paramiko
     """
     #_debug('_ssh_exec(%s, %s, %s)' % (host, user, list_cmds))
-    return _ssh_exec_paramiko(host, user, list_cmds)
+    raise SSH_ERROR("Opérations NFS désactivés")
+    # return _ssh_exec_paramiko(host, user, list_cmds)
 
 
 def _ssh_exec_paramiko(host, user, list_cmds):
@@ -1430,42 +1427,54 @@ def _ssh_exec_paramiko(host, user, list_cmds):
     ssh = paramiko.SSHClient()
 
     # known_hosts
-    ssh.load_system_host_keys()
+    try:
+        ssh.load_system_host_keys()
+    except IOError:
+        ssh.close()
+        _debug("_ssh_exec_paramiko/load_system_host_keys",
+                "user known_hosts cant be read")
+        raise SSH_AUTH_ERROR('Can load user `known_hosts`')
     try:
         ssh.load_host_keys('known_hosts')
     except:
-        try:
-            ssh.load_host_keys(os.path.expanduser('~/.ssh/known_hosts'))
-        except:
-            raise SSH_AUTH_ERROR('Can find known_hosts file in host %s' % host)
+        ssh.close()
+        raise SSH_AUTH_ERROR('Can find local file `known_hosts`')
 
     # connection
-    #ssh.connect(host, username='root', password='', pkey=private_key)
+    _debug('_ssh_exec_paramiko/connecting to %s ...' % host)
     try:
-        ssh.connect(host, username='root', password='',
-                    key_filename=os.path.expanduser('id_rsa'))
-    except paramiko.BadHostKeyException, paramiko.AuthenticationException:
-        #_debug('_ssh_exec_paramiko',
-        #       'connection to %s with `id_rsa` ... FAILED' % host)
-        try:
-            ssh.connect(host, username='root', password='',
-                        key_filename=os.path.expanduser('~/.ssh/id_rsa'))
-        except paramiko.BadHostKeyException, paramiko.AuthenticationException:
-            #_debug('_ssh_exec_paramiko',
-            #       'connection to %s with `~/.ssh/id_rsa` ... FAILED' % host)
-            raise SSH_AUTH_ERROR((
-                'Can not connect to host %s.'
-                'You need to set a public key'
-            ) % host)
+        ssh.connect(host, username='root', key_filename='id_rsa', allow_agent=False)
+        _debug('_ssh_exec_paramiko/connection done with root and local priv key ...')
+    except paramiko.BadHostKeyException:
+        _debug('_ssh_exec_paramiko',
+               'Can not connect to host %s. Host not in local file `known_hosts`' % host)
+        ssh.close()
+        raise SSH_AUTH_ERROR(
+            'Can not connect to host %s. Host not in local file `known_hosts`' % host)
+    except paramiko.AuthenticationException:
+        _debug('_ssh_exec_paramiko', 'Authentification Failed on %s' % host)
+        ssh.close()
+        raise SSH_AUTH_ERROR('Authentification Failed on %s' % host)
+    except paramiko.SSHException:
+        # ssh session error
+        _debug('_ssh_exec_paramiko/ssh error')
+        ssh.close()
+        raise SSH_ERROR('Can not connect to host %s. ssh error' % host)
+    except socket.error:
+        # connection error
+        _debug('_ssh_exec_paramiko/network error')
+        ssh.close()
+        raise SSH_ERROR('Can not connect to host %s. network error' % host)
+    _debug('_ssh_exec_paramiko/connection OK')
 
     # commands
     list_out = []
     for cmd in list_cmds:
-        #_debug('_ssh_exec_paramiko','Try to execute "%s" ...' % cmd)
+        _debug('_ssh_exec_paramiko','Try to execute "%s" ...' % cmd)
         stdin, stdout, stderr = ssh.exec_command(cmd)
         err = stderr.read()
         if err:
-            #_debug('_ssh_exec_paramiko/exec cmd(%s)/sdterr' % cmd, err)
+            _debug('_ssh_exec_paramiko/exec cmd(%s)/sdterr' % cmd, err)
             raise SSH_EXEC_ERROR(err)
         else:
             #_debug('_ssh_exec_paramiko/exec cmd(%s)/sdterr' % cmd, 'OK')
@@ -1618,8 +1627,11 @@ def _ssh_setquota(host, login, path, soft=0, hard=0):
     """
     if not host or not login or not path:
         return False
-
-    mount = _mount_point_rel_path(host, path)
+    
+    try:
+        mount = _mount_point_rel_path(host, path)
+    except:
+        return False
 
     cmd = 'setquota -u ' + login + ' %d %d 0 0 %s' % (soft, hard, mount)
     #_debug('_ssh_setquota(%s, %s, %s, %d, %d)' % (host, login, mount, soft,
@@ -1628,7 +1640,7 @@ def _ssh_setquota(host, login, path, soft=0, hard=0):
 
     try:
         _ssh_exec(host, 'root', [cmd])
-    except SSH_EXEC_ERROR:
+    except:
         return False
 
     return True
@@ -1741,13 +1753,15 @@ def _mongodb_connect(collection):
     """
     try:
         conn = pymongo.MongoClient(
-            host=main_mongodb['hostname'], port=main_mongodb['port'])
+            host=main_mongodb['hostname'],
+            port=main_mongodb['port'],
+            serverSelectionTimeoutMS=500)
     except TypeError:
         # port not an int error
         raise MONGODB_ERROR(
             'Port invalid (not an int): %s' % main_mongodb['port'])
-    except pymongo.errors.ConnectionFailure:
-        raise MONGODB_ERROR('connection error on host: %s at port: %s' %
+    except (pymongo.errors.ConnectionFailure, pymongo.errors.ServerSelectionTimeoutError):
+        raise MONGODB_ERROR('Cant connect on %s at port %s (#0)' %
                             (main_mongodb['hostname'], main_mongodb['port']))
 
     try:
@@ -1761,6 +1775,12 @@ def _mongodb_connect(collection):
     except pymongo.errors.InvalidName:
         raise MONGODB_ERROR('invalid collection "%s" on db "%s"' %
                             (collection, main_mongodb['db']))
+
+    # test if server responding
+    try:
+        conn.admin.command('ismaster')
+    except pymongo.errors.ConnectionFailure:
+        raise MONGODB_ERROR('Server Down')
 
     return coll
 
@@ -1817,7 +1837,8 @@ def _log_ldap_action(dn, action, kargs):
         print "action %s conflict between %s ans %s" % (action, dn, kargs)
         sys.exit(1)
 
-    if action not in ['useradd', 'userdel', 'userattrmod', 'userattrdel', 'groupaddmember', 'groupdelmember']:
+    if action not in ['useradd', 'userdel', 'userattrmod',
+                      'userattrdel', 'groupaddmember', 'groupdelmember']:
         print "action %s unknown" % action
         sys.exit(1)
 
@@ -2203,11 +2224,13 @@ def load_config(filename):
         print _colors.FAIL + 'Configuration syntax error:' + _colors.NOCOLOR + 'on file ' + filename
         sys.exit(1)
 
-    # add some links
-    main_nav[3] = ('/server_ldap/' + main_ldap_servers_name[0], 'master ldap')
-    main_nav[7] = ('/users/p', main_users['p']['name'])
-    main_nav[8] = ('/users/d', main_users['d']['name'])
-    main_nav[9] = ('/users/t', main_users['t']['name'])
+    # modify some links
+    i = 0
+    for k,v in main_nav:
+        if (k == '_LDAP_'):
+            main_nav[i] = ('/server_ldap/' + main_ldap_servers_name[0], v)
+        _debug("main_nav[%d] = %s" % (i,main_nav[i]))
+        i += 1
 
 
 def ldap_initialize(bind=False):
@@ -2218,6 +2241,7 @@ def ldap_initialize(bind=False):
         or False on error
 
     FIXME: and a ldap server parameter
+    FIXME: add a timeout
     """
     h = _ldap_initialize(main_ldap_servers[0])
     if h is None:
@@ -2296,7 +2320,10 @@ def ldap_users(base=None, list_filters=None, list_attrs=None, filterstr=''):
 
     #_debug('ldap_users/list_filters',list_filters)
 
-    objs = _ldap_search(base, list_filters, list_attrs)
+    try:
+        objs = _ldap_search(base, list_filters, list_attrs)
+    except ldap.SIZELIMIT_EXCEEDED:
+        return []
     #_debug('ldap_users/objs',objs)
 
     return objs
@@ -2479,11 +2506,17 @@ def users_type(type=None):
     except ldap.TIMEOUT:
         ldap_close()
         return _dict(warn='LDAP server too long. Retry later :(',
-                     title=title, users=[])
+                     title=title, users=[], nfs_servers=main_nfs_servers_name)
+    except ldap.SIZELIMIT_EXCEEDED:
+        _debug('users_type', 'SIZELIMIT_EXCEEDED')
+        ldap_close()
+        return _dict(warn='LDAP server reply partial result',
+                     title=title, users=users, nfs_servers=main_nfs_servers_name)
 
     if len(users) == 0:
         ldap_close()
-        return _dict(warn='No users of type %s' % title, title=title, users=[])
+        return _dict(warn='No users of type %s' % title, title=title,
+                     users=[], nfs_servers=main_nfs_servers_name)
 
     ldap_close()
     return _dict(title=title, users=users, nfs_servers=main_nfs_servers_name)
@@ -2583,7 +2616,8 @@ def news(ver=None):
 def about():
     _debug_route()
     return _dict(warn=None, ldap_ver=ldap.__version__,
-                 bottle_ver=bottle.__version__)
+                 bottle_ver=bottle.__version__,
+                 paramiko_ver=paramiko.__version__)
 
 
 @bottle.route('/logs')
@@ -2766,7 +2800,7 @@ def json_useradd():
         #_debug('json_useradd/Try to exec %s [%s]' % (cmd, text))
         try:
             _ssh_exec(nfs_server_hostname, 'root', [cmd])
-        except SSH_EXEC_ERROR as e:
+        except (ERROR, SSH_EXEC_ERROR, SSH_AUTH_ERROR) as e:
             return _json_result(success=False, message=e.msg)
         #_debug('json_useradd/Try to exec %s' % cmd, 'OK')
 
@@ -2785,7 +2819,7 @@ def json_useradd():
         _debug('createemail', cmd)
         try:
             _ssh_exec('heywood', 'root', [cmd])
-        except SSH_EXEC_ERROR as e:
+        except (ERROR, SSH_EXEC_ERROR, SSH_AUTH_ERROR) as e:
             return _json_result(success=False, message=e.msg)
 
     return _json_result(
@@ -2827,7 +2861,7 @@ def json_userdel():
         main_users['*']['basedn'],
         list_filters=['objectClass=person', 'manager=' + user_dn])
     if len(assistants) > 0:
-        _debug('json_userdel/assistants', '%d found' % len(assistants))
+        # _debug('json_userdel/assistants', '%d found' % len(assistants))
         ldap_close()
         return _json_result(
             success=False,
@@ -2845,7 +2879,7 @@ def json_userdel():
         list_modify_attrs = [(ldap.MOD_DELETE, 'uniqueMember', user_dn)]
         for dngroup, group in groups:
             cn = group['cn'][0]
-            _debug('json_userdel/group', 'removing %s from %s ...' % (uid, cn))
+            # _debug('json_userdel/group', 'removing %s from %s ...' % (uid, cn))
             try:
                 main_ldap_server['file'].modify_s(dngroup, list_modify_attrs)
             except ldap.LDAPError, e:
@@ -2854,10 +2888,10 @@ def json_userdel():
                     success=False,
                     message="Erreur serveur LDAP: %s" % str(e))
             _log_ldap_action(dngroup, 'groupdelmember', {'member': user_dn})
-            _debug('json_userdel/group',
-                   'removing %s from %s ... OK' % (uid, cn))
+            # _debug('json_userdel/group',
+            #        'removing %s from %s ... OK' % (uid, cn))
     else:
-        _debug('json_userdel', 'no group with member ' + user_dn)
+        # _debug('json_userdel', 'no group with member ' + user_dn)
         pass
 
     #_debug('json_userdel/user', 'deleting user %s ...' % uid)
@@ -2873,7 +2907,10 @@ def json_userdel():
     ldap_close()
 
     # NFS operations
-    _ssh_exec(main_ldap_server['host'], 'root', ['rm -rf ' + homeDirectory])
+    try:
+        _ssh_exec(main_ldap_server['host'], 'root', ['rm -rf ' + homeDirectory])
+    except (ERROR, SSH_EXEC_ERROR, SSH_AUTH_ERROR) as e:
+        return _json_result(success=False, message=e.msg)
 
     return _json_result(success=True)
 
@@ -2933,7 +2970,7 @@ def json_user_home(uid):
         owner = t[2]
         lastmodification = t[3]
         direxists = True
-    except SSH_EXEC_ERROR:
+    except (ERROR, SSH_EXEC_ERROR, SSH_AUTH_ERROR) as e:
         pass
 
     # quota
@@ -2947,8 +2984,8 @@ def json_user_home(uid):
             server,
             'root',
             ['LANG=C repquota -u %s | grep %s' % (mount_point, uid)])
-    except:
-        output = ''
+    except (SSH_EXEC_ERROR, SSH_AUTH_ERROR, SSH_EXEC_ERROR, SSH_ERROR) as e:
+        return _json_result(success=False, message=e.msg)
 
     if output:
         t = output[0].split()
@@ -3109,18 +3146,18 @@ def json_group_members_infos(group, allinfo=False):
         st_members = '%d permanent(e)s' % nmembers
 
     if nphds == 1:
-        st_phds = u'un thésard(e)'
+        st_phds = u'un doctorant(e)'
     elif nphds == 0:
-        st_phds = u'pas de thésard'
+        st_phds = u'pas de doctorant'
     else:
-        st_phds = u'%d thésard(e)s' % nphds
+        st_phds = u'%d doctorant(e)s' % nphds
 
     if nstudents == 1:
-        st_students = u'un étudiant(e)'
+        st_students = u'un étudiant(e) ou invité(e)'
     elif nstudents == 0:
-        st_students = u'pas de étudiant'
+        st_students = u"pas de étudiant ni d'invité"
     else:
-        st_students = u'%d étudiant(e)s' % nstudents
+        st_students = u'%d étudiant(e)s / invité(e)s' % nstudents
 
     message = st_members + ', ' + st_phds + ' et ' + st_students
 
@@ -3261,7 +3298,7 @@ def json_log_query(query, **kargs_json_result):
         logs = [i for i in log_query(
             query, None, sort=[('time', pymongo.DESCENDING)])]
     except MONGODB_ERROR as e:
-        print 'MONGODB_ERROR(%s)' % e.msg
+        # _debug('json_log_query/server error', e.msg)
         return _json_result(success=False, message=e.msg)
 
     # _debug('json_log_query/kargs', kargs_json_result)
@@ -3326,6 +3363,9 @@ if __name__ == '__main__':
     parser.add_option(
         "-D", "--debug",
         help="debug mode", action="store_true", dest="debug")
+    parser.add_option(
+        "-M", "--mock",
+        help="mock mode", action="store_true", dest="mock")
     (options, args) = parser.parse_args()
 
     missingFile = False
@@ -3334,7 +3374,7 @@ if __name__ == '__main__':
             print _colors.FAIL + 'Missing file' + _colors.NOCOLOR + ':  ' \
                 + _colors.WARNING + f + _colors.NOCOLOR
             missingFile = True
-    if missingFile:
+    if missingFile and not options.mock:
         parser.print_help()
         sys.exit(1)
 
@@ -3366,18 +3406,26 @@ if __name__ == '__main__':
         + _colors.NOCOLOR,
     if main_config['devel']:
         print 'in mode ' + _colors.WARNING + 'DEVEL' + _colors.NOCOLOR,
+    if options.mock:
+        print 'in mode ' + _colors.WARNING + 'MOCK' + _colors.NOCOLOR,
     if options.debug or main_config['debug']:
         print 'and ' + _colors.WARNING + 'DEBUG' + _colors.NOCOLOR \
             + ' verbosity',
-    print 'using mongoDB on ' + _colors.OKGREEN + main_mongodb['hostname'] \
-        + _colors.NOCOLOR + ':' + _colors.OKGREEN + str(main_mongodb['port']) \
-        + _colors.NOCOLOR + ' with db ' + _colors.OKGREEN + main_mongodb['db'] \
-        + _colors.NOCOLOR,
+    if not options.mock:
+        print 'using mongoDB on ' + _colors.OKGREEN + main_mongodb['hostname'] \
+            + _colors.NOCOLOR + ':' + _colors.OKGREEN + str(main_mongodb['port']) \
+            + _colors.NOCOLOR + ' with db ' + _colors.OKGREEN + main_mongodb['db'] \
+            + _colors.NOCOLOR,
+    else:
+        print 'for mongoDB and DB',
+
     print '...'
 
     try:
-        bottle.run(host='0.0.0.0', port=main_config['port'],
-                   reloader=main_config['reloader'], debug=bottle.DEBUG)
+        bottle.run(host='0.0.0.0',
+                   port=main_config['port'],
+                   reloader=main_config['reloader'],
+                   debug=bottle.DEBUG)
     except socket.error:
         print _colors.FAIL + 'Socket error' + _colors.NOCOLOR + ': Port ' \
             + _colors.WARNING + main_config['port'] + _colors.NOCOLOR \
@@ -3385,4 +3433,4 @@ if __name__ == '__main__':
         print ''
         sys.exit(1)
 
-# vim:spelllang=en:
+# vim: spelllang=en nospell:

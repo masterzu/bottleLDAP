@@ -70,11 +70,13 @@ git checkout -b "v$VERSION"
 ## install devel tools
 npm install
 
+## running python test and run tests
+python server.py -M config_test.ini &
+npm test
+kill %1
+
 ## add new files
 git add static/all.min.js static/all.css
-
-## tests
-npm test
 
 ### files to transform
 for sc in $FILES
@@ -94,6 +96,22 @@ do
     rm -f $script;
 done
 
+## add modified files
+git add $FILES
+
+## clean all devel files
+git rm Gruntfile.js package.json bower.json
+git rm -r grunt_files/
+git rm -r tests/
+
+# commit
+git commit -a -m "prepare v$VERSION"
+
+# merge from master
+
+git checkout master
+git merge "v$VERSION"
+
 cat <<EOT
 OK
 
@@ -101,21 +119,14 @@ Release v$VERSION allmost done.
 
 things to do:
 
-* add version info in server.py
-* add Changes ?
-* commit
-
-  git commit -a -m '$VERSION'
-
-* merge from master
-
-  git checkout master
-  git merge v$VERSION
-
 * resolve merge conflics
-* commit and push
+  
+  git mergetool
 
-  git commit
+* commit, tag, 
+
+  git commit 
+  git tag $VERSION
   git push
 
 EOT

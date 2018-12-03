@@ -1,5 +1,7 @@
 %rebase base title="Utilisateurs", nav=nav, warn=warn, author=author, version=version
-
+%# 
+%# Vars: nfs_servers, users
+%#
 %attrs = [ ('givenName', u'prénom'), ('sn', 'nom de famille'), ('cn', "nom d'usage (prénom + nom)"), ('mail', 'email'), ('description', u'description (thème de recherche )')  ]
 <script type="text/javascript">
 <!--
