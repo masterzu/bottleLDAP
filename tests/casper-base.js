@@ -1,4 +1,4 @@
-casper.test.begin('bottleLDAP Accueil', 9, function(test) {
+casper.test.begin('bottleLDAP Accueil', 8, function(test) {
     casper.start('http://localhost:8080', function() {
         test.assertTitle('bottleLDAP |');
 	test.assertExists('div#nav');
@@ -14,9 +14,9 @@ casper.test.begin('bottleLDAP Accueil', 9, function(test) {
         // }, true);
     });
 
-    casper.thenClick('div#nav a', function(){
-        test.assertTitle("bottleLDAP | Tableau de Bord", 'click to homepage');
-    });
+    // casper.thenClick('div#nav a', function(){
+    //     test.assertTitle("bottleLDAP | Tableau de Bord", 'click to homepage');
+    // });
 
     casper.run(function() { test.done() });
 
