@@ -104,6 +104,13 @@ git rm Gruntfile.js package.json bower.json
 git rm -r grunt_files/
 git rm -r tests/
 
+# commit
+git commit -a -m "prepare v$VERSION"
+
+# merge from master
+
+git checkout master
+git merge "v$VERSION"
 
 cat <<EOT
 OK
@@ -112,22 +119,14 @@ Release v$VERSION allmost done.
 
 things to do:
 
-* commit
-
-  git commit -a -m '$VERSION'
-
-* merge from master
-
-  git checkout master
-  git merge v$VERSION
-
 * resolve merge conflics
   
   git mergetool
 
-* commit and push
+* commit, tag, 
 
-  git commit
+  git commit 
+  git tag $VERSION
   git push
 
 EOT
